@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+  <Project Path="blazor-auto-vsa/Client/Client.csproj" />
+  <Project Path="blazor-auto-vsa/Server/Server.csproj" />
+  <Project Path="blazor-auto-vsa/Shared/Shared.csproj" />
+</Solution>
