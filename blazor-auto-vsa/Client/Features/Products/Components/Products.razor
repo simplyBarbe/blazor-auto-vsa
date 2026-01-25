@@ -1,0 +1,396 @@
+@page "/products"
+@using Shared.Core
+@using Shared.Features.Products.Responses
+@using Shared.Features.Products.Create
+@using Shared.Features.Products.Get
+@using Shared.Core.Validation
+@using Client.Components
+@using Client.Extensions
+@using Microsoft.AspNetCore.Components.Forms
+@inject IRequestSender RequestSender
+
+<PageTitle>Products - Smart Dispatcher Demo</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20" Style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
+    
+    @* Page Header *@
+    <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
+        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">
+            🛒 Product Management
+        </FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Lightweight">
+            Smart Dispatcher Demo - Auto Mode with FluentValidation
+        </FluentLabel>
+    </FluentStack>
+
+    @* Execution Mode Badge *@
+    <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
+        <FluentBadge Appearance="@(IsBrowser ? Appearance.Accent : Appearance.Neutral)" 
+                     Style="padding: 12px 20px; font-size: 14px;">
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="8">
+                @if (IsBrowser)
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Fill" />
+                    <FluentLabel Color="Color.Fill">WebAssembly (HTTP API)</FluentLabel>
+                }
+                else
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Fill" />
+                    <FluentLabel Color="Color.Fill">Server-Side Rendering (Direct)</FluentLabel>
+                }
+            </FluentStack>
+        </FluentBadge>
+    </FluentStack>
+
+    @* Main Panels Container *@
+    <FluentStack Orientation="Orientation.Horizontal" Wrap="true" HorizontalGap="20" VerticalGap="20">
+        
+        @* Create Product Panel *@
+        <FluentCard Style="flex: 1; min-width: 350px;">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                
+                @* Panel Header *@
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="Color.Accent" />
+                    <FluentLabel Typo="Typography.H5">Create Product</FluentLabel>
+                </FluentStack>
+                
+                <FluentDivider Style="width: 100%;" />
+                
+                @* Create Form with FluentValidation *@
+                <EditForm EditContext="@editContext" OnValidSubmit="CreateProduct" FormName="createProduct">
+                    <FluentValidationValidator />
+                    
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                        @* Name Field with Validation *@
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                            <FluentTextField @bind-Value="newProduct.Name" 
+                                             Name="productName"
+                                             Label="Product Name" 
+                                             Placeholder="Enter product name..."
+                                             Style="width: 100%;" />
+                            <FluentValidationMessage For="@(() => newProduct.Name)" />
+                        </FluentStack>
+                        
+                        @* Price Field with Validation *@
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                            <FluentNumberField @bind-Value="newProduct.Price" 
+                                               Name="productPrice"
+                                               Label="Price (€)" 
+                                               Placeholder="0.00"
+                                               Step="0.01"
+                                               Style="width: 100%;" />
+                            <FluentValidationMessage For="@(() => newProduct.Price)" />
+                        </FluentStack>
+                        
+                        @* Server-side Validation Errors *@
+                        @if (validationErrors != null && validationErrors.Any())
+                        {
+                            <FluentMessageBar Title="Errori di Validazione" 
+                                              Intent="MessageIntent.Error" 
+                                              AllowDismiss="true"
+                                              OnDismissClick="@(() => validationErrors = null)">
+                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                                    @foreach (var error in validationErrors)
+                                    {
+                                        <FluentLabel>@error.ErrorMessage</FluentLabel>
+                                    }
+                                </FluentStack>
+                            </FluentMessageBar>
+                        }
+                        
+                        @* Validation Summary *@
+                        <FluentValidationSummary style="color: var(--error);" />
+                        
+                        <FluentButton Type="ButtonType.Submit" 
+                                      Appearance="Appearance.Accent"
+                                      Loading="@isCreating"
+                                      Disabled="@(!isFormValid || isCreating)"
+                                      Style="width: 100%;">
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" />
+                            Create Product
+                        </FluentButton>
+                    </FluentStack>
+                </EditForm>
+
+                @* Create Result *@
+                @if (createResult is not null)
+                {
+                    <FluentMessageBar Title="Product Created!" 
+                                      Intent="MessageIntent.Success" 
+                                      AllowDismiss="true"
+                                      OnDismissClick="@(() => createResult = null)">
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
+                                <FluentLabel Weight="FontWeight.Bold">Response via:</FluentLabel>
+                                <FluentBadge Appearance="@(createResultMode == "client" ? Appearance.Accent : Appearance.Neutral)">
+                                    @(createResultMode == "client" ? "HTTP API" : "SSR Direct")
+                                </FluentBadge>
+                            </FluentStack>
+                            <FluentLabel><strong>ID:</strong> @createResult.Id</FluentLabel>
+                            <FluentLabel><strong>Name:</strong> @createResult.Name</FluentLabel>
+                            <FluentLabel><strong>Price:</strong> €@createResult.Price.ToString("F2")</FluentLabel>
+                        </FluentStack>
+                    </FluentMessageBar>
+                }
+            </FluentStack>
+        </FluentCard>
+
+        @* Get Product Panel *@
+        <FluentCard Style="flex: 1; min-width: 350px;">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                
+                @* Panel Header *@
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Search())" Color="Color.Accent" />
+                    <FluentLabel Typo="Typography.H5">Get Product</FluentLabel>
+                </FluentStack>
+                
+                <FluentDivider Style="width: 100%;" />
+                
+                @* Search Form *@
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                    <FluentNumberField @bind-Value="searchId" 
+                                       Label="Product ID" 
+                                       Placeholder="Enter ID..."
+                                       Min="1"
+                                       Style="width: 100%;" />
+                    
+                    <FluentButton Appearance="Appearance.Accent"
+                                  Loading="@isSearching"
+                                  OnClick="SearchProduct"
+                                  Disabled="@(searchId < 1)"
+                                  Style="width: 100%;">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Slot="start" />
+                        Search
+                    </FluentButton>
+                </FluentStack>
+
+                @* Search Result *@
+                @if (searchResult is not null)
+                {
+                    <FluentMessageBar Title="Product Found" 
+                                      Intent="MessageIntent.Info" 
+                                      AllowDismiss="true"
+                                      OnDismissClick="@(() => searchResult = null)">
+                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
+                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
+                                <FluentLabel Weight="FontWeight.Bold">Response via:</FluentLabel>
+                                <FluentBadge Appearance="@(searchResultMode == "client" ? Appearance.Accent : Appearance.Neutral)">
+                                    @(searchResultMode == "client" ? "HTTP API" : "SSR Direct")
+                                </FluentBadge>
+                            </FluentStack>
+                            <FluentLabel><strong>ID:</strong> @searchResult.Id</FluentLabel>
+                            <FluentLabel><strong>Name:</strong> @searchResult.Name</FluentLabel>
+                            <FluentLabel><strong>Price:</strong> €@searchResult.Price.ToString("F2")</FluentLabel>
+                        </FluentStack>
+                    </FluentMessageBar>
+                }
+                else if (searchError is not null)
+                {
+                    <FluentMessageBar Title="Error" 
+                                      Intent="MessageIntent.Error" 
+                                      AllowDismiss="true"
+                                      OnDismissClick="@(() => searchError = null)">
+                        @searchError
+                    </FluentMessageBar>
+                }
+            </FluentStack>
+        </FluentCard>
+    </FluentStack>
+
+    @* Request History Panel *@
+    @if (requestHistory.Count > 0)
+    {
+        <FluentCard>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+                
+                @* Panel Header *@
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.History())" Color="Color.Accent" />
+                    <FluentLabel Typo="Typography.H5">Request History</FluentLabel>
+                    <FluentSpacer />
+                    <FluentButton Appearance="Appearance.Lightweight" OnClick="ClearHistory">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Slot="start" />
+                        Clear
+                    </FluentButton>
+                </FluentStack>
+                
+                <FluentDivider Style="width: 100%;" />
+                
+                @* History List *@
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8" Style="max-height: 300px; overflow-y: auto;">
+                    @foreach (var entry in requestHistory.AsEnumerable().Reverse())
+                    {
+                        <FluentCard Style="@($"border-left: 3px solid {(entry.Mode == "client" ? "var(--accent-fill-rest)" : "var(--success)")};")">
+                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
+                                @if (entry.Mode == "client")
+                                {
+                                    <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Accent" />
+                                }
+                                else
+                                {
+                                    <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Success" />
+                                }
+                                
+                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="2" Style="flex: 1;">
+                                    <FluentLabel Weight="FontWeight.Bold">@entry.Action</FluentLabel>
+                                    <FluentLabel Typo="Typography.Body" Color="Color.Lightweight">
+                                        @entry.Timestamp.ToString("HH:mm:ss")
+                                    </FluentLabel>
+                                </FluentStack>
+                                
+                                <FluentBadge Appearance="@(entry.Mode == "client" ? Appearance.Accent : Appearance.Neutral)">
+                                    @(entry.Mode == "client" ? "HTTP" : "Direct")
+                                </FluentBadge>
+                            </FluentStack>
+                        </FluentCard>
+                    }
+                </FluentStack>
+            </FluentStack>
+        </FluentCard>
+    }
+</FluentStack>
+
+@code {
+    private bool IsBrowser => OperatingSystem.IsBrowser();
+    
+    // Create product state - use CreateProductCommand directly
+    private CreateProductCommand newProduct = new();
+    private EditContext editContext = null!;
+    private bool isCreating = false;
+    private bool isFormValid = false;
+    private ProductResponse? createResult;
+    private string? createResultMode;
+    private List<ValidationError>? validationErrors;
+    
+    // Search product state
+    private int searchId = 1;
+    private bool isSearching = false;
+    private ProductResponse? searchResult;
+    private string? searchResultMode;
+    private string? searchError;
+    
+    // Request history
+    private List<HistoryEntry> requestHistory = new();
+
+    protected override void OnInitialized()
+    {
+        newProduct = new CreateProductCommand { Price = 9.99m };
+        editContext = new EditContext(newProduct);
+        
+        // Track validation state changes without calling Validate() to avoid loops
+        editContext.OnValidationStateChanged += (sender, e) =>
+        {
+            // Check if form is valid by checking if there are any validation messages
+            isFormValid = !editContext.GetValidationMessages().Any();
+            InvokeAsync(StateHasChanged);
+        };
+        
+        // Initial validation state
+        isFormValid = !editContext.GetValidationMessages().Any();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Auto-load product with ID 1 on page load
+        await SearchProduct();
+    }
+
+    private async Task CreateProduct()
+    {
+        isCreating = true;
+        createResult = null;
+        validationErrors = null;
+        
+        try
+        {
+            var mode = IsBrowser ? "client" : "server";
+            // Use the command directly - no need to create a new one
+            createResult = await RequestSender.Send(newProduct);
+            createResultMode = mode;
+            
+            requestHistory.Add(new HistoryEntry(
+                $"Created: {createResult.Name} (ID: {createResult.Id})",
+                mode,
+                DateTime.Now
+            ));
+            
+            // Reset form and EditContext
+            newProduct = new CreateProductCommand { Price = 9.99m };
+            editContext = new EditContext(newProduct);
+            
+            // Re-attach validation state tracking without calling Validate() to avoid loops
+            editContext.OnValidationStateChanged += (sender, e) =>
+            {
+                // Check if form is valid by checking if there are any validation messages
+                isFormValid = !editContext.GetValidationMessages().Any();
+                InvokeAsync(StateHasChanged);
+            };
+            
+            // Initial validation state
+            isFormValid = !editContext.GetValidationMessages().Any();
+        }
+        catch (ValidationException ex)
+        {
+            // Handle server-side validation errors
+            validationErrors = ex.Errors;
+            
+            // Also add errors to EditContext for field-level display
+            editContext.AddValidationErrors(ex.Errors);
+        }
+        catch (Exception ex)
+        {
+            validationErrors = new List<ValidationError>
+            {
+                new() { PropertyName = string.Empty, ErrorMessage = $"Errore: {ex.Message}" }
+            };
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    private async Task SearchProduct()
+    {
+        if (searchId < 1) return;
+        
+        isSearching = true;
+        searchResult = null;
+        searchError = null;
+        
+        try
+        {
+            var mode = IsBrowser ? "client" : "server";
+            var query = new GetProductQuery(searchId);
+            searchResult = await RequestSender.Send(query);
+            searchResultMode = mode;
+            
+            requestHistory.Add(new HistoryEntry(
+                $"Fetched: {searchResult.Name} (ID: {searchResult.Id})",
+                mode,
+                DateTime.Now
+            ));
+        }
+        catch (ValidationException ex)
+        {
+            searchError = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage));
+        }
+        catch (Exception ex)
+        {
+            searchError = $"Product not found: {ex.Message}";
+        }
+        finally
+        {
+            isSearching = false;
+        }
+    }
+
+    private void ClearHistory()
+    {
+        requestHistory.Clear();
+    }
+
+    private record HistoryEntry(string Action, string Mode, DateTime Timestamp);
+}

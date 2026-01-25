@@ -1,0 +1,74 @@
+using FluentValidation;
+using Microsoft.FluentUI.AspNetCore.Components;
+using Server.Components;
+using Server.Extensions;
+using Server.Features.Products.Create;
+using Server.Features.Products.Get;
+using Server.Infrastructure.Dispatching;
+using Server.Infrastructure.Mapping;
+using Shared.Core;
+
+namespace Server
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Add services to the container.
+            builder.Services.AddRazorComponents()
+                .AddInteractiveServerComponents()
+                .AddInteractiveWebAssemblyComponents();
+            builder.Services.AddFluentUIComponents();
+
+            // Register FluentValidation validators from server assembly (with async rules)
+            builder.Services.AddValidatorsFromAssembly(typeof(CreateProductCommandServerValidator).Assembly);
+
+            // Register request pipeline with validation behavior
+            builder.Services.AddRequestPipeline();
+
+            // Register database context, unit of work, and AutoMapper
+            builder.Services.AddApplicationDbContext(builder.Configuration, typeof(ProductMappingProfile).Assembly);
+
+            // Register Smart Dispatcher for SSR/Prerendering
+            builder.Services.AddScoped<IRequestSender, LocalRequestSender>();
+
+            // Register all handlers from the assembly
+            builder.Services.AddHandlersFromAssembly(typeof(GetProductHandler).Assembly);
+
+            var app = builder.Build();
+
+            // Apply pending database migrations
+            app.UseDatabaseMigration();
+
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseWebAssemblyDebugging();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+            app.UseHttpsRedirection();
+
+            app.UseAntiforgery();
+
+            app.MapStaticAssets();
+            app.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode()
+                .AddInteractiveWebAssemblyRenderMode()
+                .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
+
+            // Map API endpoints for WebAssembly client
+            app.MapApiEndpoints(typeof(Server.Features.Products.Create.CreateProductEndpoint).Assembly);
+
+            app.Run();
+        }
+    }
+}
