@@ -1,37 +1,24 @@
-using Server.Infrastructure.Endpoints;
-using Shared.Core;
-using Shared.Core.Validation;
+using Server.Infrastructure.CRUD.Endpoints;
 using Shared.Features.Products.Create;
+using Shared.Features.Products.Responses;
 
 namespace Server.Features.Products.Create;
 
 /// <summary>
 /// Endpoint for creating a new product.
 /// </summary>
-public class CreateProductEndpoint : IEndpoint
+public class CreateProductEndpoint : CreateEntityEndpointBase<CreateProductCommand, ProductResponse>
 {
-    /// <summary>
-    /// Maps the POST product endpoint.
-    /// </summary>
-    public void Map(IEndpointRouteBuilder app)
-    {
-        app.MapPost("/api/products", HandleAsync)
-            .DisableAntiforgery();
-    }
+    /// <inheritdoc />
+    protected override string GetRoute() => "/api/products";
 
-    private async Task<IResult> HandleAsync(
-        CreateProductCommand command,
-        IRequestSender sender,
-        CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    protected override string GetCreatedLocation(object result)
     {
-        try
+        if (result is ProductResponse productResponse)
         {
-            var result = await sender.Send(command, cancellationToken);
-            return Results.Created($"/api/products/{result.Id}", result);
+            return $"/api/products/{productResponse.Id}";
         }
-        catch (ValidationException ex)
-        {
-            return Results.BadRequest(new ValidationErrorResponse { Errors = ex.Errors });
-        }
+        return base.GetCreatedLocation(result);
     }
 }

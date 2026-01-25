@@ -1,11 +1,12 @@
 using Shared.Core;
+using Shared.Core.CRUD;
 
 namespace Shared.Features.Products.Create;
 
 /// <summary>
 /// Command to create a new product.
 /// </summary>
-public class CreateProductCommand : IRequest<Shared.Features.Products.Responses.ProductResponse>
+public class CreateProductCommand : CreateEntityCommand<Shared.Features.Products.Responses.ProductResponse>
 {
     /// <summary>
     /// The name of the product.

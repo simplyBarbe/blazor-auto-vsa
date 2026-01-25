@@ -1,41 +1,20 @@
-using Server.Infrastructure.Endpoints;
-using Shared.Core;
-using Shared.Core.Validation;
+using Server.Infrastructure.CRUD.Endpoints;
 using Shared.Features.Products.Get;
+using Shared.Features.Products.Responses;
 
 namespace Server.Features.Products.Get;
 
 /// <summary>
 /// Endpoint for retrieving a product by ID.
 /// </summary>
-public class GetProductEndpoint : IEndpoint
+public class GetProductEndpoint : GetEntityEndpointBase<int, GetProductQuery, ProductResponse>
 {
-    /// <summary>
-    /// Maps the GET product endpoint.
-    /// </summary>
-    public void Map(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/api/products/{id:int}", HandleAsync)
-            .DisableAntiforgery();
-    }
+    /// <inheritdoc />
+    protected override string GetRoute() => "/api/products/{id:int}";
 
-    private async Task<IResult> HandleAsync(
-        int id,
-        IRequestSender sender,
-        CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    protected override GetProductQuery CreateQuery(int key)
     {
-        try
-        {
-            var result = await sender.Send(new GetProductQuery(id), cancellationToken);
-            return Results.Ok(result);
-        }
-        catch (ValidationException ex)
-        {
-            return Results.BadRequest(new ValidationErrorResponse { Errors = ex.Errors });
-        }
-        catch (KeyNotFoundException)
-        {
-            return Results.NotFound();
-        }
+        return new GetProductQuery(key);
     }
 }
