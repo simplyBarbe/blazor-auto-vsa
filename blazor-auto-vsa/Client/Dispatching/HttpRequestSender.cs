@@ -30,14 +30,36 @@ public class HttpRequestSender : IRequestSender
     {
         var (url, method) = _mapper.GetEndpoint(request);
 
+        HttpResponseMessage response;
         if (method == HttpMethod.Get)
         {
-            var getResult = await _http.GetFromJsonAsync<TResponse>(url, cancellationToken);
-            return getResult ?? throw new InvalidOperationException($"Received null response from {url}");
+            response = await _http.GetAsync(url, cancellationToken);
         }
-
-        // Cast to object so System.Text.Json uses the runtime type
-        var response = await _http.PostAsJsonAsync(url, (object)request, cancellationToken);
+        else if (method == HttpMethod.Post)
+        {
+            response = await _http.PostAsJsonAsync(url, (object)request, cancellationToken);
+        }
+        else if (method == HttpMethod.Put)
+        {
+            response = await _http.PutAsJsonAsync(url, (object)request, cancellationToken);
+        }
+        else if (method == HttpMethod.Delete)
+        {
+            response = await _http.DeleteAsync(url, cancellationToken);
+        }
+        else if (method == HttpMethod.Patch)
+        {
+            response = await _http.PatchAsJsonAsync(url, (object)request, cancellationToken);
+        }
+        else
+        {
+            var message = new HttpRequestMessage(method, url);
+            if (method != HttpMethod.Head && method != HttpMethod.Options)
+            {
+                message.Content = JsonContent.Create((object)request);
+            }
+            response = await _http.SendAsync(message, cancellationToken);
+        }
 
         // Handle validation errors (400 Bad Request)
         if (response.StatusCode == HttpStatusCode.BadRequest)
@@ -65,7 +87,12 @@ public class HttpRequestSender : IRequestSender
 
         response.EnsureSuccessStatusCode();
 
-        var postResult = await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
-        return postResult ?? throw new InvalidOperationException($"Received null response from {url}");
+        if (typeof(TResponse) == typeof(object) || response.StatusCode == HttpStatusCode.NoContent)
+        {
+            return default!;
+        }
+
+        var result = await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
+        return result ?? throw new InvalidOperationException($"Received null response from {url}");
     }
 }

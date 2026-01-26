@@ -22,6 +22,7 @@ namespace Client
             });
 
             // Register Smart Dispatcher for WebAssembly
+            builder.Services.AddSingleton<IRouteDefinition, Client.Features.Products.ProductRoutes>();
             builder.Services.AddSingleton<IRequestEndpointMapper, RequestEndpointMapper>();
             builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
 
