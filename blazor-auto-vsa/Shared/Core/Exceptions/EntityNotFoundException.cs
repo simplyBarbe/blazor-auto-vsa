@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace Shared.Core.Exceptions;
 
 /// <summary>
@@ -21,10 +23,32 @@ public class EntityNotFoundException : Exception
     /// <param name="entityName">The name of the entity type.</param>
     /// <param name="entityId">The identifier of the entity that was not found.</param>
     public EntityNotFoundException(string entityName, object? entityId)
-        : base($"Entity '{entityName}' with identifier '{entityId}' was not found.")
+        : base($"Entity '{entityName}' with identifier '{FormatIdentifier(entityId)}' was not found.")
     {
         EntityName = entityName;
         EntityId = entityId;
+    }
+
+    private static string FormatIdentifier(object? entityId)
+    {
+        if (entityId == null) return "null";
+
+        if (entityId is object[] array)
+        {
+            return $"[{string.Join(", ", array)}]";
+        }
+
+        if (entityId is IEnumerable enumerable && !(entityId is string))
+        {
+            var items = new List<string>();
+            foreach (var item in enumerable)
+            {
+                items.Add(item?.ToString() ?? "null");
+            }
+            return $"[{string.Join(", ", items)}]";
+        }
+
+        return entityId.ToString() ?? "null";
     }
 
     /// <summary>

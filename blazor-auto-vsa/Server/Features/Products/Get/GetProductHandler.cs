@@ -17,8 +17,7 @@ public class GetProductHandler : GetEntityHandlerBase<Product, GetProductQuery, 
     /// </summary>
     /// <param name="unitOfWork">The unit of work.</param>
     /// <param name="mapper">The AutoMapper instance.</param>
-    public GetProductHandler(IUnitOfWork unitOfWork, IMapper mapper)
-        : base(unitOfWork, mapper)
+    public GetProductHandler(IUnitOfWork unitOfWork, IMapper mapper) : base(unitOfWork, mapper)
     {
     }
 }

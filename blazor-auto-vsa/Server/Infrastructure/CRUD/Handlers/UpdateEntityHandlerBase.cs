@@ -15,7 +15,7 @@ namespace Server.Infrastructure.CRUD.Handlers;
 /// <typeparam name="TResponse">The response type.</typeparam>
 public abstract class UpdateEntityHandlerBase<TEntity, TCommand, TResponse> : IRequestHandler<TCommand, TResponse>
     where TEntity : class
-    where TCommand : UpdateEntityCommand<TResponse>
+    where TCommand : IRequest<TResponse>, IEntityKeyProvider
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;

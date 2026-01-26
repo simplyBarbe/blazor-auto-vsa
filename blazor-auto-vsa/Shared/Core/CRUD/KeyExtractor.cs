@@ -19,7 +19,7 @@ public class KeyExtractor
     /// <summary>
     /// Extracts key values from a command or query object.
     /// First checks if the object implements IEntityKeyProvider and calls GetKeys().
-    /// Otherwise, checks for an "Id" property, then falls back to treating the object as a key.
+    /// Otherwise, falls back to treating the object as a key.
     /// </summary>
     /// <param name="commandOrQuery">The command or query object to extract keys from.</param>
     /// <returns>An array of key values.</returns>
@@ -37,17 +37,6 @@ public class KeyExtractor
         }
 
         var type = commandOrQuery.GetType();
-
-        // Fallback: check for "Id" property (exact name match)
-        var idProperty = type.GetProperty("Id", BindingFlags.Public | BindingFlags.Instance);
-        if (idProperty != null && idProperty.CanRead)
-        {
-            var idValue = idProperty.GetValue(commandOrQuery);
-            if (idValue != null)
-            {
-                return new object[] { idValue };
-            }
-        }
 
         // Final fallback: treat the object itself as a key (for simple types or tuples)
         return GetKeyValuesFromObject(commandOrQuery);
@@ -102,18 +91,17 @@ public class KeyExtractor
     /// <returns>An array of key values.</returns>
     protected virtual object[] ExtractFromTuple(ITuple tuple)
     {
-        var values = new List<object>();
-        var length = tuple.Length;
-        for (int i = 0; i < length; i++)
+        var result = new object[tuple.Length];
+        for (int i = 0; i < tuple.Length; i++)
         {
             var value = tuple[i];
             if (value == null)
             {
                 throw new ArgumentException($"Tuple element at index {i} is null.", nameof(tuple));
             }
-            values.Add(value);
+            result[i] = value;
         }
-        return values.ToArray();
+        return result;
     }
 
     /// <summary>

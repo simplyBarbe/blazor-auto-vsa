@@ -10,7 +10,7 @@ namespace Server.Features.Products.Get;
 public class GetProductEndpoint : GetEntityEndpointBase<int, GetProductQuery, ProductResponse>
 {
     /// <inheritdoc />
-    protected override string GetRoute() => "/api/products/{id:int}";
+    protected override string GetRoute() => "/api/products/{key:int}";
 
     /// <inheritdoc />
     protected override GetProductQuery CreateQuery(int key)

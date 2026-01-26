@@ -1,3 +1,4 @@
+using Shared.Core;
 using Shared.Core.CRUD;
 
 namespace Shared.Features.Products.Update;
@@ -5,13 +6,15 @@ namespace Shared.Features.Products.Update;
 /// <summary>
 /// Command to update an existing product.
 /// </summary>
-public class UpdateProductCommand : UpdateEntityCommand<Shared.Features.Products.Responses.ProductResponse>
+public class UpdateProductCommand : IRequest<Shared.Features.Products.Responses.ProductResponse>, IEntityKeyProvider
 {
     /// <summary>
     /// The ID of the product to update.
-    /// KeyExtractor will automatically use this "Id" property.
     /// </summary>
     public int Id { get; set; }
+
+    /// <inheritdoc />
+    public object[] GetKeys() => new object[] { Id };
 
     /// <summary>
     /// Gets or sets the name of the product.

@@ -9,7 +9,7 @@ namespace Server.Features.Products.Delete;
 public class DeleteProductEndpoint : DeleteEntityEndpointBase<int, DeleteProductCommand>
 {
     /// <inheritdoc />
-    protected override string GetRoute() => "/api/products/{id:int}";
+    protected override string GetRoute() => "/api/products/{key:int}";
 
     /// <inheritdoc />
     protected override DeleteProductCommand CreateCommand(int key)

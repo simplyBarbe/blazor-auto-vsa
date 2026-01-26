@@ -10,7 +10,7 @@ namespace Server.Infrastructure.CRUD.Validators;
 /// </summary>
 /// <typeparam name="TCommand">The command type.</typeparam>
 public abstract class DeleteEntityCommandValidatorBase<TCommand> : AbstractValidator<TCommand>
-    where TCommand : DeleteEntityCommand
+    where TCommand : IEntityKeyProvider
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteEntityCommandValidatorBase{TCommand}"/> class.

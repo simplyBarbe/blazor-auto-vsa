@@ -10,7 +10,7 @@ namespace Server.Infrastructure.CRUD.Validators;
 /// </summary>
 /// <typeparam name="TQuery">The query type.</typeparam>
 public abstract class GetEntityQueryValidatorBase<TQuery> : AbstractValidator<TQuery>
-    where TQuery : GetEntityQuery<object>
+    where TQuery : IEntityKeyProvider
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GetEntityQueryValidatorBase{TQuery}"/> class.

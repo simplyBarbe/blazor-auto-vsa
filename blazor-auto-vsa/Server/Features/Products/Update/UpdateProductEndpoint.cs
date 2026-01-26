@@ -11,7 +11,7 @@ namespace Server.Features.Products.Update;
 public class UpdateProductEndpoint : UpdateEntityEndpointBase<int, UpdateProductCommand, ProductResponse>
 {
     /// <inheritdoc />
-    protected override string GetRoute() => "/api/products/{id:int}";
+    protected override string GetRoute() => "/api/products/{key:int}";
 
     /// <inheritdoc />
     protected override async Task<IResult> HandleAsync(

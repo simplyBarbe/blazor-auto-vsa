@@ -20,36 +20,8 @@ public abstract class GetEntityEndpointBase<TKey, TQuery, TResponse> : IEndpoint
     /// <inheritdoc />
     public virtual void Map(IEndpointRouteBuilder app)
     {
-        var route = GetRoute();
-        var parameterName = GetRouteParameterName();
-        
-        // Use a helper to create the endpoint with the correct parameter binding
-        CreateEndpoint(app, route, parameterName);
-    }
-
-    /// <summary>
-    /// Creates the endpoint mapping with the correct route parameter binding.
-    /// Handles common parameter names ("id", "code") and requires overriding Map() for others.
-    /// </summary>
-    private void CreateEndpoint(IEndpointRouteBuilder app, string route, string parameterName)
-    {
-        switch (parameterName.ToLowerInvariant())
-        {
-            case "id":
-                app.MapGet(route, async ([FromRoute(Name = "id")] TKey key, [FromServices] IRequestSender sender, CancellationToken cancellationToken) 
-                    => await HandleAsync(key, sender, cancellationToken))
-                    .DisableAntiforgery();
-                break;
-            case "code":
-                app.MapGet(route, async ([FromRoute(Name = "code")] TKey key, [FromServices] IRequestSender sender, CancellationToken cancellationToken) 
-                    => await HandleAsync(key, sender, cancellationToken))
-                    .DisableAntiforgery();
-                break;
-            default:
-                // For other parameter names, the derived class must override Map()
-                throw new InvalidOperationException(
-                    $"Parameter name '{parameterName}' is not supported by default. Override the Map() method to handle custom parameter names.");
-        }
+        app.MapGet(GetRoute(), HandleAsync)
+           .DisableAntiforgery();
     }
 
     /// <summary>
@@ -57,13 +29,6 @@ public abstract class GetEntityEndpointBase<TKey, TQuery, TResponse> : IEndpoint
     /// </summary>
     /// <returns>The route pattern (e.g., "/api/products/{id:int}" or "/api/orders/{year:int}/{month}" for composite keys).</returns>
     protected abstract string GetRoute();
-
-    /// <summary>
-    /// Gets the route parameter name. Defaults to "id".
-    /// Override this method to use "code" or override Map() for other parameter names or composite keys.
-    /// </summary>
-    /// <returns>The route parameter name (default: "id").</returns>
-    protected virtual string GetRouteParameterName() => "id";
 
     /// <summary>
     /// Creates a query from the key. Can be overridden for custom query creation.

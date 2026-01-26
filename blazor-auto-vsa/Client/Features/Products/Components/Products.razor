@@ -317,7 +317,7 @@
             ));
             
             // Reset form and EditContext
-            newProduct = new CreateProductCommand { Price = 9.99m };
+            newProduct = new CreateProductCommand { Price = 9m };
             editContext = new EditContext(newProduct);
             
             // Re-attach validation state tracking without calling Validate() to avoid loops

@@ -13,7 +13,7 @@ namespace Server.Infrastructure.CRUD.Handlers;
 /// <typeparam name="TResponse">The response type.</typeparam>
 public abstract class ListEntityHandlerBase<TEntity, TQuery, TResponse> : IRequestHandler<TQuery, PagedResult<TResponse>>
     where TEntity : class
-    where TQuery : ListEntityQuery<TResponse>
+    where TQuery : IRequest<PagedResult<TResponse>>, IPageableQuery
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;

@@ -13,7 +13,7 @@ namespace Server.Infrastructure.CRUD.Handlers;
 /// <typeparam name="TCommand">The command type.</typeparam>
 public abstract class DeleteEntityHandlerBase<TEntity, TCommand> : IRequestHandler<TCommand, object?>
     where TEntity : class
-    where TCommand : DeleteEntityCommand
+    where TCommand : IRequest<object?>, IEntityKeyProvider
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly KeyExtractor _keyExtractor;

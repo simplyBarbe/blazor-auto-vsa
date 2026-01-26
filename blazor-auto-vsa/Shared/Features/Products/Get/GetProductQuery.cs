@@ -1,3 +1,4 @@
+using Shared.Core;
 using Shared.Core.CRUD;
 
 namespace Shared.Features.Products.Get;
@@ -5,13 +6,15 @@ namespace Shared.Features.Products.Get;
 /// <summary>
 /// Query to retrieve a product by its ID.
 /// </summary>
-public class GetProductQuery : GetEntityQuery<Shared.Features.Products.Responses.ProductResponse>
+public class GetProductQuery : IRequest<Shared.Features.Products.Responses.ProductResponse>, IEntityKeyProvider
 {
     /// <summary>
     /// The ID of the product to retrieve.
-    /// KeyExtractor will automatically use this "Id" property.
     /// </summary>
     public int Id { get; set; }
+
+    /// <inheritdoc />
+    public object[] GetKeys() => new object[] { Id };
 
     /// <summary>
     /// Default constructor for deserialization.

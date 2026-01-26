@@ -15,7 +15,7 @@ namespace Server.Infrastructure.CRUD.Handlers;
 /// <typeparam name="TResponse">The response type.</typeparam>
 public abstract class GetEntityHandlerBase<TEntity, TQuery, TResponse> : IRequestHandler<TQuery, TResponse>
     where TEntity : class
-    where TQuery : GetEntityQuery<TResponse>
+    where TQuery : IRequest<TResponse>, IEntityKeyProvider
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
