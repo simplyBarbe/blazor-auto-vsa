@@ -7,30 +7,25 @@ using Shared.Features.Products.Get;
 using Shared.Core.Validation;
 using Client.Extensions;
 
+using Client.Components.SmartComponent;
+
 namespace Client.Features.Products.Components;
 
-public partial class Products
+public partial class Products : SmartComponentBase
 {
-    [Inject]
-    private IRequestSender RequestSender { get; set; } = default!;
-
     private bool IsBrowser => OperatingSystem.IsBrowser();
     
     // Create product state - use CreateProductCommand directly
     private CreateProductCommand newProduct = new();
     private EditContext editContext = null!;
-    private bool isCreating = false;
     private bool isFormValid = false;
     private ProductResponse? createResult;
     private string? createResultMode;
-    private List<ValidationError>? validationErrors;
     
     // Search product state
     private int searchId = 1;
-    private bool isSearching = false;
     private ProductResponse? searchResult;
     private string? searchResultMode;
-    private string? searchError;
     
     // Request history
     private List<HistoryEntry> requestHistory = new();
@@ -60,20 +55,15 @@ public partial class Products
 
     private async Task CreateProduct()
     {
-        isCreating = true;
-        createResult = null;
-        validationErrors = null;
+        createResult = await SendAsync(newProduct, editContext, "Product created!");
         
-        try
+        if (createResult != null)
         {
-            var mode = IsBrowser ? "client" : "server";
-            // Use the command directly - no need to create a new one
-            createResult = await RequestSender.Send(newProduct);
-            createResultMode = mode;
+            createResultMode = IsBrowser ? "client" : "server";
             
             requestHistory.Add(new HistoryEntry(
                 $"Created: {createResult.Name} (ID: {createResult.Id})",
-                mode,
+                createResultMode,
                 DateTime.Now
             ));
             
@@ -81,35 +71,14 @@ public partial class Products
             newProduct = new CreateProductCommand { Price = 9m };
             editContext = new EditContext(newProduct);
             
-            // Re-attach validation state tracking without calling Validate() to avoid loops
+            // Re-attach validation state tracking
             editContext.OnValidationStateChanged += (sender, e) =>
             {
-                // Check if form is valid by checking if there are any validation messages
                 isFormValid = !editContext.GetValidationMessages().Any();
                 InvokeAsync(StateHasChanged);
             };
             
-            // Initial validation state
             isFormValid = !editContext.GetValidationMessages().Any();
-        }
-        catch (ValidationException ex)
-        {
-            // Handle server-side validation errors
-            validationErrors = ex.Errors;
-            
-            // Also add errors to EditContext for field-level display
-            editContext.AddValidationErrors(ex.Errors);
-        }
-        catch (Exception ex)
-        {
-            validationErrors = new List<ValidationError>
-            {
-                new() { PropertyName = string.Empty, ErrorMessage = $"Errore: {ex.Message}" }
-            };
-        }
-        finally
-        {
-            isCreating = false;
         }
     }
 
@@ -117,34 +86,17 @@ public partial class Products
     {
         if (searchId < 1) return;
         
-        isSearching = true;
-        searchResult = null;
-        searchError = null;
+        searchResult = await SendAsync(new GetProductQuery(searchId));
         
-        try
+        if (searchResult != null)
         {
-            var mode = IsBrowser ? "client" : "server";
-            var query = new GetProductQuery(searchId);
-            searchResult = await RequestSender.Send(query);
-            searchResultMode = mode;
+            searchResultMode = IsBrowser ? "client" : "server";
             
             requestHistory.Add(new HistoryEntry(
                 $"Fetched: {searchResult.Name} (ID: {searchResult.Id})",
-                mode,
+                searchResultMode,
                 DateTime.Now
             ));
-        }
-        catch (ValidationException ex)
-        {
-            searchError = string.Join(", ", ex.Errors.Select(e => e.ErrorMessage));
-        }
-        catch (Exception ex)
-        {
-            searchError = $"Product not found: {ex.Message}";
-        }
-        finally
-        {
-            isSearching = false;
         }
     }
 
