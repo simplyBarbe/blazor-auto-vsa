@@ -15,25 +15,15 @@ using Client.Components.SmartComponent;
 
 namespace Client.Features.Products.Components;
 
-public partial class Products : SmartComponentBase
+public partial class Products : SmartListBase<ProductResponse, ListProductQuery>
 {
-    private bool IsBrowser => OperatingSystem.IsBrowser();
-    
-    private IQueryable<ProductResponse>? products;
-
     protected override async Task OnInitializedAsync()
     {
-        await LoadProductsAsync();
+        Query.PageSize = 100;
+        await base.OnInitializedAsync();
     }
 
-    private async Task LoadProductsAsync()
-    {
-        var result = await SendAsync(new ListProductQuery { PageSize = 100 });
-        if (result != null)
-        {
-            products = result.Items.AsQueryable();
-        }
-    }
+    private async Task LoadProductsAsync() => await LoadDataAsync();
 
     private async Task OnAddProductAsync()
     {

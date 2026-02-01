@@ -1,7 +1,8 @@
 @page "/products"
 @using Client.Components.SmartComponent
-@inherits SmartComponentBase
+@inherits SmartListBase<ProductResponse, Shared.Features.Products.List.ListProductQuery>
 @using Shared.Features.Products.Responses
+@using Shared.Features.Products.List
 @using Microsoft.FluentUI.AspNetCore.Components
 
 <PageTitle>Products - Smart Dispatcher Demo</PageTitle>
@@ -47,7 +48,7 @@
                 </FluentButton>
             </FluentStack>
 
-            @if (products == null)
+            @if (Items == null)
             {
                 <FluentStack HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center" Style="height: 200px;">
                     <FluentProgressRing />
@@ -55,7 +56,7 @@
             }
             else
             {
-                <FluentDataGrid Items="@products" ResizableColumns="true" TGridItem="ProductResponse" GridTemplateColumns="1fr 2fr 1fr 1fr">
+                <FluentDataGrid Items="@Items" ResizableColumns="true" TGridItem="ProductResponse" GridTemplateColumns="1fr 2fr 1fr 1fr">
                     <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID" />
                     <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
                     <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2" />

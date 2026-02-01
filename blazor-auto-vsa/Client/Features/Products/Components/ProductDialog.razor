@@ -5,40 +5,21 @@
 @inherits SmartComponentBase
 @implements IDialogContentComponent<UpdateProductCommand>
 
-<FluentDialogHeader ShowDismiss="true">
-    <FluentStack VerticalAlignment="VerticalAlignment.Center">
-        @if (Content.Id == 0)
-        {
-            <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="@Color.Accent" />
-        }
-        else
-        {
-            <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" Color="@Color.Accent" />
-        }
-        <FluentLabel Typo="Typography.PaneHeader">
-            @(Content.Id == 0 ? "Add Product" : "Edit Product")
-        </FluentLabel>
-    </FluentStack>
-</FluentDialogHeader>
+<SmartCrudDialog TCommand="UpdateProductCommand" 
+                 Content="@Content" 
+                 IsAddMode="@(Content.Id == 0)"
+                 AddTitle="Add Product"
+                 EditTitle="Edit Product"
+                 OnSave="SaveAsync"
+                 OnCancel="CancelAsync">
+    <ChildContent>
+        <FluentTextField @bind-Value="context.Name" Label="Name" Required="true" Style="width: 100%;" />
+        <FluentValidationMessage For="@(() => context.Name)" />
 
-<EditForm Model="@Content" id="product-form" OnSubmit="SaveAsync">
-    <FluentDialogBody>
-        <FluentValidationValidator />
-        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
-            <ValidationSummary />
-            <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;" />
-            <FluentValidationMessage For="@(() => Content.Name)" />
-
-            <FluentNumberField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true" Style="width: 100%;" />
-            <FluentValidationMessage For="@(() => Content.Price)" />
-        </FluentStack>
-    </FluentDialogBody>
-
-    <FluentDialogFooter>
-        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">Save</FluentButton>
-        <FluentButton Appearance="Appearance.Neutral" OnClick="CancelAsync" Disabled="@IsLoading">Cancel</FluentButton>
-    </FluentDialogFooter>
-</EditForm>
+        <FluentNumberField TValue="decimal" @bind-Value="context.Price" Label="Price" Required="true" Style="width: 100%;" />
+        <FluentValidationMessage For="@(() => context.Price)" />
+    </ChildContent>
+</SmartCrudDialog>
 
 @code {
     [Parameter]
@@ -49,37 +30,16 @@
 
     private async Task SaveAsync(EditContext editContext)
     {
-        if (IsLoading) 
+        if (Content.Id == 0)
         {
-            return;
+            var createCommand = new CreateProductCommand(Content.Name, Content.Price);
+            var result = await SendAsync(createCommand, editContext, "Product created!");
+            if (result != null) await Dialog.CloseAsync(Content);
         }
-
-        try 
+        else
         {
-            editContext.ClearValidationMessages();
-            bool isValid = editContext.Validate();
-
-            if (!isValid) 
-            {
-                 editContext.NotifyValidationStateChanged();
-                 return;
-            }
-
-            if (Content.Id == 0)
-            {
-                var createCommand = new CreateProductCommand(Content.Name, Content.Price);
-                var result = await SendAsync(createCommand, editContext, "Product created!");
-                if (result != null) await Dialog.CloseAsync(Content);
-            }
-            else
-            {
-                var result = await SendAsync(Content, editContext, "Product updated!");
-                if (result != null) await Dialog.CloseAsync(Content);
-            }
-        }
-        catch (Exception ex)
-        {
-            ShowError(ex.Message);
+            var result = await SendAsync(Content, editContext, "Product updated!");
+            if (result != null) await Dialog.CloseAsync(Content);
         }
     }
 

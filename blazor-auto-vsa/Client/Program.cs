@@ -1,4 +1,5 @@
 using Client.Dispatching;
+using Client.Extensions;
 using FluentValidation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -21,13 +22,10 @@ namespace Client
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
 
-            // Register Smart Dispatcher for WebAssembly
-            builder.Services.AddSingleton<IRouteDefinition, Client.Features.Products.ProductRoutes>();
-            builder.Services.AddSingleton<IRequestEndpointMapper, RequestEndpointMapper>();
-            builder.Services.AddScoped<IRequestSender, HttpRequestSender>();
-
-            // Register FluentValidation validators from Shared (basic synchronous rules)
-            builder.Services.AddValidatorsFromAssembly(typeof(CreateProductCommandValidator).Assembly);
+            // Register Smart Framework (Dispatcher, Validators, Route Definitions)
+            builder.Services.AddSmartFramework(
+                typeof(Program).Assembly, 
+                typeof(CreateProductCommandValidator).Assembly);
 
             await builder.Build().RunAsync();
         }

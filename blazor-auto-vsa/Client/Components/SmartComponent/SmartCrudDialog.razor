@@ -1,0 +1,111 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Client.Extensions
+@typeparam TCommand where TCommand : class
+@inherits SmartComponentBase
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        @if (IsAddMode)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="@Color.Accent" />
+        }
+        else
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" Color="@Color.Accent" />
+        }
+        <FluentLabel Typo="Typography.PaneHeader">
+            @(IsAddMode ? AddTitle : EditTitle)
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<EditForm Model="@Content" OnSubmit="HandleSubmitAsync">
+    <FluentDialogBody>
+        <FluentValidationValidator />
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+            <ValidationSummary />
+            @ChildContent(Content)
+        </FluentStack>
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">
+            @SaveButtonText
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync" Disabled="@IsLoading">
+            @CancelButtonText
+        </FluentButton>
+    </FluentDialogFooter>
+</EditForm>
+
+@code {
+    /// <summary>
+    /// The command object being edited.
+    /// </summary>
+    [Parameter, EditorRequired] 
+    public TCommand Content { get; set; } = default!;
+
+    /// <summary>
+    /// The fields to display in the dialog body.
+    /// </summary>
+    [Parameter, EditorRequired] 
+    public RenderFragment<TCommand> ChildContent { get; set; } = default!;
+
+    /// <summary>
+    /// Title to show in Add mode.
+    /// </summary>
+    [Parameter] public string AddTitle { get; set; } = "Add";
+
+    /// <summary>
+    /// Title to show in Edit mode.
+    /// </summary>
+    [Parameter] public string EditTitle { get; set; } = "Edit";
+
+    /// <summary>
+    /// Text to show on the save button.
+    /// </summary>
+    [Parameter] public string SaveButtonText { get; set; } = "Save";
+
+    /// <summary>
+    /// Text to show on the cancel button.
+    /// </summary>
+    [Parameter] public string CancelButtonText { get; set; } = "Cancel";
+
+    /// <summary>
+    /// Determines if the dialog is in Add or Edit mode.
+    /// </summary>
+    [Parameter] public bool IsAddMode { get; set; }
+
+    /// <summary>
+    /// Event triggered when the form is submitted and valid.
+    /// </summary>
+    [Parameter] public EventCallback<EditContext> OnSave { get; set; }
+
+    /// <summary>
+    /// Event triggered when the cancel button is clicked.
+    /// </summary>
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task HandleSubmitAsync(EditContext editContext)
+    {
+        if (IsLoading) return;
+
+        // Clear previous validation messages
+        editContext.ClearValidationMessages();
+
+        // Perform client-side validation
+        if (!editContext.Validate())
+        {
+            editContext.NotifyValidationStateChanged();
+            return;
+        }
+
+        // Call the save handler
+        await OnSave.InvokeAsync(editContext);
+    }
+
+    private async Task HandleCancelAsync()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

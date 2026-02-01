@@ -22,23 +22,13 @@ namespace Server
                 .AddInteractiveWebAssemblyComponents();
             builder.Services.AddFluentUIComponents();
 
-            // Register FluentValidation validators from server assembly (with async rules)
-            builder.Services.AddValidatorsFromAssembly(typeof(CreateProductCommandServerValidator).Assembly);
-            
-            // Also register validators from Shared assembly
-            builder.Services.AddValidatorsFromAssembly(typeof(Shared.Features.Products.Create.CreateProductCommandValidator).Assembly);
-
-            // Register request pipeline with validation behavior
-            builder.Services.AddRequestPipeline();
+            // Register Smart Framework (Handlers, Validators, Pipeline, Dispatcher)
+            builder.Services.AddSmartFramework(
+                typeof(Program).Assembly, 
+                typeof(Shared.Features.Products.Create.CreateProductCommandValidator).Assembly);
 
             // Register database context, unit of work, and AutoMapper
             builder.Services.AddApplicationDbContext(builder.Configuration, typeof(ProductMappingProfile).Assembly);
-
-            // Register Smart Dispatcher for SSR/Prerendering
-            builder.Services.AddScoped<IRequestSender, LocalRequestSender>();
-
-            // Register all handlers from the assembly
-            builder.Services.AddHandlersFromAssembly(typeof(GetProductHandler).Assembly);
 
             var app = builder.Build();
 
@@ -73,7 +63,7 @@ namespace Server
                 .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
 
             // Map API endpoints for WebAssembly client
-            app.MapApiEndpoints(typeof(Server.Features.Products.Create.CreateProductEndpoint).Assembly);
+            app.MapSmartEndpoints(typeof(Program).Assembly);
 
             app.Run();
         }
