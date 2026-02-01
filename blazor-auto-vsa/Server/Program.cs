@@ -24,6 +24,9 @@ namespace Server
 
             // Register FluentValidation validators from server assembly (with async rules)
             builder.Services.AddValidatorsFromAssembly(typeof(CreateProductCommandServerValidator).Assembly);
+            
+            // Also register validators from Shared assembly
+            builder.Services.AddValidatorsFromAssembly(typeof(Shared.Features.Products.Create.CreateProductCommandValidator).Assembly);
 
             // Register request pipeline with validation behavior
             builder.Services.AddRequestPipeline();

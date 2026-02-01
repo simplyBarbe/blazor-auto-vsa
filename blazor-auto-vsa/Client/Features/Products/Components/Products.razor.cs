@@ -37,9 +37,7 @@ public partial class Products : SmartComponentBase
 
     private async Task OnAddProductAsync()
     {
-        Console.WriteLine("prod 1");
         if (IsLoading) return;
-        Console.WriteLine("prod 2");
 
         var command = new UpdateProductCommand();
         var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters

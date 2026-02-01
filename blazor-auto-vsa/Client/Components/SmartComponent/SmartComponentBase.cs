@@ -25,7 +25,6 @@ public abstract class SmartComponentBase : ComponentBase
             if (_isLoading != value)
             {
                 _isLoading = value;
-                Console.WriteLine($"IsLoading changed to: {_isLoading}");
                 InvokeAsync(StateHasChanged);
             }
         }
@@ -41,24 +40,19 @@ public abstract class SmartComponentBase : ComponentBase
         string? successMessage = null,
         CancellationToken ct = default)
     {
-        Console.WriteLine($"SendAsync called for {request.GetType().Name}. IsLoading: {IsLoading}");
         if (IsLoading) return default;
         
         IsLoading = true;
-        Console.WriteLine("IsLoading set to true");
         
         try
         {
             if (editContext != null)
             {
-                Console.WriteLine("Clearing validation messages in SendAsync");
                 editContext.ClearValidationMessages();
                 editContext.NotifyValidationStateChanged();
             }
 
-            Console.WriteLine("Sending request via RequestSender");
             var result = await RequestSender.Send(request, ct);
-            Console.WriteLine("Request completed successfully");
             
             if (successMessage != null)
             {
@@ -69,15 +63,12 @@ public abstract class SmartComponentBase : ComponentBase
         }
         catch (ValidationException ex)
         {
-            Console.WriteLine($"ValidationException caught in SendAsync with {ex.Errors.Count} errors");
             if (editContext != null)
             {
-                Console.WriteLine("Adding validation errors to EditContext");
                 editContext.AddValidationErrors(ex.Errors);
             }
             else
             {
-                Console.WriteLine("Showing validation errors as toasts");
                 foreach (var error in ex.Errors)
                 {
                     ToastService.ShowError(error.ErrorMessage);
@@ -87,14 +78,12 @@ public abstract class SmartComponentBase : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Generic Exception caught in SendAsync: {ex.Message}");
             ToastService.ShowError(ex.Message);
             return default;
         }
         finally
         {
             IsLoading = false;
-            Console.WriteLine("IsLoading set to false in finally");
         }
     }
 

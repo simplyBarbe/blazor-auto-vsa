@@ -49,53 +49,37 @@
 
     private async Task SaveAsync(EditContext editContext)
     {
-        Console.WriteLine($"[ProductDialog] SaveAsync triggered START. IsLoading: {IsLoading}");
-        
         if (IsLoading) 
         {
-            Console.WriteLine("[ProductDialog] SaveAsync BLOCKED: IsLoading is true");
             return;
         }
 
         try 
         {
-            Console.WriteLine("[ProductDialog] Validating...");
             editContext.ClearValidationMessages();
             bool isValid = editContext.Validate();
-            Console.WriteLine($"[ProductDialog] IsValid: {isValid}");
 
             if (!isValid) 
             {
-                 Console.WriteLine("[ProductDialog] Validation failed. Errors:");
-                 foreach (var message in editContext.GetValidationMessages())
-                 {
-                     Console.WriteLine($"[ProductDialog] - {message}");
-                 }
                  editContext.NotifyValidationStateChanged();
                  return;
             }
 
             if (Content.Id == 0)
             {
-                Console.WriteLine("[ProductDialog] Creating...");
                 var createCommand = new CreateProductCommand(Content.Name, Content.Price);
                 var result = await SendAsync(createCommand, editContext, "Product created!");
                 if (result != null) await Dialog.CloseAsync(Content);
             }
             else
             {
-                Console.WriteLine("[ProductDialog] Updating...");
                 var result = await SendAsync(Content, editContext, "Product updated!");
                 if (result != null) await Dialog.CloseAsync(Content);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[ProductDialog] FATAL ERROR: {ex}");
-        }
-        finally
-        {
-            Console.WriteLine($"[ProductDialog] SaveAsync FINISHED. IsLoading: {IsLoading}");
+            ShowError(ex.Message);
         }
     }
 

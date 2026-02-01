@@ -15,18 +15,12 @@ public static class EditContextValidationExtensions
     /// </summary>
     internal static ValidationMessageStore GetMessageStore(this EditContext editContext)
     {
-        Console.WriteLine($"GetMessageStore for EditContext (Model: {editContext.Model.GetType().Name})");
         lock (_messageStores)
         {
             if (!_messageStores.TryGetValue(editContext, out var store))
             {
-                Console.WriteLine("Creating NEW ValidationMessageStore");
                 store = new ValidationMessageStore(editContext);
                 _messageStores.Add(editContext, store);
-            }
-            else
-            {
-                Console.WriteLine("Reusing EXISTING ValidationMessageStore");
             }
 
             return store;
@@ -38,12 +32,10 @@ public static class EditContextValidationExtensions
     /// </summary>
     public static void AddValidationErrors(this EditContext editContext, List<ValidationError> errors)
     {
-        Console.WriteLine($"AddValidationErrors called with {errors.Count} errors");
         var messages = GetMessageStore(editContext);
         
         foreach (var error in errors)
         {
-            Console.WriteLine($"Server error: {error.PropertyName} - {error.ErrorMessage}");
             if (!string.IsNullOrEmpty(error.PropertyName))
             {
                 var fieldIdentifier = new FieldIdentifier(editContext.Model, error.PropertyName);
@@ -64,7 +56,6 @@ public static class EditContextValidationExtensions
     /// </summary>
     public static void ClearValidationMessages(this EditContext editContext)
     {
-        Console.WriteLine("ClearValidationMessages called");
         var messages = GetMessageStore(editContext);
         messages.Clear();
         editContext.NotifyValidationStateChanged();
