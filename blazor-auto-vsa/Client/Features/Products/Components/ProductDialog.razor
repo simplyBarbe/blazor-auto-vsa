@@ -1,0 +1,106 @@
+﻿@using Shared.Features.Products.Update
+@using Shared.Features.Products.Create
+@using Client.Components.SmartComponent
+@using Client.Extensions
+@inherits SmartComponentBase
+@implements IDialogContentComponent<UpdateProductCommand>
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        @if (Content.Id == 0)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="@Color.Accent" />
+        }
+        else
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" Color="@Color.Accent" />
+        }
+        <FluentLabel Typo="Typography.PaneHeader">
+            @(Content.Id == 0 ? "Add Product" : "Edit Product")
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<EditForm Model="@Content" id="product-form" OnSubmit="SaveAsync">
+    <FluentDialogBody>
+        <FluentValidationValidator />
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+            <ValidationSummary />
+            <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;" />
+            <FluentValidationMessage For="@(() => Content.Name)" />
+
+            <FluentNumberField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true" Style="width: 100%;" />
+            <FluentValidationMessage For="@(() => Content.Price)" />
+        </FluentStack>
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">Save</FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="CancelAsync" Disabled="@IsLoading">Cancel</FluentButton>
+    </FluentDialogFooter>
+</EditForm>
+
+@code {
+    [Parameter]
+    public UpdateProductCommand Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private async Task SaveAsync(EditContext editContext)
+    {
+        Console.WriteLine($"[ProductDialog] SaveAsync triggered START. IsLoading: {IsLoading}");
+        
+        if (IsLoading) 
+        {
+            Console.WriteLine("[ProductDialog] SaveAsync BLOCKED: IsLoading is true");
+            return;
+        }
+
+        try 
+        {
+            Console.WriteLine("[ProductDialog] Validating...");
+            editContext.ClearValidationMessages();
+            bool isValid = editContext.Validate();
+            Console.WriteLine($"[ProductDialog] IsValid: {isValid}");
+
+            if (!isValid) 
+            {
+                 Console.WriteLine("[ProductDialog] Validation failed. Errors:");
+                 foreach (var message in editContext.GetValidationMessages())
+                 {
+                     Console.WriteLine($"[ProductDialog] - {message}");
+                 }
+                 editContext.NotifyValidationStateChanged();
+                 return;
+            }
+
+            if (Content.Id == 0)
+            {
+                Console.WriteLine("[ProductDialog] Creating...");
+                var createCommand = new CreateProductCommand(Content.Name, Content.Price);
+                var result = await SendAsync(createCommand, editContext, "Product created!");
+                if (result != null) await Dialog.CloseAsync(Content);
+            }
+            else
+            {
+                Console.WriteLine("[ProductDialog] Updating...");
+                var result = await SendAsync(Content, editContext, "Product updated!");
+                if (result != null) await Dialog.CloseAsync(Content);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ProductDialog] FATAL ERROR: {ex}");
+        }
+        finally
+        {
+            Console.WriteLine($"[ProductDialog] SaveAsync FINISHED. IsLoading: {IsLoading}");
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+}

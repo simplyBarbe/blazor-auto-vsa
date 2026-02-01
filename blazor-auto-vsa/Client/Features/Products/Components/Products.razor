@@ -1,14 +1,8 @@
 @page "/products"
 @using Client.Components.SmartComponent
 @inherits SmartComponentBase
-@using Shared.Core
 @using Shared.Features.Products.Responses
-@using Shared.Features.Products.Create
-@using Shared.Features.Products.Get
-@using Shared.Core.Validation
-@using Client.Components
-@using Client.Extensions
-@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.FluentUI.AspNetCore.Components
 
 <PageTitle>Products - Smart Dispatcher Demo</PageTitle>
 
@@ -43,187 +37,41 @@
         </FluentBadge>
     </FluentStack>
 
-    @* Main Panels Container *@
-    <FluentStack Orientation="Orientation.Horizontal" Wrap="true" HorizontalGap="20" VerticalGap="20">
-        
-        @* Create Product Panel *@
-        <FluentCard Style="flex: 1; min-width: 350px;">
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                
-                @* Panel Header *@
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                    <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="Color.Accent" />
-                    <FluentLabel Typo="Typography.H5">Create Product</FluentLabel>
-                </FluentStack>
-                
-                <FluentDivider Style="width: 100%;" />
-                
-                @* Create Form with FluentValidation *@
-                <EditForm EditContext="@editContext" OnValidSubmit="CreateProduct" FormName="createProduct">
-                    <FluentValidationValidator />
-                    
-                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                        @* Name Field with Validation *@
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
-                            <FluentTextField @bind-Value="newProduct.Name" 
-                                             Name="productName"
-                                             Label="Product Name" 
-                                             Placeholder="Enter product name..."
-                                             Style="width: 100%;" />
-                            <FluentValidationMessage For="@(() => newProduct.Name)" />
-                        </FluentStack>
-                        
-                        @* Price Field with Validation *@
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
-                            <FluentNumberField @bind-Value="newProduct.Price" 
-                                               Name="productPrice"
-                                               Label="Price (€)" 
-                                               Placeholder="0.00"
-                                               Step="0.01"
-                                               Style="width: 100%;" />
-                            <FluentValidationMessage For="@(() => newProduct.Price)" />
-                        </FluentStack>
-                        
-                        @* Validation Summary *@
-                        <FluentValidationSummary />
-                        
-                        <FluentButton Type="ButtonType.Submit" 
-                                      Appearance="Appearance.Accent"
-                                      Loading="@IsLoading"
-                                      Disabled="@(!isFormValid || IsLoading)"
-                                      Style="width: 100%;">
-                            <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" />
-                            Create Product
-                        </FluentButton>
-                    </FluentStack>
-                </EditForm>
-
-                @* Create Result *@
-                @if (createResult is not null)
-                {
-                    <FluentMessageBar Title="Product Created!" 
-                                      Intent="MessageIntent.Success" 
-                                      AllowDismiss="true"
-                                      OnDismissClick="@(() => createResult = null)">
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
-                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
-                                <FluentLabel Weight="FontWeight.Bold">Response via:</FluentLabel>
-                                <FluentBadge Appearance="@(createResultMode == "client" ? Appearance.Accent : Appearance.Neutral)">
-                                    @(createResultMode == "client" ? "HTTP API" : "SSR Direct")
-                                </FluentBadge>
-                            </FluentStack>
-                            <FluentLabel><strong>ID:</strong> @createResult.Id</FluentLabel>
-                            <FluentLabel><strong>Name:</strong> @createResult.Name</FluentLabel>
-                            <FluentLabel><strong>Price:</strong> €@createResult.Price.ToString("F2")</FluentLabel>
-                        </FluentStack>
-                    </FluentMessageBar>
-                }
+    @* Products Grid *@
+    <FluentCard>
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
+                <FluentButton Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" />
+                    Add Product
+                </FluentButton>
             </FluentStack>
-        </FluentCard>
 
-        @* Get Product Panel *@
-        <FluentCard Style="flex: 1; min-width: 350px;">
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                
-                @* Panel Header *@
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                    <FluentIcon Value="@(new Icons.Regular.Size24.Search())" Color="Color.Accent" />
-                    <FluentLabel Typo="Typography.H5">Get Product</FluentLabel>
+            @if (products == null)
+            {
+                <FluentStack HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center" Style="height: 200px;">
+                    <FluentProgressRing />
                 </FluentStack>
-                
-                <FluentDivider Style="width: 100%;" />
-                
-                @* Search Form *@
-                <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                    <FluentNumberField @bind-Value="searchId" 
-                                       Label="Product ID" 
-                                       Placeholder="Enter ID..."
-                                       Min="1"
-                                       Style="width: 100%;" />
-                    
-                    <FluentButton Appearance="Appearance.Accent"
-                                  Loading="@IsLoading"
-                                  OnClick="SearchProduct"
-                                  Disabled="@(searchId < 1 || IsLoading)"
-                                  Style="width: 100%;">
-                        <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Slot="start" />
-                        Search
-                    </FluentButton>
-                </FluentStack>
-
-                @* Search Result *@
-                @if (searchResult is not null)
-                {
-                    <FluentMessageBar Title="Product Found" 
-                                      Intent="MessageIntent.Info" 
-                                      AllowDismiss="true"
-                                      OnDismissClick="@(() => searchResult = null)">
-                        <FluentStack Orientation="Orientation.Vertical" VerticalGap="4">
-                            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" VerticalAlignment="VerticalAlignment.Center">
-                                <FluentLabel Weight="FontWeight.Bold">Response via:</FluentLabel>
-                                <FluentBadge Appearance="@(searchResultMode == "client" ? Appearance.Accent : Appearance.Neutral)">
-                                    @(searchResultMode == "client" ? "HTTP API" : "SSR Direct")
-                                </FluentBadge>
-                            </FluentStack>
-                            <FluentLabel><strong>ID:</strong> @searchResult.Id</FluentLabel>
-                            <FluentLabel><strong>Name:</strong> @searchResult.Name</FluentLabel>
-                            <FluentLabel><strong>Price:</strong> €@searchResult.Price.ToString("F2")</FluentLabel>
+            }
+            else
+            {
+                <FluentDataGrid Items="@products" ResizableColumns="true" TGridItem="ProductResponse" GridTemplateColumns="1fr 2fr 1fr 1fr">
+                    <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID" />
+                    <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
+                    <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2" />
+                    <TemplateColumn Title="Actions" Align="Align.End">
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" HorizontalAlignment="HorizontalAlignment.Right">
+                            <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnEditProductAsync(context))" Disabled="@IsLoading">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent" />
+                            </FluentButton>
+                            <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteProductAsync(context))" Disabled="@IsLoading">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error" />
+                            </FluentButton>
                         </FluentStack>
-                    </FluentMessageBar>
-                }
-            </FluentStack>
-        </FluentCard>
-    </FluentStack>
+                    </TemplateColumn>
+                </FluentDataGrid>
+            }
+        </FluentStack>
+    </FluentCard>
 
-    @* Request History Panel *@
-    @if (requestHistory.Count > 0)
-    {
-        <FluentCard>
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
-                
-                @* Panel Header *@
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                    <FluentIcon Value="@(new Icons.Regular.Size24.History())" Color="Color.Accent" />
-                    <FluentLabel Typo="Typography.H5">Request History</FluentLabel>
-                    <FluentSpacer />
-                    <FluentButton Appearance="Appearance.Lightweight" OnClick="ClearHistory">
-                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Slot="start" />
-                        Clear
-                    </FluentButton>
-                </FluentStack>
-                
-                <FluentDivider Style="width: 100%;" />
-                
-                @* History List *@
-                <FluentStack Orientation="Orientation.Vertical" VerticalGap="8" Style="max-height: 300px; overflow-y: auto;">
-                    @foreach (var entry in requestHistory.AsEnumerable().Reverse())
-                    {
-                        <FluentCard>
-                            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12">
-                                @if (entry.Mode == "client")
-                                {
-                                    <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Accent" />
-                                }
-                                else
-                                {
-                                    <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Success" />
-                                }
-                                
-                                <FluentStack Orientation="Orientation.Vertical" VerticalGap="2" Style="flex: 1;">
-                                    <FluentLabel Weight="FontWeight.Bold">@entry.Action</FluentLabel>
-                                    <FluentLabel Typo="Typography.Body" Color="Color.Lightweight">
-                                        @entry.Timestamp.ToString("HH:mm:ss")
-                                    </FluentLabel>
-                                </FluentStack>
-                                
-                                <FluentBadge Appearance="@(entry.Mode == "client" ? Appearance.Accent : Appearance.Neutral)">
-                                    @(entry.Mode == "client" ? "HTTP" : "Direct")
-                                </FluentBadge>
-                            </FluentStack>
-                        </FluentCard>
-                    }
-                </FluentStack>
-            </FluentStack>
-        </FluentCard>
-    }
 </FluentStack>

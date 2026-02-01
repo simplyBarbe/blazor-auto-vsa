@@ -26,10 +26,13 @@ public class ListProductHandler : ListEntityHandlerBase<Product, ListProductQuer
     /// <inheritdoc />
     protected override QueryFilter<Product> BuildQueryFilter(ListProductQuery query)
     {
+        var pageNumber = query.PageNumber ?? 1;
+        var pageSize = query.PageSize ?? 10;
+
         var filter = new QueryFilter<Product>
         {
-            Skip = (query.PageNumber - 1) * query.PageSize,
-            Take = query.PageSize,
+            Skip = (pageNumber - 1) * pageSize,
+            Take = pageSize,
             OrderBy = new List<SortExpression<Product>>
             {
                 new(p => p.Name, SortDirection.Ascending)

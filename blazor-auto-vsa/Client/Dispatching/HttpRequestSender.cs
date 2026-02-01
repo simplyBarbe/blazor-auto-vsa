@@ -65,6 +65,7 @@ public class HttpRequestSender : IRequestSender
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            Console.WriteLine($"Server returned BadRequest: {content}");
 
             try
             {
@@ -72,6 +73,7 @@ public class HttpRequestSender : IRequestSender
 
                 if (validationErrors?.Errors != null && validationErrors.Errors.Any())
                 {
+                    Console.WriteLine($"Throwing ValidationException with {validationErrors.Errors.Count} errors");
                     throw new ValidationException(validationErrors.Errors);
                 }
             }

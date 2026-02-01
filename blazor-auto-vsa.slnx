@@ -1,10 +1,11 @@
 <Solution>
-  <Project Path="docker-compose.dcproj">
-    <Build />
-  </Project>
-  <Folder Name="/blazor-auto-vsa/" />
-  <Project Path="blazor-auto-vsa/Client/Client.csproj" />
-  <Project Path="blazor-auto-vsa/Server/Server.csproj" />
-  <Project Path="blazor-auto-vsa/Shared/Shared.csproj" />
+  <Folder Name="/blazor-auto-vsa/">
+    <Project Path="blazor-auto-vsa/Client/Client.csproj" />
+    <Project Path="blazor-auto-vsa/Server/Server.csproj" />
+    <Project Path="blazor-auto-vsa/Shared/Shared.csproj" />
+    <Project Path="docker-compose.dcproj">
+      <Build />
+    </Project>
+  </Folder>
   <Project Path="Server.Tests/Server.Tests.csproj" />
 </Solution>

@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.FluentUI.AspNetCore.Components;
 using Shared.Core;
 using Shared.Features.Products.Responses;
 using Shared.Features.Products.Create;
+using Shared.Features.Products.Update;
+using Shared.Features.Products.Delete;
+using Shared.Features.Products.List;
 using Shared.Features.Products.Get;
 using Shared.Core.Validation;
 using Client.Extensions;
@@ -15,95 +19,75 @@ public partial class Products : SmartComponentBase
 {
     private bool IsBrowser => OperatingSystem.IsBrowser();
     
-    // Create product state - use CreateProductCommand directly
-    private CreateProductCommand newProduct = new();
-    private EditContext editContext = null!;
-    private bool isFormValid = false;
-    private ProductResponse? createResult;
-    private string? createResultMode;
-    
-    // Search product state
-    private int searchId = 1;
-    private ProductResponse? searchResult;
-    private string? searchResultMode;
-    
-    // Request history
-    private List<HistoryEntry> requestHistory = new();
-
-    protected override void OnInitialized()
-    {
-        newProduct = new CreateProductCommand { Price = 9.99m };
-        editContext = new EditContext(newProduct);
-        
-        // Track validation state changes without calling Validate() to avoid loops
-        editContext.OnValidationStateChanged += (sender, e) =>
-        {
-            // Check if form is valid by checking if there are any validation messages
-            isFormValid = !editContext.GetValidationMessages().Any();
-            InvokeAsync(StateHasChanged);
-        };
-        
-        // Initial validation state
-        isFormValid = !editContext.GetValidationMessages().Any();
-    }
+    private IQueryable<ProductResponse>? products;
 
     protected override async Task OnInitializedAsync()
     {
-        // Auto-load product with ID 1 on page load
-        await SearchProduct();
+        await LoadProductsAsync();
     }
 
-    private async Task CreateProduct()
+    private async Task LoadProductsAsync()
     {
-        createResult = await SendAsync(newProduct, editContext, "Product created!");
-        
-        if (createResult != null)
+        var result = await SendAsync(new ListProductQuery { PageSize = 100 });
+        if (result != null)
         {
-            createResultMode = IsBrowser ? "client" : "server";
-            
-            requestHistory.Add(new HistoryEntry(
-                $"Created: {createResult.Name} (ID: {createResult.Id})",
-                createResultMode,
-                DateTime.Now
-            ));
-            
-            // Reset form and EditContext
-            newProduct = new CreateProductCommand { Price = 9m };
-            editContext = new EditContext(newProduct);
-            
-            // Re-attach validation state tracking
-            editContext.OnValidationStateChanged += (sender, e) =>
-            {
-                isFormValid = !editContext.GetValidationMessages().Any();
-                InvokeAsync(StateHasChanged);
-            };
-            
-            isFormValid = !editContext.GetValidationMessages().Any();
+            products = result.Items.AsQueryable();
         }
     }
 
-    private async Task SearchProduct()
+    private async Task OnAddProductAsync()
     {
-        if (searchId < 1) return;
-        
-        searchResult = await SendAsync(new GetProductQuery(searchId));
-        
-        if (searchResult != null)
+        Console.WriteLine("prod 1");
+        if (IsLoading) return;
+        Console.WriteLine("prod 2");
+
+        var command = new UpdateProductCommand();
+        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
         {
-            searchResultMode = IsBrowser ? "client" : "server";
-            
-            requestHistory.Add(new HistoryEntry(
-                $"Fetched: {searchResult.Name} (ID: {searchResult.Id})",
-                searchResultMode,
-                DateTime.Now
-            ));
+            Title = "Add Product",
+            Width = "400px",
+            TrapFocus = true,
+            Modal = true,
+            PreventScroll = true
+        });
+
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadProductsAsync();
         }
     }
 
-    private void ClearHistory()
+    private async Task OnEditProductAsync(ProductResponse product)
     {
-        requestHistory.Clear();
+        if (IsLoading) return;
+
+        var command = new UpdateProductCommand(product.Id, product.Name, product.Price);
+        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
+        {
+            Title = "Edit Product",
+            Width = "400px",
+            TrapFocus = true,
+            Modal = true,
+            PreventScroll = true
+        });
+
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadProductsAsync();
+        }
     }
 
-    private record HistoryEntry(string Action, string Mode, DateTime Timestamp);
+    private async Task OnDeleteProductAsync(ProductResponse product)
+    {
+        if (IsLoading) return;
+
+        var confirmed = await ConfirmAsync($"Are you sure you want to delete {product.Name}?");
+        if (confirmed)
+        {
+            await SendAsync(new DeleteProductCommand(product.Id), successMessage: "Product deleted!");
+            await LoadProductsAsync();
+        }
+    }
 }
