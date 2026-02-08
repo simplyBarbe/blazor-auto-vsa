@@ -31,16 +31,29 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
         }
 
         var url = mapping.Template;
+        var unusedProperties = new Dictionary<string, string>();
         
         // Simple logic to replace placeholders like {Id} with property values from the request
         foreach (var prop in type.GetProperties())
         {
+            var value = prop.GetValue(request)?.ToString();
+            if (value == null) continue;
+
             var placeholder = $"{{{prop.Name}}}";
             if (url.Contains(placeholder, StringComparison.OrdinalIgnoreCase))
             {
-                var value = prop.GetValue(request)?.ToString();
-                url = url.Replace(placeholder, Uri.EscapeDataString(value ?? string.Empty), StringComparison.OrdinalIgnoreCase);
+                url = url.Replace(placeholder, Uri.EscapeDataString(value), StringComparison.OrdinalIgnoreCase);
             }
+            else
+            {
+                unusedProperties[prop.Name] = value;
+            }
+        }
+
+        if (mapping.Method == HttpMethod.Get && unusedProperties.Any())
+        {
+            var queryString = string.Join("&", unusedProperties.Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
+            url = url.Contains('?') ? $"{url}&{queryString}" : $"{url}?{queryString}";
         }
 
         return (url, mapping.Method);

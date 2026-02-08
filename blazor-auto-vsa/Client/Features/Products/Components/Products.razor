@@ -54,9 +54,9 @@
                     <FluentProgressRing />
                 </FluentStack>
             }
-            else
-            {
-                <FluentDataGrid Items="@Items" ResizableColumns="true" TGridItem="ProductResponse" GridTemplateColumns="1fr 2fr 1fr 1fr">
+            
+            <div hidden="@(Items == null)">
+                <FluentDataGrid @ref="_grid" ItemsProvider="@ProductProvider" Pagination="@_pagination" ResizableColumns="true" TGridItem="ProductResponse" GridTemplateColumns="1fr 2fr 1fr 1fr">
                     <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID" />
                     <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
                     <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2" />
@@ -71,7 +71,9 @@
                         </FluentStack>
                     </TemplateColumn>
                 </FluentDataGrid>
-            }
+
+                <FluentPaginator State="@_pagination" />
+            </div>
         </FluentStack>
     </FluentCard>
 

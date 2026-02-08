@@ -17,10 +17,48 @@ namespace Client.Features.Products.Components;
 
 public partial class Products : SmartListBase<ProductResponse, ListProductQuery>
 {
-    protected override async Task OnInitializedAsync()
+    private readonly PaginationState _pagination = new() { ItemsPerPage = 3 };
+    private FluentDataGrid<ProductResponse>? _grid;
+
+    protected override async Task LoadDataAsync()
     {
-        Query.PageSize = 100;
-        await base.OnInitializedAsync();
+        if (_grid != null)
+        {
+            await _grid.RefreshDataAsync();
+        }
+        else
+        {
+            await base.LoadDataAsync();
+        }
+    }
+
+    protected async Task<TResponse?> SendWithoutLoadingAsync<TResponse>(IRequest<TResponse> request)
+    {
+        try
+        {
+            return await RequestSender.Send(request);
+        }
+        catch (Exception ex)
+        {
+            ToastService.ShowError(ex.Message);
+            return default;
+        }
+    }
+
+    private async ValueTask<GridItemsProviderResult<ProductResponse>> ProductProvider(GridItemsProviderRequest<ProductResponse> request)
+    {
+        Query.PageNumber = (request.StartIndex / (request.Count ?? _pagination.ItemsPerPage)) + 1;
+        Query.PageSize = request.Count ?? _pagination.ItemsPerPage;
+
+        var result = await SendWithoutLoadingAsync(Query);
+
+        if (result == null)
+        {
+            return GridItemsProviderResult.From(new List<ProductResponse>(), TotalCount);
+        }
+
+        Items = result.Items.AsQueryable();
+        return GridItemsProviderResult.From(result.Items.ToList(), result.TotalCount);
     }
 
     private async Task LoadProductsAsync() => await LoadDataAsync();

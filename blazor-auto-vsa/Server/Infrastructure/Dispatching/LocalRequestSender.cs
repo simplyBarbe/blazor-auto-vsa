@@ -9,24 +9,27 @@ namespace Server.Infrastructure.Dispatching;
 /// </summary>
 public class LocalRequestSender : IRequestSender
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public LocalRequestSender(IServiceProvider serviceProvider)
+    public LocalRequestSender(IServiceScopeFactory scopeFactory)
     {
-        _serviceProvider = serviceProvider;
+        _scopeFactory = scopeFactory;
     }
 
     public async Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
+        using var scope = _scopeFactory.CreateScope();
+        var serviceProvider = scope.ServiceProvider;
+        
         var requestType = request.GetType();
         var responseType = typeof(TResponse);
 
         // Get all pipeline behaviors for this request/response type
         var behaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
-        var behaviors = _serviceProvider.GetServices(behaviorType).Cast<object>().ToList();
+        var behaviors = serviceProvider.GetServices(behaviorType).Cast<object>().ToList();
 
         // Build the final handler delegate
-        RequestHandlerDelegate<TResponse> handler = () => ExecuteHandler<TResponse>(request, cancellationToken);
+        RequestHandlerDelegate<TResponse> handler = () => ExecuteHandler<TResponse>(serviceProvider, request, cancellationToken);
 
         // Build the pipeline by wrapping behaviors from last to first
         foreach (var behavior in behaviors.AsEnumerable().Reverse())
@@ -46,12 +49,12 @@ public class LocalRequestSender : IRequestSender
         return await handler();
     }
 
-    private async Task<TResponse> ExecuteHandler<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken)
+    private async Task<TResponse> ExecuteHandler<TResponse>(IServiceProvider serviceProvider, IRequest<TResponse> request, CancellationToken cancellationToken)
     {
         var requestType = request.GetType();
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
 
-        var handler = _serviceProvider.GetRequiredService(handlerType);
+        var handler = serviceProvider.GetRequiredService(handlerType);
 
         var method = handlerType.GetMethod("Handle")
             ?? throw new InvalidOperationException($"Handle method not found on {handlerType.Name}");

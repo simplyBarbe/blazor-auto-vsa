@@ -14,7 +14,7 @@ public abstract class SmartListBase<TResponse, TQuery> : SmartComponentBase
     /// <summary>
     /// The current set of items to display.
     /// </summary>
-    protected IQueryable<TResponse>? Items { get; private set; }
+    protected IQueryable<TResponse>? Items { get; set; }
 
     /// <summary>
     /// The query used for data loading, including pagination and filtering parameters.
