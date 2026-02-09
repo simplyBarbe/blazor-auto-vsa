@@ -1,5 +1,7 @@
 ﻿using Shared.Core;
+using Microsoft.FluentUI.AspNetCore.Components;
 using System.Linq;
+using Shared.Core.CRUD;
 
 namespace Client.Components.SmartComponent;
 
@@ -9,8 +11,18 @@ namespace Client.Components.SmartComponent;
 /// <typeparam name="TResponse">The type of items in the list.</typeparam>
 /// <typeparam name="TQuery">The type of the query used to fetch data.</typeparam>
 public abstract class SmartListBase<TResponse, TQuery> : SmartComponentBase
-    where TQuery : IRequest<PagedResult<TResponse>>, new()
+    where TQuery : IRequest<PagedResult<TResponse>>, IPageableQuery, new()
 {
+    /// <summary>
+    /// Default page size for list views.
+    /// </summary>
+    protected virtual int ItemsPerPage => 10;
+
+    /// <summary>
+    /// Pagination state for data grids.
+    /// </summary>
+    protected PaginationState Pagination { get; } = new();
+
     /// <summary>
     /// The current set of items to display.
     /// </summary>
@@ -28,6 +40,8 @@ public abstract class SmartListBase<TResponse, TQuery> : SmartComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        Pagination.ItemsPerPage = ItemsPerPage;
+
         await LoadDataAsync();
     }
 
@@ -45,7 +59,31 @@ public abstract class SmartListBase<TResponse, TQuery> : SmartComponentBase
     }
 
     /// <summary>
-    /// Helper to determine if we are running in the browser (WebAssembly).
+    /// Shared items provider for data grids with paging.
     /// </summary>
-    protected bool IsBrowser => OperatingSystem.IsBrowser();
+    protected async ValueTask<GridItemsProviderResult<TResponse>> ProvideItemsAsync(
+        GridItemsProviderRequest<TResponse> request)
+    {
+        var pageSize = request.Count.GetValueOrDefault(Pagination.ItemsPerPage);
+        if (pageSize <= 0)
+        {
+            pageSize = Pagination.ItemsPerPage;
+        }
+
+        var startIndex = Math.Max(0, request.StartIndex);
+        Query.PageNumber = (startIndex / pageSize) + 1;
+        Query.PageSize = pageSize;
+
+        var result = await SendAsync(Query, options: new RequestOptions(TrackLoading: false));
+
+        if (result == null)
+        {
+            return GridItemsProviderResult.From(Array.Empty<TResponse>(), TotalCount);
+        }
+
+        var items = result.Items?.ToList() ?? new List<TResponse>();
+        Items = items.AsQueryable();
+        TotalCount = result.TotalCount;
+        return GridItemsProviderResult.From(items, result.TotalCount);
+    }
 }

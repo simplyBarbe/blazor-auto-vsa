@@ -5,40 +5,39 @@
 @inherits SmartComponentBase
 @implements IDialogContentComponent<UpdateProductCommand>
 
-<SmartCrudDialog TCommand="UpdateProductCommand" 
-                 Content="@Content" 
+<SmartCrudDialog TCommand="UpdateProductCommand"
+                 Content="@Content"
                  IsAddMode="@(Content.Id == 0)"
                  AddTitle="Add Product"
                  EditTitle="Edit Product"
                  OnSave="SaveAsync"
                  OnCancel="CancelAsync">
     <ChildContent>
-        <FluentTextField @bind-Value="context.Name" Label="Name" Required="true" Style="width: 100%;" />
-        <FluentValidationMessage For="@(() => context.Name)" />
+        <FluentTextField @bind-Value="context.Name" Label="Name" Required="true" Style="width: 100%;"/>
+        <FluentValidationMessage For="@(() => context.Name)"/>
 
-        <FluentNumberField TValue="decimal" @bind-Value="context.Price" Label="Price" Required="true" Style="width: 100%;" />
-        <FluentValidationMessage For="@(() => context.Price)" />
+        <FluentNumberField TValue="decimal" @bind-Value="context.Price" Label="Price" Required="true"
+                           Style="width: 100%;"/>
+        <FluentValidationMessage For="@(() => context.Price)"/>
     </ChildContent>
 </SmartCrudDialog>
 
 @code {
-    [Parameter]
-    public UpdateProductCommand Content { get; set; } = default!;
+    [Parameter] public UpdateProductCommand Content { get; set; } = default!;
 
-    [CascadingParameter]
-    public FluentDialog Dialog { get; set; } = default!;
+    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
 
     private async Task SaveAsync(EditContext editContext)
     {
         if (Content.Id == 0)
         {
             var createCommand = new CreateProductCommand(Content.Name, Content.Price);
-            var result = await SendAsync(createCommand, editContext, "Product created!");
+            var result = await SendAsync(createCommand, editContext, new RequestOptions(SuccessMessage: "Product created!"));
             if (result != null) await Dialog.CloseAsync(Content);
         }
         else
         {
-            var result = await SendAsync(Content, editContext, "Product updated!");
+            var result = await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product created!"));
             if (result != null) await Dialog.CloseAsync(Content);
         }
     }
@@ -47,4 +46,5 @@
     {
         await Dialog.CancelAsync();
     }
+
 }

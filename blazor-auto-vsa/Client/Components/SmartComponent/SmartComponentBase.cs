@@ -12,6 +12,8 @@ namespace Client.Components.SmartComponent;
 /// </summary>
 public abstract class SmartComponentBase : ComponentBase
 {
+    protected sealed record RequestOptions(bool TrackLoading = true, string? SuccessMessage = null);
+
     [Inject] protected IRequestSender RequestSender { get; set; } = default!;
     [Inject] protected IToastService ToastService { get; set; } = default!;
     [Inject] protected IDialogService DialogService { get; set; } = default!;
@@ -37,12 +39,17 @@ public abstract class SmartComponentBase : ComponentBase
     protected async Task<TResponse?> SendAsync<TResponse>(
         IRequest<TResponse> request,
         EditContext? editContext = null,
-        string? successMessage = null,
+        RequestOptions? options = null,
         CancellationToken ct = default)
     {
-        if (IsLoading) return default;
-        
-        IsLoading = true;
+        options ??= new RequestOptions();
+
+        if (options.TrackLoading && IsLoading) return default;
+
+        if (options.TrackLoading)
+        {
+            IsLoading = true;
+        }
         
         try
         {
@@ -54,9 +61,9 @@ public abstract class SmartComponentBase : ComponentBase
 
             var result = await RequestSender.Send(request, ct);
             
-            if (successMessage != null)
+            if (options.SuccessMessage != null)
             {
-                ToastService.ShowSuccess(successMessage);
+                ToastService.ShowSuccess(options.SuccessMessage);
             }
             
             return result;
@@ -83,7 +90,10 @@ public abstract class SmartComponentBase : ComponentBase
         }
         finally
         {
-            IsLoading = false;
+            if (options.TrackLoading)
+            {
+                IsLoading = false;
+            }
         }
     }
 
