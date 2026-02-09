@@ -19,4 +19,8 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Features\Weather\Components\Weather.razor" />
+  </ItemGroup>
+
 </Project>

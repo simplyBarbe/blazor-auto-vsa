@@ -8,8 +8,31 @@ body {
     margin: 0;
 }
 
+.header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 1.5rem;
+    position: relative;
+    width: 100%;
+}
+
+.header-title {
+    font-size: var(--type-ramp-plus-1-font-size);
+    font-weight: 600;
+}
+
+.theme-toggle {
+    margin-left: auto;
+}
+
 .navmenu-icon {
     display: none;
+}
+
+.navmenu {
+    position: relative;
 }
 
 .main {

@@ -31,8 +31,8 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
         }
 
         var url = mapping.Template;
-        var unusedProperties = new Dictionary<string, string>();
-        
+        var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         // Simple logic to replace placeholders like {Id} with property values from the request
         foreach (var prop in type.GetProperties())
         {
@@ -43,17 +43,23 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
             if (url.Contains(placeholder, StringComparison.OrdinalIgnoreCase))
             {
                 url = url.Replace(placeholder, Uri.EscapeDataString(value), StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                unusedProperties[prop.Name] = value;
+                used.Add(prop.Name);
             }
         }
 
-        if (mapping.Method == HttpMethod.Get && unusedProperties.Any())
+        if (mapping.Method == HttpMethod.Get)
         {
-            var queryString = string.Join("&", unusedProperties.Select(kvp => $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
-            url = url.Contains('?') ? $"{url}&{queryString}" : $"{url}?{queryString}";
+            var queryParts = type.GetProperties()
+                .Select(p => (p.Name, Value: p.GetValue(request)?.ToString()))
+                .Where(p => p.Value != null && !used.Contains(p.Name))
+                .Select(p => $"{Uri.EscapeDataString(p.Name)}={Uri.EscapeDataString(p.Value!)}")
+                .ToList();
+
+            if (queryParts.Count > 0)
+            {
+                var separator = url.Contains('?') ? "&" : "?";
+                url = $"{url}{separator}{string.Join("&", queryParts)}";
+            }
         }
 
         return (url, mapping.Method);

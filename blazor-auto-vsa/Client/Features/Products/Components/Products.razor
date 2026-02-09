@@ -7,8 +7,9 @@
 
 <PageTitle>Products - Smart Dispatcher Demo</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" VerticalGap="20" Style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
-    
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20"
+             Style="max-width: 1000px; margin: 0 auto; padding: 2rem;">
+
     @* Page Header *@
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
         <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">
@@ -21,18 +22,17 @@
 
     @* Execution Mode Badge *@
     <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
-        <FluentBadge Appearance="@(IsBrowser ? Appearance.Accent : Appearance.Neutral)" 
-                     Style="padding: 12px 20px; font-size: 14px;">
+        <FluentBadge Appearance="@(IsBrowser ? Appearance.Accent : Appearance.Neutral)" Style="padding: 12px 20px; font-size: 14px;">
             <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="8">
                 @if (IsBrowser)
                 {
-                    <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Fill" />
-                    <FluentLabel Color="Color.Fill">WebAssembly (HTTP API)</FluentLabel>
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Custom" CustomColor="var(--foreground-on-accent-rest)" />
+                    <FluentLabel Color="Color.Custom" CustomColor="var(--foreground-on-accent-rest)">WebAssembly (HTTP API)</FluentLabel>
                 }
                 else
                 {
-                    <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Fill" />
-                    <FluentLabel Color="Color.Fill">Server-Side Rendering (Direct)</FluentLabel>
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Custom" CustomColor="var(--neutral-foreground-rest)" />
+                    <FluentLabel Color="Color.Custom" CustomColor="var(--neutral-foreground-rest)">Server-Side Rendering (Direct)</FluentLabel>
                 }
             </FluentStack>
         </FluentBadge>
@@ -43,36 +43,42 @@
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
             <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right">
                 <FluentButton Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" />
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom" CustomColor="var(--foreground-on-accent-rest)" />
                     Add Product
                 </FluentButton>
             </FluentStack>
 
             @if (Items == null)
             {
-                <FluentStack HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center" Style="height: 200px;">
-                    <FluentProgressRing />
+                <FluentStack HorizontalAlignment="HorizontalAlignment.Center"
+                             VerticalAlignment="VerticalAlignment.Center" Style="height: 200px;">
+                    <FluentProgressRing/>
                 </FluentStack>
             }
-            
+
             <div hidden="@(Items == null)">
-                <FluentDataGrid @ref="_grid" ItemsProvider="@ProductProvider" Pagination="@_pagination" ResizableColumns="true" TGridItem="ProductResponse" GridTemplateColumns="1fr 2fr 1fr 1fr">
-                    <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID" />
-                    <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
-                    <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2" />
+                <FluentDataGrid @ref="_grid" ItemsProvider="@ProductProvider" Pagination="@_pagination"
+                                ResizableColumns="true" TGridItem="ProductResponse"
+                                GridTemplateColumns="1fr 2fr 1fr 1fr">
+                    <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID"/>
+                    <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name"/>
+                    <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2"/>
                     <TemplateColumn Title="Actions" Align="Align.End">
-                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8" HorizontalAlignment="HorizontalAlignment.Right">
-                            <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnEditProductAsync(context))" Disabled="@IsLoading">
-                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent" />
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="8"
+                                     HorizontalAlignment="HorizontalAlignment.Right">
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                          OnClick="@(() => OnEditProductAsync(context))" Disabled="@IsLoading">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent"/>
                             </FluentButton>
-                            <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteProductAsync(context))" Disabled="@IsLoading">
-                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error" />
+                            <FluentButton Appearance="Appearance.Lightweight"
+                                          OnClick="@(() => OnDeleteProductAsync(context))" Disabled="@IsLoading">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error"/>
                             </FluentButton>
                         </FluentStack>
                     </TemplateColumn>
                 </FluentDataGrid>
 
-                <FluentPaginator State="@_pagination" />
+                <FluentPaginator State="@_pagination"/>
             </div>
         </FluentStack>
     </FluentCard>

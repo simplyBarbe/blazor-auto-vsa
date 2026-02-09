@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Shared.Core;
 using Shared.Features.Products.Create;
+using System.Globalization;
 
 namespace Client
 {
@@ -13,6 +14,10 @@ namespace Client
         static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+            var defaultCulture = new CultureInfo("it-IT");
+            CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
 
             builder.Services.AddFluentUIComponents();
 

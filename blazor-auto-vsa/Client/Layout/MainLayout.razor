@@ -1,8 +1,18 @@
 @inherits LayoutComponentBase
 
+<FluentDesignTheme Mode="@themeMode" ModeChanged="OnThemeModeChanged" StorageName="blazor-auto-vsa-theme" />
+
 <FluentLayout>
     <FluentHeader>
-        Server
+        <div class="header-bar">
+            <div class="header-title">Server</div>
+            <FluentButton Class="theme-toggle"
+                          Appearance="Appearance.Stealth"
+                          OnClick="ToggleTheme"
+                          Title="@ThemeButtonTitle"
+                          IconStart="@ThemeButtonIcon"
+                          AriaLabel="@ThemeButtonTitle" />
+        </div>
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <NavMenu />
@@ -12,11 +22,6 @@
             </div>
         </FluentBodyContent>
     </FluentStack>
-    <FluentFooter>
-        <a href="https://www.fluentui-blazor.net" target="_blank">Documentation and demos</a>
-        <FluentSpacer />
-        <a href="https://learn.microsoft.com/en-us/aspnet/core/blazor" target="_blank">About Blazor</a>
-    </FluentFooter>
 </FluentLayout>
 
 <FluentToastProvider />
@@ -27,3 +32,32 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private DesignThemeModes themeMode = DesignThemeModes.System;
+
+    private string ThemeButtonLabel =>
+        themeMode == DesignThemeModes.Dark ? "Light mode" : "Dark mode";
+
+    private string ThemeButtonTitle =>
+        themeMode == DesignThemeModes.Dark ? "Switch to light mode" : "Switch to dark mode";
+
+    private Icon ThemeButtonIcon =>
+        themeMode == DesignThemeModes.Dark
+            ? new Icons.Regular.Size20.WeatherSunny()
+            : new Icons.Regular.Size20.WeatherMoon();
+
+    private Task OnThemeModeChanged(DesignThemeModes mode)
+    {
+        themeMode = mode;
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleTheme()
+    {
+        themeMode = themeMode == DesignThemeModes.Dark
+            ? DesignThemeModes.Light
+            : DesignThemeModes.Dark;
+        return Task.CompletedTask;
+    }
+}

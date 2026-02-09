@@ -7,6 +7,7 @@ using Server.Features.Products.Get;
 using Server.Infrastructure.Dispatching;
 using Server.Infrastructure.Mapping;
 using Shared.Core;
+using System.Globalization;
 
 namespace Server
 {
@@ -16,11 +17,16 @@ namespace Server
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var defaultCulture = new CultureInfo("it-IT");
+            CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
+
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
             builder.Services.AddFluentUIComponents();
+            builder.Services.AddLocalization();
 
             // Register Smart Framework (Handlers, Validators, Pipeline, Dispatcher)
             builder.Services.AddSmartFramework(
@@ -49,6 +55,13 @@ namespace Server
 
             app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
             app.UseHttpsRedirection();
+
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(defaultCulture),
+                SupportedCultures = new[] { defaultCulture },
+                SupportedUICultures = new[] { defaultCulture }
+            });
 
             app.UseAntiforgery();
 
