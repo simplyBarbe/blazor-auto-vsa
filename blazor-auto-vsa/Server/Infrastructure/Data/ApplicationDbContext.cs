@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Domain;
+using Server.Domain.Enums;
 using Server.Infrastructure.Data.Configurations;
+using Server.Infrastructure.Data.Converters;
 
 namespace Server.Infrastructure.Data;
 
@@ -19,10 +21,14 @@ public class ApplicationDbContext : DbContext
     {
     }
 
-    /// <summary>
-    /// Gets or sets the products DbSet.
-    /// </summary>
+    public DbSet<AuditTrail> AuditTrails { get; set; } = null!;
+    
     public DbSet<Product> Products { get; set; } = null!;
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
+        // Apply UTC converter to all DateTime properties globally
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>()
+            .HaveColumnType("timestamp with time zone");
 
     /// <summary>
     /// Configures the model using entity configurations from the Shared assembly.
@@ -30,9 +36,10 @@ public class ApplicationDbContext : DbContext
     /// <param name="modelBuilder">The model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-        // Apply all IEntityTypeConfiguration implementations from the Infrastructure assembly
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductConfiguration).Assembly);
+        modelBuilder.HasPostgresEnum<AuditType>();
+
+        base.OnModelCreating(modelBuilder);
     }
 }

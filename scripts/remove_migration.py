@@ -19,7 +19,7 @@ def main():
     workspace_root = script_dir.parent
     
     # Project path relative to workspace root
-    project_path = workspace_root / "fluentui" / "Server" / "Server.csproj"
+    project_path = workspace_root / "blazor-auto-vsa" / "Server" / "Server.csproj"
     
     # Verify project file exists
     if not project_path.exists():

@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Infrastructure.Dispatching;
+using Server.Infrastructure.Common;
+using Server.Infrastructure.Services;
 using Shared.Core;
 using System.Reflection;
 
@@ -18,9 +20,14 @@ public static class SmartFrameworkExtensions
     /// <param name="services">The service collection.</param>
     /// <param name="assemblies">The assemblies to scan for components.</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddSmartFramework(this IServiceCollection services, params Assembly[] assemblies)
-    {
-        // 1. Register request pipeline (ValidationBehavior, IAsyncRequestValidator)
+        public static IServiceCollection AddSmartFramework(this IServiceCollection services, params Assembly[] assemblies)
+        {
+            // Register Infrastructure Services
+            services.AddHttpContextAccessor();
+            services.AddScoped<IDateTimeProvider, DateTimeProvider>();
+            services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+            // 1. Register request pipeline (ValidationBehavior, IAsyncRequestValidator)
         services.AddRequestPipeline();
 
         // 2. Register Smart Dispatcher for SSR/Prerendering

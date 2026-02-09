@@ -1,9 +1,11 @@
+using Server.Domain.Common;
+
 namespace Server.Domain;
 
 /// <summary>
 /// Represents a product entity in the domain.
 /// </summary>
-public class Product
+public class Product : IAuditableEntity
 {
     /// <summary>
     /// Gets or sets the unique identifier for the product.

@@ -1,5 +1,5 @@
 <Solution>
-  <Folder Name="/blazor-auto-vsa/">
+  <Folder Name="/app/">
     <Project Path="blazor-auto-vsa/Client/Client.csproj" />
     <Project Path="blazor-auto-vsa/Server/Server.csproj" />
     <Project Path="blazor-auto-vsa/Shared/Shared.csproj" />
@@ -7,5 +7,7 @@
       <Build />
     </Project>
   </Folder>
-  <Project Path="Server.Tests/Server.Tests.csproj" />
+  <Folder Name="/tests/">
+    <Project Path="Server.Tests/Server.Tests.csproj" />
+  </Folder>
 </Solution>
