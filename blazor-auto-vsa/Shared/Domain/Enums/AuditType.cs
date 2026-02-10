@@ -1,4 +1,4 @@
-namespace Server.Domain.Enums;
+namespace Shared.Domain.Enums;
 
 public enum AuditType
 {

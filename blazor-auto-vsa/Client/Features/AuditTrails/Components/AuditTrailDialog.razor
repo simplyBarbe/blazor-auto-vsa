@@ -1,0 +1,113 @@
+@using Shared.Features.AuditTrails.Responses
+@using Shared.Domain.Enums
+@implements IDialogContentComponent<AuditTrailResponse>
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size24.History())" />
+        <FluentLabel Typo="Typography.PaneHeader">
+            @Content.TableName - @Content.DateTime.ToString("G")
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" Style="width: 100%;">
+        
+        <FluentCard Style="width: 100%;">
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="20">
+                <FluentStack Orientation="Orientation.Vertical">
+                    <FluentLabel Typo="Typography.Body">Type</FluentLabel>
+                    <FluentBadge Appearance="@GetAuditTypeAppearance(Content.AuditType)">@Content.AuditType</FluentBadge>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Vertical">
+                    <FluentLabel Typo="Typography.Body">User ID</FluentLabel>
+                    <FluentLabel>@(Content.UserId?.ToString() ?? "System")</FluentLabel>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Vertical">
+                    <FluentLabel Typo="Typography.Body">Primary Key</FluentLabel>
+                    <FluentLabel>@FormatDictionary(Content.PrimaryKey)</FluentLabel>
+                </FluentStack>
+            </FluentStack>
+        </FluentCard>
+
+        <FluentLabel Typo="Typography.Header">Changes</FluentLabel>
+
+        <div style="overflow-x: auto; width: 100%;">
+            <table class="diff-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid var(--neutral-stroke-rest);">
+                        <th style="padding: 8px; text-align: left;">Field</th>
+                        <th style="padding: 8px; text-align: left;">Before</th>
+                        <th style="padding: 8px; text-align: left;">After</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var key in GetAllKeys())
+                    {
+                        var isModified = Content.AffectedColumns?.Contains(key) ?? false;
+                        var oldVal = Content.OldValues?.ContainsKey(key) == true ? Content.OldValues[key] : null;
+                        var newVal = Content.NewValues?.ContainsKey(key) == true ? Content.NewValues[key] : null;
+
+                        <tr style="@(isModified ? "background-color: var(--accent-fill-rest-alpha); border-left: 4px solid var(--accent-fill-rest);" : "border-bottom: 1px solid var(--neutral-stroke-subtle);")">
+                            <td style="padding: 8px; font-weight: bold;">@key</td>
+                            <td style="padding: 8px; color: @(isModified ? "var(--error)" : "inherit");">
+                                @(oldVal?.ToString() ?? (Content.AuditType == AuditType.Created ? "-" : "null"))
+                            </td>
+                            <td style="padding: 8px; color: @(isModified ? "var(--success)" : "inherit");">
+                                @(newVal?.ToString() ?? (Content.AuditType == AuditType.Deleted ? "-" : "null"))
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Neutral" OnClick="@(() => Dialog.CloseAsync())">Close</FluentButton>
+</FluentDialogFooter>
+
+@code {
+    [Parameter]
+    public AuditTrailResponse Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog Dialog { get; set; } = default!;
+
+    private IEnumerable<string> GetAllKeys()
+    {
+        var keys = new HashSet<string>();
+        if (Content.OldValues != null) foreach (var k in Content.OldValues.Keys) keys.Add(k);
+        if (Content.NewValues != null) foreach (var k in Content.NewValues.Keys) keys.Add(k);
+        return keys.OrderBy(k => k);
+    }
+
+    private string FormatDictionary(Dictionary<string, object> dict)
+    {
+        if (dict == null || !dict.Any()) return "-";
+        return string.Join(", ", dict.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+    }
+
+    private Appearance GetAuditTypeAppearance(AuditType type) => type switch
+    {
+        AuditType.Created => Appearance.Accent,
+        AuditType.Updated => Appearance.Neutral,
+        AuditType.Deleted => Appearance.Lightweight,
+        _ => Appearance.Neutral
+    };
+}
+
+<style>
+    .diff-table {
+        width: 100%;
+    }
+    .diff-table td {
+        word-break: break-all;
+    }
+    :root {
+        --accent-fill-rest-alpha: rgba(0, 120, 212, 0.05); /* Approximate accent color with low alpha for highlighting */
+    }
+</style>

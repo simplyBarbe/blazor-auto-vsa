@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Server.Domain;
 using Server.Domain.Common;
-using Server.Domain.Enums;
+using Shared.Domain.Enums;
 using Server.Infrastructure.Common;
 using Microsoft.Extensions.DependencyInjection;
 

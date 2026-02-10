@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Domain;
-using Server.Domain.Enums;
+using Shared.Domain.Enums;
 using Server.Infrastructure.Data.Configurations;
 using Server.Infrastructure.Data.Converters;
 

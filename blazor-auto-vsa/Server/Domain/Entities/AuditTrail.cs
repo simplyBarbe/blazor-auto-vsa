@@ -1,5 +1,5 @@
 using Server.Domain.Common;
-using Server.Domain.Enums;
+using Shared.Domain.Enums;
 
 namespace Server.Domain;
 
