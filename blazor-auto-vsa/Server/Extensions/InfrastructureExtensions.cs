@@ -10,17 +10,17 @@ using System.Reflection;
 namespace Server.Extensions;
 
 /// <summary>
-/// Extension methods for registering Smart Framework components.
+/// Extension methods for registering server infrastructure components.
 /// </summary>
-public static class SmartFrameworkExtensions
+public static class InfrastructureExtensions
 {
     /// <summary>
-    /// Registers all Smart Framework services, including handlers, validators, and the request pipeline.
+    /// Registers core server infrastructure: handlers, validators, and the request pipeline.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="assemblies">The assemblies to scan for components.</param>
     /// <returns>The service collection for chaining.</returns>
-        public static IServiceCollection AddSmartFramework(this IServiceCollection services, params Assembly[] assemblies)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, params Assembly[] assemblies)
         {
             // Register Infrastructure Services
             services.AddHttpContextAccessor();
@@ -30,7 +30,7 @@ public static class SmartFrameworkExtensions
             // 1. Register request pipeline (ValidationBehavior, IAsyncRequestValidator)
         services.AddRequestPipeline();
 
-        // 2. Register Smart Dispatcher for SSR/Prerendering
+        // 2. Register Dispatcher for SSR/Prerendering
         services.AddScoped<IRequestSender, LocalRequestSender>();
 
         // 3. Scan assemblies for handlers and validators
@@ -44,12 +44,12 @@ public static class SmartFrameworkExtensions
     }
 
     /// <summary>
-    /// Maps all Smart Framework endpoints from the specified assemblies.
+    /// Maps all API endpoints from the specified assemblies.
     /// </summary>
     /// <param name="app">The endpoint route builder.</param>
     /// <param name="assemblies">The assemblies to scan for endpoints.</param>
     /// <returns>The endpoint route builder for chaining.</returns>
-    public static IEndpointRouteBuilder MapSmartEndpoints(this IEndpointRouteBuilder app, params Assembly[] assemblies)
+    public static IEndpointRouteBuilder MapEndpoints(this IEndpointRouteBuilder app, params Assembly[] assemblies)
     {
         foreach (var assembly in assemblies)
         {

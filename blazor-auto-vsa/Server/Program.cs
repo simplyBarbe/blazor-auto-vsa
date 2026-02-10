@@ -28,8 +28,8 @@ namespace Server
             builder.Services.AddFluentUIComponents();
             builder.Services.AddLocalization();
 
-            // Register Smart Framework (Handlers, Validators, Pipeline, Dispatcher)
-            builder.Services.AddSmartFramework(
+            // Register server infrastructure (Handlers, Validators, Pipeline, Dispatcher)
+            builder.Services.AddInfrastructure(
                 typeof(Program).Assembly, 
                 typeof(Shared.Features.Products.Create.CreateProductCommandValidator).Assembly);
 
@@ -76,7 +76,7 @@ namespace Server
                 .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
 
             // Map API endpoints for WebAssembly client
-            app.MapSmartEndpoints(typeof(Program).Assembly);
+            app.MapEndpoints(typeof(Program).Assembly);
 
             app.Run();
         }

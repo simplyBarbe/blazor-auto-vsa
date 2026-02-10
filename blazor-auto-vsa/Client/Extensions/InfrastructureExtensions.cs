@@ -7,19 +7,19 @@ using System.Reflection;
 namespace Client.Extensions;
 
 /// <summary>
-/// Extension methods for registering Smart Framework components on the client.
+/// Extension methods for registering client infrastructure services.
 /// </summary>
-public static class SmartFrameworkExtensions
+public static class InfrastructureExtensions
 {
     /// <summary>
-    /// Registers all Smart Framework client-side services.
+    /// Registers all client-side infrastructure services (dispatcher, validators, routes).
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="assemblies">The assemblies to scan for components (validators, route definitions).</param>
     /// <returns>The service collection for chaining.</returns>
-    public static IServiceCollection AddSmartFramework(this IServiceCollection services, params Assembly[] assemblies)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, params Assembly[] assemblies)
     {
-        // 1. Register Smart Dispatcher infrastructure
+        // 1. Register Dispatcher infrastructure
         services.AddSingleton<IRequestEndpointMapper, RequestEndpointMapper>();
         services.AddScoped<IRequestSender, HttpRequestSender>();
 

@@ -1,6 +1,6 @@
 @page "/products"
-@using Client.Components.SmartComponent
-@inherits SmartListBase<ProductResponse, Shared.Features.Products.List.ListProductQuery>
+@using Client.Components.Base
+@inherits PagedListComponent<ProductResponse, Shared.Features.Products.List.ListProductQuery>
 @using Shared.Features.Products.Responses
 @using Shared.Features.Products.List
 @using Microsoft.FluentUI.AspNetCore.Components
@@ -12,7 +12,7 @@
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
         <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">🛒 Product Management</FluentLabel>
-        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">Smart Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
     </FluentStack>
 
     <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
@@ -48,7 +48,7 @@
         </FluentButton>
     </FluentStack>
 
-    <SmartDataGridContainer IsLoading="@IsLoading" Pagination="@Pagination">
+    <DataGridContainer IsLoading="@IsLoading" Pagination="@Pagination">
         <FluentDataGrid @ref="_grid" ItemsProvider="@ProductProvider" Pagination="@Pagination"
                         ResizableColumns="true" ResizeColumnOnAllRows="false"
                         DisplayMode="DataGridDisplayMode.Table"
@@ -65,5 +65,5 @@
                 </FluentButton>
             </TemplateColumn>
         </FluentDataGrid>
-    </SmartDataGridContainer>
+    </DataGridContainer>
 </FluentStack>

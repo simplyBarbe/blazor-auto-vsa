@@ -1,4 +1,4 @@
-﻿namespace Client.Components.SmartComponent;
+﻿namespace Client.Components.Base;
 
 public enum UiState
 {

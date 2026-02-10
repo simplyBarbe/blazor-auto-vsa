@@ -5,12 +5,12 @@ using Shared.Core;
 using Shared.Core.Validation;
 using Client.Extensions;
 
-namespace Client.Components.SmartComponent;
+namespace Client.Components.Base;
 
 /// <summary>
 /// Base class for components with loading, validation, toast, and confirmation dialog support.
 /// </summary>
-public abstract class SmartComponentBase : ComponentBase
+public abstract class BaseComponent : ComponentBase
 {
     protected sealed record RequestOptions(bool TrackLoading = true, string? SuccessMessage = null);
 

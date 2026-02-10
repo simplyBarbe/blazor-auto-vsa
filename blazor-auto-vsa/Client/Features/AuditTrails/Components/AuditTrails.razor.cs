@@ -2,12 +2,12 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Shared.Features.AuditTrails.Responses;
 using Shared.Features.AuditTrails.List;
-using Client.Components.SmartComponent;
+using Client.Components.Base;
 using Shared.Domain.Enums;
 
 namespace Client.Features.AuditTrails.Components;
 
-public partial class AuditTrails : SmartListBase<AuditTrailResponse, ListAuditTrailQuery>
+public partial class AuditTrails : PagedListComponent<AuditTrailResponse, ListAuditTrailQuery>
 {
     private FluentDataGrid<AuditTrailResponse>? _grid;
 

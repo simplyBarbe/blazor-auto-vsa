@@ -11,11 +11,11 @@ using Shared.Features.Products.Get;
 using Shared.Core.Validation;
 using Client.Extensions;
 
-using Client.Components.SmartComponent;
+using Client.Components.Base;
 
 namespace Client.Features.Products.Components;
 
-public partial class Products : SmartListBase<ProductResponse, ListProductQuery>
+public partial class Products : PagedListComponent<ProductResponse, ListProductQuery>
 {
 
     /// <summary>

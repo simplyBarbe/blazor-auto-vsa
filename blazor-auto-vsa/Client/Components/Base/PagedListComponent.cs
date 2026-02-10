@@ -3,14 +3,14 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using System.Linq;
 using Shared.Core.CRUD;
 
-namespace Client.Components.SmartComponent;
+namespace Client.Components.Base;
 
 /// <summary>
 /// Base class for list components that handle pagination and data loading.
 /// </summary>
 /// <typeparam name="TResponse">The type of items in the list.</typeparam>
 /// <typeparam name="TQuery">The type of the query used to fetch data.</typeparam>
-public abstract class SmartListBase<TResponse, TQuery> : SmartComponentBase
+public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
     where TQuery : IRequest<PagedResult<TResponse>>, IPageableQuery, new()
 {
     /// <summary>

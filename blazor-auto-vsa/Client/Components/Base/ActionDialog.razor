@@ -1,7 +1,8 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Forms
 @using Client.Extensions
+@using Client.Components.Base
 @typeparam TCommand where TCommand : class
-@inherits SmartComponentBase
+@inherits BaseComponent
 
 <FluentDialogHeader ShowDismiss="true">
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
@@ -39,68 +40,38 @@
 </EditForm>
 
 @code {
-    /// <summary>
-    /// The command object being edited.
-    /// </summary>
     [Parameter, EditorRequired] 
     public TCommand Content { get; set; } = default!;
 
-    /// <summary>
-    /// The fields to display in the dialog body.
-    /// </summary>
     [Parameter, EditorRequired] 
     public RenderFragment<TCommand> ChildContent { get; set; } = default!;
 
-    /// <summary>
-    /// Title to show in Add mode.
-    /// </summary>
     [Parameter] public string AddTitle { get; set; } = "Add";
 
-    /// <summary>
-    /// Title to show in Edit mode.
-    /// </summary>
     [Parameter] public string EditTitle { get; set; } = "Edit";
 
-    /// <summary>
-    /// Text to show on the save button.
-    /// </summary>
     [Parameter] public string SaveButtonText { get; set; } = "Save";
 
-    /// <summary>
-    /// Text to show on the cancel button.
-    /// </summary>
     [Parameter] public string CancelButtonText { get; set; } = "Cancel";
 
-    /// <summary>
-    /// Determines if the dialog is in Add or Edit mode.
-    /// </summary>
     [Parameter] public bool IsAddMode { get; set; }
 
-    /// <summary>
-    /// Event triggered when the form is submitted and valid.
-    /// </summary>
     [Parameter] public EventCallback<EditContext> OnSave { get; set; }
 
-    /// <summary>
-    /// Event triggered when the cancel button is clicked.
-    /// </summary>
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private async Task HandleSubmitAsync(EditContext editContext)
     {
         if (IsLoading) return;
 
-        // Clear previous validation messages
         editContext.ClearValidationMessages();
 
-        // Perform client-side validation
         if (!editContext.Validate())
         {
             editContext.NotifyValidationStateChanged();
             return;
         }
 
-        // Call the save handler
         await OnSave.InvokeAsync(editContext);
     }
 

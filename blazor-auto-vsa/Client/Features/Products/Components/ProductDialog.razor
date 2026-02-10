@@ -1,26 +1,24 @@
 ﻿@using Shared.Features.Products.Update
 @using Shared.Features.Products.Create
-@using Client.Components.SmartComponent
+@using Client.Components.Base
 @using Client.Extensions
-@inherits SmartComponentBase
+@inherits BaseComponent
 @implements IDialogContentComponent<UpdateProductCommand>
 
-<SmartCrudDialog TCommand="UpdateProductCommand"
+<ActionDialog TCommand="UpdateProductCommand"
                  Content="@Content"
                  IsAddMode="@(Content.Id == 0)"
                  AddTitle="Add Product"
                  EditTitle="Edit Product"
                  OnSave="SaveAsync"
                  OnCancel="CancelAsync">
-    <ChildContent>
-        <FluentTextField @bind-Value="context.Name" Label="Name" Required="true" Style="width: 100%;"/>
-        <FluentValidationMessage For="@(() => context.Name)"/>
+        <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
+        <FluentValidationMessage For="@(() => Content.Name)"/>
 
-        <FluentNumberField TValue="decimal" @bind-Value="context.Price" Label="Price" Required="true"
+        <FluentNumberField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true"
                            Style="width: 100%;"/>
-        <FluentValidationMessage For="@(() => context.Price)"/>
-    </ChildContent>
-</SmartCrudDialog>
+        <FluentValidationMessage For="@(() => Content.Price)"/>
+</ActionDialog>
 
 @code {
     [Parameter] public UpdateProductCommand Content { get; set; } = default!;

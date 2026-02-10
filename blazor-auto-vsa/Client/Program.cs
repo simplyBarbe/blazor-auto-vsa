@@ -27,8 +27,8 @@ namespace Client
                 BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
             });
 
-            // Register Smart Framework (Dispatcher, Validators, Route Definitions)
-            builder.Services.AddSmartFramework(
+            // Register client infrastructure (Dispatcher, Validators, Route Definitions)
+            builder.Services.AddInfrastructure(
                 typeof(Program).Assembly, 
                 typeof(CreateProductCommandValidator).Assembly);
 
