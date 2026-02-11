@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Server.Domain;
+using Server.Domain.Entities;
 using Shared.Domain.Enums;
 using Server.Infrastructure.Data.Configurations;
 using Server.Infrastructure.Data.Converters;
@@ -10,7 +12,7 @@ namespace Server.Infrastructure.Data;
 /// Application database context for Entity Framework Core.
 /// Manages entity configurations and database connections.
 /// </summary>
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.

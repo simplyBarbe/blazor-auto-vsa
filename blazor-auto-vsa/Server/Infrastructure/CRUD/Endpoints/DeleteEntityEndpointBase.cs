@@ -19,8 +19,7 @@ public abstract class DeleteEntityEndpointBase<TKey, TCommand> : IEndpoint
     /// <inheritdoc />
     public virtual void Map(IEndpointRouteBuilder app)
     {
-        app.MapDelete(GetRoute(), HandleAsync)
-           .DisableAntiforgery();
+        app.MapDelete(GetRoute(), HandleAsync);
     }
 
     /// <summary>

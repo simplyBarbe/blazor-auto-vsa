@@ -6,12 +6,18 @@
     <FluentHeader>
         <div class="header-bar">
             <div class="header-title">Server</div>
-            <FluentButton Class="theme-toggle"
-                          Appearance="Appearance.Stealth"
-                          OnClick="ToggleTheme"
-                          Title="@ThemeButtonTitle"
-                          IconStart="@ThemeButtonIcon"
-                          AriaLabel="@ThemeButtonTitle" />
+            <FluentStack Orientation="Orientation.Horizontal" 
+                         HorizontalAlignment="HorizontalAlignment.End" 
+                         VerticalAlignment="VerticalAlignment.Center"
+                         Width="auto">
+                <FluentButton Class="theme-toggle"
+                              Appearance="Appearance.Stealth"
+                              OnClick="ToggleTheme"
+                              Title="@ThemeButtonTitle"
+                              IconStart="@ThemeButtonIcon"
+                              AriaLabel="@ThemeButtonTitle" />
+                <Client.Features.Auth.Components.LoginDisplay />
+            </FluentStack>
         </div>
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">

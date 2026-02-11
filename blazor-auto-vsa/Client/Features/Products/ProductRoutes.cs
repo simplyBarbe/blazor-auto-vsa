@@ -11,10 +11,10 @@ public class ProductRoutes : IRouteDefinition
 {
     public void Define(IRouteMap map)
     {
-        map.Map<GetProductQuery>("/api/products/{Id:guid}", HttpMethod.Get);
+        map.Map<GetProductQuery>("/api/products/{Id}", HttpMethod.Get);
         map.Map<ListProductQuery>("/api/products", HttpMethod.Get);
         map.Map<CreateProductCommand>("/api/products", HttpMethod.Post);
-        map.Map<UpdateProductCommand>("/api/products/{Id:guid}", HttpMethod.Put);
-        map.Map<DeleteProductCommand>("/api/products/{Id:guid}", HttpMethod.Delete);
+        map.Map<UpdateProductCommand>("/api/products/{Id}", HttpMethod.Put);
+        map.Map<DeleteProductCommand>("/api/products/{Id}", HttpMethod.Delete);
     }
 }

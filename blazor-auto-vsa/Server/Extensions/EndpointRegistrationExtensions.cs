@@ -1,3 +1,4 @@
+using Server.Infrastructure.Auth;
 using Server.Infrastructure.Endpoints;
 using System.Reflection;
 
@@ -15,6 +16,9 @@ public static class EndpointRegistrationExtensions
     /// <param name="assembly">The assembly to scan for endpoints.</param>
     public static IEndpointRouteBuilder MapApiEndpoints(this IEndpointRouteBuilder app, Assembly assembly)
     {
+        // Map authentication endpoints
+        app.MapAuthEndpoints();
+
         var endpointTypes = assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && typeof(IEndpoint).IsAssignableFrom(t));
 

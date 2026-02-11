@@ -1,0 +1,79 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Antiforgery
+@using Server.Domain.Entities
+@using Shared.Core.Auth
+@using System.Security.Claims
+@implements IDisposable
+@inject PersistentComponentState PersistentState
+@inject UserManager<ApplicationUser> UserManager
+@inject IAntiforgery Antiforgery
+@inject IHttpContextAccessor HttpContextAccessor
+
+<CascadingAuthenticationState>
+    @ChildContent
+</CascadingAuthenticationState>
+
+@code {
+    private PersistingComponentStateSubscription? _subscription;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _subscription = PersistentState.RegisterOnPersisting(PersistAuthenticationState, RenderMode.InteractiveWebAssembly);
+    }
+
+    private async Task PersistAuthenticationState()
+    {
+        if (HttpContextAccessor.HttpContext is { } httpContext)
+        {
+            var tokens = Antiforgery.GetAndStoreTokens(httpContext);
+            if (tokens.RequestToken is { } token)
+            {
+                PersistentState.PersistAsJson("AntiforgeryToken", token);
+            }
+        }
+
+        if (AuthenticationState == null)
+        {
+            return;
+        }
+
+        var authState = await AuthenticationState;
+        var principal = authState.User;
+
+        if (principal.Identity?.IsAuthenticated == true)
+        {
+            var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var user = await UserManager.FindByIdAsync(userId);
+                if (user != null)
+                {
+                    var roles = await UserManager.GetRolesAsync(user);
+                    var claims = await UserManager.GetClaimsAsync(user);
+
+                    var userInfo = new UserInfo
+                    {
+                        UserId = user.Id,
+                        Email = user.Email ?? string.Empty,
+                        Roles = roles.ToList(),
+                        Claims = claims.ToDictionary(c => c.Type, c => c.Value)
+                    };
+
+                    PersistentState.PersistAsJson(nameof(UserInfo), userInfo);
+                }
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        _subscription?.Dispose();
+    }
+}

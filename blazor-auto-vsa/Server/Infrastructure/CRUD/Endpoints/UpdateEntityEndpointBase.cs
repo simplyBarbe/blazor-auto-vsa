@@ -20,8 +20,7 @@ public abstract class UpdateEntityEndpointBase<TKey, TCommand, TResponse> : IEnd
     /// <inheritdoc />
     public virtual void Map(IEndpointRouteBuilder app)
     {
-        app.MapPut(GetRoute(), HandleAsync)
-           .DisableAntiforgery();
+        app.MapPut(GetRoute(), HandleAsync);
     }
 
     /// <summary>

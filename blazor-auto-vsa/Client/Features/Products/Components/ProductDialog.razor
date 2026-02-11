@@ -35,7 +35,7 @@
         }
         else
         {
-            var result = await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product created!"));
+            var result = await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product updated!"));
             if (result != null) await Dialog.CloseAsync(Content);
         }
     }

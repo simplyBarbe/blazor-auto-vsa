@@ -1,4 +1,6 @@
 using Shared.Core;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Client.Dispatching;
 
@@ -30,22 +32,25 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
             throw new InvalidOperationException($"No route mapped for {type.Name}");
         }
 
-        var url = mapping.Template;
         var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // Simple logic to replace placeholders like {Id} with property values from the request
-        foreach (var prop in type.GetProperties())
+        // Use Regex to find and replace all placeholders like {Id} or {Id:int}
+        var url = Regex.Replace(mapping.Template, @"\{(?<name>\w+)(?::[^}]+)?\}", m =>
         {
-            var value = prop.GetValue(request)?.ToString();
-            if (value == null) continue;
-
-            var placeholder = $"{{{prop.Name}}}";
-            if (url.Contains(placeholder, StringComparison.OrdinalIgnoreCase))
+            var name = m.Groups["name"].Value;
+            var prop = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+            
+            if (prop != null)
             {
-                url = url.Replace(placeholder, Uri.EscapeDataString(value), StringComparison.OrdinalIgnoreCase);
-                used.Add(prop.Name);
+                var val = prop.GetValue(request)?.ToString();
+                if (val != null)
+                {
+                    used.Add(prop.Name);
+                    return Uri.EscapeDataString(val);
+                }
             }
-        }
+            return m.Value; // Keep placeholder if no property match or value is null
+        }, RegexOptions.IgnoreCase);
 
         if (mapping.Method == HttpMethod.Get)
         {

@@ -1,9 +1,10 @@
+using System.Reflection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Server.Infrastructure.Data;
 using Server.Infrastructure.Data.Contracts;
-using Server.Infrastructure.Data.Repositories;
-using System.Reflection;
 using Server.Infrastructure.Data.Interceptors;
+using Server.Infrastructure.Data.Repositories;
 
 namespace Server.Extensions;
 
@@ -42,7 +43,7 @@ public static class DatabaseRegistrationExtensions
     }
 
     /// <summary>
-    /// Applies pending database migrations at startup.
+    /// Applies pending database migrations at startup and seeds initial data.
     /// </summary>
     /// <param name="app">The web application.</param>
     /// <returns>The web application for chaining.</returns>
@@ -51,6 +52,11 @@ public static class DatabaseRegistrationExtensions
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         context.Database.Migrate();
+
+        // Seed Identity Data
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Server.Domain.Entities.ApplicationUser>>();
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        DbSeeder.SeedIdentityAsync(userManager, roleManager).GetAwaiter().GetResult();
 
         return app;
     }

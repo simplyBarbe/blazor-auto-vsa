@@ -1,4 +1,6 @@
 @page "/audit-trails"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 @using Client.Components.Base
 @inherits PagedListComponent<AuditTrailResponse, Shared.Features.AuditTrails.List.ListAuditTrailQuery>
 @using Shared.Features.AuditTrails.Responses

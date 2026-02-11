@@ -17,8 +17,7 @@ public abstract class CreateEntityEndpointBase<TCommand, TResponse> : IEndpoint
     /// <inheritdoc />
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapPost(GetRoute(), HandleAsync)
-            .DisableAntiforgery();
+        app.MapPost(GetRoute(), HandleAsync);
     }
 
     /// <summary>
