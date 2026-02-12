@@ -22,11 +22,14 @@ namespace Server
             CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
 
             // Add services to the container.
-            builder.Services.AddRazorComponents()
+            var razorComponents = builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents()
                 .AddInteractiveWebAssemblyComponents();
+            razorComponents.AddAuthenticationStateSerialization();
+            
             builder.Services.AddFluentUIComponents();
             builder.Services.AddLocalization();
+            
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
             builder.Services.AddHttpClient();

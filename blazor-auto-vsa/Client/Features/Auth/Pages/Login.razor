@@ -1,12 +1,9 @@
 @page "/login"
 @rendermode InteractiveAuto
-@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.JSInterop
 @using Shared.Core.Auth
-@using Client.Infrastructure.Auth
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>Login</PageTitle>
 
@@ -85,12 +82,6 @@
 
             if (result.Succeeded)
             {
-                // Notify the authentication state provider
-                if (AuthStateProvider is CookieAuthStateProvider cookieProvider)
-                {
-                    cookieProvider.NotifyAuthenticationStateChanged(result.UserInfo);
-                }
-
                 // Redirect to return URL or home (forceLoad to pick up the new cookie)
                 var redirectUrl = !string.IsNullOrEmpty(ReturnUrl) ? ReturnUrl : "/";
                 Navigation.NavigateTo(redirectUrl, forceLoad: true);

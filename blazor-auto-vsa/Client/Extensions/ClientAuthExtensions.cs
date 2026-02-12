@@ -1,6 +1,5 @@
-using Client.Infrastructure.Auth;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace Client.Extensions;
 
@@ -16,12 +15,10 @@ public static class ClientAuthExtensions
     /// <returns>The builder for chaining.</returns>
     public static WebAssemblyHostBuilder AddClientAuthentication(this WebAssemblyHostBuilder builder)
     {
-        // Register authorization services
+        // Register authorization services.
         builder.Services.AddAuthorizationCore();
-
-        // Register the authentication state provider
-        builder.Services.AddScoped<AuthenticationStateProvider, CookieAuthStateProvider>();
-        builder.Services.AddScoped<CookieAuthStateProvider>(sp => (CookieAuthStateProvider)sp.GetRequiredService<AuthenticationStateProvider>());
+        builder.Services.AddCascadingAuthenticationState();
+        builder.Services.AddAuthenticationStateDeserialization();
 
         return builder;
     }

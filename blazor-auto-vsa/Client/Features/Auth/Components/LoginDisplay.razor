@@ -1,9 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.JSInterop
-@using Client.Infrastructure.Auth
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthStateProvider
 
 <AuthorizeView>
     <Authorized>
@@ -29,21 +27,11 @@
     {
         try
         {
-            // Use JS interop to call logout via browser fetch (required for cookie removal)
             await JS.InvokeAsync<bool>("authInterop.logout");
-
-            // Notify the authentication state provider
-            if (AuthStateProvider is CookieAuthStateProvider cookieProvider)
-            {
-                cookieProvider.NotifyAuthenticationStateChanged(null);
-            }
-
-            // Redirect to home (forceLoad to clear the auth state)
             Navigation.NavigateTo("/", forceLoad: true);
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Logout error: {ex.Message}");
         }
     }
 }

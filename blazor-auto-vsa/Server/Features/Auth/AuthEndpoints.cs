@@ -91,7 +91,9 @@ public static class AuthEndpoints
             UserId = user.Id,
             Email = user.Email ?? string.Empty,
             Roles = roles.ToList(),
-            Claims = claims.ToDictionary(c => c.Type, c => c.Value)
+            Claims = claims
+                .GroupBy(c => c.Type)
+                .ToDictionary(group => group.Key, group => group.Last().Value)
         };
 
         return Results.Ok(userInfo);
