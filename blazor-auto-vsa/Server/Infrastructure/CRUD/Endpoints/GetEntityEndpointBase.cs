@@ -21,6 +21,7 @@ public abstract class GetEntityEndpointBase<TKey, TQuery, TResponse> : IEndpoint
     public virtual void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(GetRoute(), HandleAsync)
+           .WithTags(EndpointTagHelper.GetFeatureTag(GetType()))
            .DisableAntiforgery();
     }
 

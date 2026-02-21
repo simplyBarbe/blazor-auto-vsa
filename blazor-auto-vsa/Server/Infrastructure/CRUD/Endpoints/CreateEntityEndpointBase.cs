@@ -17,7 +17,8 @@ public abstract class CreateEntityEndpointBase<TCommand, TResponse> : IEndpoint
     /// <inheritdoc />
     public void Map(IEndpointRouteBuilder app)
     {
-        app.MapPost(GetRoute(), HandleAsync);
+        app.MapPost(GetRoute(), HandleAsync)
+            .WithTags(EndpointTagHelper.GetFeatureTag(GetType()));
     }
 
     /// <summary>

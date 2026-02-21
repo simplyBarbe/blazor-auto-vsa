@@ -19,7 +19,8 @@ public abstract class DeleteEntityEndpointBase<TKey, TCommand> : IEndpoint
     /// <inheritdoc />
     public virtual void Map(IEndpointRouteBuilder app)
     {
-        app.MapDelete(GetRoute(), HandleAsync);
+        app.MapDelete(GetRoute(), HandleAsync)
+            .WithTags(EndpointTagHelper.GetFeatureTag(GetType()));
     }
 
     /// <summary>

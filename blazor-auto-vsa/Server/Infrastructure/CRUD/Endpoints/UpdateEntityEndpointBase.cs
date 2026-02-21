@@ -20,7 +20,8 @@ public abstract class UpdateEntityEndpointBase<TKey, TCommand, TResponse> : IEnd
     /// <inheritdoc />
     public virtual void Map(IEndpointRouteBuilder app)
     {
-        app.MapPut(GetRoute(), HandleAsync);
+        app.MapPut(GetRoute(), HandleAsync)
+            .WithTags(EndpointTagHelper.GetFeatureTag(GetType()));
     }
 
     /// <summary>
