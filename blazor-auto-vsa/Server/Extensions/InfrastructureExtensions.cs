@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Server.Infrastructure.Dispatching;
@@ -22,8 +22,7 @@ public static class InfrastructureExtensions
     /// <returns>The service collection for chaining.</returns>
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, params Assembly[] assemblies)
         {
-            // Register Infrastructure Services
-            services.AddHttpContextAccessor();
+            // Register Infrastructure Services (HttpContextAccessor is registered in AddWebUiServices)
             services.AddScoped<IDateTimeProvider, DateTimeProvider>();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
 
