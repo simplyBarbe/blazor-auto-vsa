@@ -18,17 +18,24 @@ public static class AuthEndpoints
     /// <param name="app">The web application.</param>
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/auth").WithTags("Authentication");
+        var group = app.MapGroup("/api/auth")
+            .WithTags("Authentication");
 
         group.MapPost("/login", Login)
-            .WithName("Login");
+            .WithName("Login")
+            .WithSummary("Authenticate user")
+            .WithDescription("Authenticates a user with email and password, returning user information and starting a session");
 
         group.MapPost("/logout", Logout)
             .WithName("Logout")
+            .WithSummary("Logout user")
+            .WithDescription("Signs out the current authenticated user and ends their session")
             .RequireAuthorization();
 
         group.MapGet("/me", GetCurrentUser)
-            .WithName("GetCurrentUser");
+            .WithName("GetCurrentUser")
+            .WithSummary("Get current user")
+            .WithDescription("Retrieves information about the currently authenticated user including roles and claims");
     }
 
     /// <summary>

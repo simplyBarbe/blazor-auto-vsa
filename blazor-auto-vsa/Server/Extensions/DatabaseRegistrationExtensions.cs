@@ -35,7 +35,7 @@ public static class DatabaseRegistrationExtensions
         });
 
         // Register AutoMapper with specified assemblies
-        services.AddAutoMapper(mappingAssemblies);
+        services.AddAutoMapper(_ => { }, mappingAssemblies);
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
