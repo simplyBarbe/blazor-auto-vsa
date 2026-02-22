@@ -29,7 +29,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Client\Client.csproj" />
     <ProjectReference Include="..\..\src\Server\Server.csproj" />
-    <ProjectReference Include="..\TestCommon\TestCommon.csproj" />
   </ItemGroup>
 
 </Project>

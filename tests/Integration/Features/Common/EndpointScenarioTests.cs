@@ -55,6 +55,30 @@ public class EndpointScenarioTests : IClassFixture<TestWebApplicationFactory>
         public object[] GetKeys() => [UserId, GroupId];
     }
 
+    public class CreateTestCommand : IRequest<TestResponse>
+    {
+        public string Name { get; set; } = "";
+    }
+
+    public class ListTestQuery : IRequest<PagedResult<TestResponse>>, IPageableQuery
+    {
+        public int? PageNumber { get; set; }
+        public int? PageSize { get; set; }
+    }
+
+    public class UpdateTestCommand : IRequest<TestResponse>, IEntityKeyProvider
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public object[] GetKeys() => [Id];
+    }
+
+    public class DeleteTestCommand : IRequest<object?>, IEntityKeyProvider
+    {
+        public int Id { get; set; }
+        public object[] GetKeys() => [Id];
+    }
+
     #endregion
 
     #region Mock Endpoints
@@ -83,6 +107,28 @@ public class EndpointScenarioTests : IClassFixture<TestWebApplicationFactory>
         {
             return await base.HandleAsync(key, sender, cancellationToken);
         }
+    }
+
+    public class TestCreateEndpoint : CreateEntityEndpointBase<CreateTestCommand, TestResponse>
+    {
+        protected override string GetRoute() => "/api/test-create";
+        protected override string GetCreatedLocation(object result) => "/api/test-create/1";
+    }
+
+    public class TestListEndpoint : ListEntityEndpointBase<ListTestQuery, TestResponse>
+    {
+        protected override string GetRoute() => "/api/test-list";
+    }
+
+    public class TestUpdateEndpoint : UpdateEntityEndpointBase<int, UpdateTestCommand, TestResponse>
+    {
+        protected override string GetRoute() => "/api/test-update/{key:int}";
+    }
+
+    public class TestDeleteEndpoint : DeleteEntityEndpointBase<int, DeleteTestCommand>
+    {
+        protected override string GetRoute() => "/api/test-delete/{key:int}";
+        protected override DeleteTestCommand CreateCommand(int key) => new DeleteTestCommand { Id = key };
     }
 
     #endregion
@@ -263,5 +309,118 @@ public class EndpointScenarioTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadFromJsonAsync<Shared.Core.Validation.ValidationErrorResponse>();
         content!.Errors.Should().HaveCount(1);
         content.Errors[0].ErrorMessage.Should().Be("Invalid Id");
+    }
+
+    [Fact]
+    public async Task Create_ShouldReturn201AndLocationAndBody()
+    {
+        var mockSender = new Mock<IRequestSender>();
+        var created = new TestResponse { Message = "Created" };
+        mockSender.Setup(x => x.Send<TestResponse>(It.IsAny<CreateTestCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(created);
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(services => services.AddScoped(_ => mockSender.Object));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints => new TestCreateEndpoint().Map(endpoints));
+            });
+        }).CreateClient();
+
+        var response = await client.PostAsJsonAsync("/api/test-create", new CreateTestCommand { Name = "Test" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.Headers.Location.Should().NotBeNull();
+        response.Headers.Location!.ToString().Should().Contain("/api/test-create");
+        var body = await response.Content.ReadFromJsonAsync<TestResponse>();
+        body!.Message.Should().Be("Created");
+    }
+
+    [Fact]
+    public async Task List_ShouldBindQueryAndReturn200WithPagedResult()
+    {
+        var mockSender = new Mock<IRequestSender>();
+        var paged = new PagedResult<TestResponse>
+        {
+            Items = [new TestResponse { Message = "A" }],
+            PageNumber = 1,
+            PageSize = 10,
+            TotalCount = 1
+        };
+        mockSender.Setup(x => x.Send<PagedResult<TestResponse>>(It.IsAny<ListTestQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(paged);
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(services => services.AddScoped(_ => mockSender.Object));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints => new TestListEndpoint().Map(endpoints));
+            });
+        }).CreateClient();
+
+        var response = await client.GetAsync("/api/test-list?PageNumber=1&PageSize=10");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<PagedResult<TestResponse>>();
+        result!.Items.Should().HaveCount(1);
+        result.Items[0].Message.Should().Be("A");
+        mockSender.Verify(x => x.Send<PagedResult<TestResponse>>(It.Is<ListTestQuery>(q => q.PageNumber == 1 && q.PageSize == 10), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_ShouldBindKeyAndBodyAndReturn200()
+    {
+        var mockSender = new Mock<IRequestSender>();
+        var updated = new TestResponse { Message = "Updated" };
+        mockSender.Setup(x => x.Send<TestResponse>(It.IsAny<UpdateTestCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(updated);
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(services => services.AddScoped(_ => mockSender.Object));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints => new TestUpdateEndpoint().Map(endpoints));
+            });
+        }).CreateClient();
+
+        var response = await client.PutAsJsonAsync("/api/test-update/42", new UpdateTestCommand { Id = 42, Name = "Updated" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<TestResponse>();
+        body!.Message.Should().Be("Updated");
+        mockSender.Verify(x => x.Send<TestResponse>(It.Is<UpdateTestCommand>(c => c.Id == 42 && c.Name == "Updated"), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldBindKeyAndReturn204()
+    {
+        var mockSender = new Mock<IRequestSender>();
+        mockSender.Setup(x => x.Send<object?>(It.IsAny<DeleteTestCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(null as object);
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(services => services.AddScoped(_ => mockSender.Object));
+            builder.Configure(app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints => new TestDeleteEndpoint().Map(endpoints));
+            });
+        }).CreateClient();
+
+        var response = await client.DeleteAsync("/api/test-delete/99");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        mockSender.Verify(x => x.Send<object?>(It.Is<DeleteTestCommand>(c => c.Id == 99), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

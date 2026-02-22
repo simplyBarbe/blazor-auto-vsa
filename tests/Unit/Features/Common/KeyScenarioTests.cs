@@ -48,6 +48,15 @@ public class KeyScenarioTests
     #endregion
 
     [Fact]
+    public void KeyExtractor_WhenCommandNull_ThrowsArgumentNullException()
+    {
+        var act = () => _keyExtractor.GetKeyValues(null!);
+
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("commandOrQuery");
+    }
+
+    [Fact]
     public void KeyExtractor_ShouldExtract_IntId()
     {
         var query = new GetByIdIntQuery { Id = 123 };

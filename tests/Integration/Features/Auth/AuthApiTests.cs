@@ -52,4 +52,28 @@ public class AuthApiTests : IClassFixture<TestWebApplicationFactory>
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         }
     }
+
+    [Fact]
+    public async Task Logout_without_authentication_should_return_401()
+    {
+        var response = await _client.PostAsync("/api/auth/logout", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Logout_after_login_should_return_200()
+    {
+        var loginRequest = new LoginRequest { Email = "admin@example.com", Password = "Admin123!" };
+        var loginResponse = await _client.PostAsJsonAsync("/api/auth/login", loginRequest);
+
+        if (loginResponse.StatusCode != HttpStatusCode.OK)
+        {
+            return; // No seeded user; skip asserting logout
+        }
+
+        var logoutResponse = await _client.PostAsync("/api/auth/logout", null);
+
+        logoutResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 }

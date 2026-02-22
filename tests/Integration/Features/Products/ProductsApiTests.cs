@@ -126,4 +126,20 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task UpdateProduct_with_invalid_data_should_return_400()
+    {
+        var createCommand = new CreateProductCommand("Valid", 10m);
+        var createResponse = await _client.PostAsJsonAsync("/api/products", createCommand);
+        createResponse.EnsureSuccessStatusCode();
+        var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
+        created.Should().NotBeNull();
+
+        var updateCommand = new UpdateProductCommand(created!.Id, "", -5m); // empty name, negative price
+
+        var response = await _client.PutAsJsonAsync($"/api/products/{created.Id}", updateCommand);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }
