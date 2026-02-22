@@ -3,9 +3,6 @@ using Shared.Core.Auth;
 
 namespace Client.Features.Auth;
 
-/// <summary>
-/// Route definitions for authentication endpoints.
-/// </summary>
 public class AuthRoutes : IRouteDefinition
 {
     public void Define(IRouteMap map)

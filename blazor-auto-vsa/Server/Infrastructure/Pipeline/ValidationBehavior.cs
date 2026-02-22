@@ -5,10 +5,7 @@ using System.Linq;
 
 namespace Server.Infrastructure.Pipeline;
 
-/// <summary>
-/// Pipeline behavior that validates requests before handler execution.
-/// If no validator is registered for the request type, validation is skipped.
-/// </summary>
+/// <summary>Validates requests before handler execution. Skipped when no validator is registered for the request type.</summary>
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {

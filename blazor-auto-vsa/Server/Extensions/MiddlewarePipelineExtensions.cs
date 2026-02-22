@@ -4,20 +4,10 @@ using Microsoft.AspNetCore.Localization;
 
 namespace Server.Extensions;
 
-/// <summary>
-/// Configures the HTTP request pipeline (middleware order) in one place.
-/// </summary>
 public static class MiddlewarePipelineExtensions
 {
     private const string DefaultCultureName = "it-IT";
 
-    /// <summary>
-    /// Configures database migration, environment-specific middleware,
-    /// status pages, HTTPS, auth, localization, antiforgery, and conditional static assets.
-    /// Call app.UseSerilogRequestLogging() before this if using Serilog.
-    /// </summary>
-    /// <param name="app">The web application.</param>
-    /// <returns>The web application for chaining.</returns>
     public static WebApplication UseAppMiddleware(this WebApplication app)
     {
         app.UseDatabaseMigration();

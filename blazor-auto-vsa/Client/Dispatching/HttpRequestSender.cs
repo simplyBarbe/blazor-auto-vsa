@@ -6,11 +6,6 @@ using System.Text.Json;
 
 namespace Client.Dispatching;
 
-/// <summary>
-/// Implementation of IRequestSender that sends requests via HTTP.
-/// Used when running in WebAssembly mode.
-/// Handles validation errors returned from the server.
-/// </summary>
 public class HttpRequestSender : IRequestSender
 {
     private readonly HttpClient _http;
@@ -61,7 +56,6 @@ public class HttpRequestSender : IRequestSender
             response = await _http.SendAsync(message, cancellationToken);
         }
 
-        // Handle validation errors (400 Bad Request)
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -75,12 +69,8 @@ public class HttpRequestSender : IRequestSender
                     throw new ValidationException(validationErrors.Errors);
                 }
             }
-            catch (JsonException)
-            {
-                // Fall through to generic error handling below
-            }
+            catch (JsonException) { }
 
-            // If it's not a validation error payload, surface the response body
             throw new HttpRequestException(
                 $"Request failed with status {(int)response.StatusCode} {response.StatusCode}. Response: {content}");
         }

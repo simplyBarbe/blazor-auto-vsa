@@ -5,10 +5,7 @@ using Shared.Core.Pipeline;
 
 namespace Server.Infrastructure.Dispatching;
 
-/// <summary>
-/// Implementation of IRequestSender that invokes handlers through a pipeline.
-/// Used during SSR/Prerendering when running on the server.
-/// </summary>
+/// <summary>Invokes handlers through the pipeline. Used for SSR/Prerendering on the server.</summary>
 public class LocalRequestSender : IRequestSender
 {
     private readonly IServiceScopeFactory _scopeFactory;
@@ -29,18 +26,15 @@ public class LocalRequestSender : IRequestSender
         var requestType = request.GetType();
         var responseType = typeof(TResponse);
 
-        // Get all pipeline behaviors for this request/response type
         var behaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
         var behaviors = serviceProvider.GetServices(behaviorType).Cast<object>().ToList();
 
-        // Build the final handler delegate
         RequestHandlerDelegate<TResponse> handler = async () => 
         {
             var result = await ExecuteHandlerInternal(serviceProvider, request, requestType, responseType, cancellationToken);
             return (TResponse)result;
         };
 
-        // Build the pipeline by wrapping behaviors from last to first
         foreach (var behavior in behaviors.AsEnumerable().Reverse())
         {
             var currentBehavior = behavior;
@@ -84,7 +78,6 @@ public class LocalRequestSender : IRequestSender
                 ctParam
             );
 
-            // Convert Task<TResponse> to Task<object>
             var convertedCall = Expression.Call(
                 typeof(LocalRequestSender).GetMethod(nameof(ConvertTask), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
                     .MakeGenericMethod(responseType),
@@ -118,7 +111,6 @@ public class LocalRequestSender : IRequestSender
                 ctParam
             );
 
-            // Convert Task<TResponse> to Task<object>
             var convertedCall = Expression.Call(
                 typeof(LocalRequestSender).GetMethod(nameof(ConvertTask), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
                     .MakeGenericMethod(responseType),

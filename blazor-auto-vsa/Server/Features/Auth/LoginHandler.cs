@@ -5,9 +5,6 @@ using Shared.Core.Auth;
 
 namespace Server.Features.Auth;
 
-/// <summary>
-/// Handler for LoginRequest - authenticates a user with email and password.
-/// </summary>
 public class LoginHandler : IRequestHandler<LoginRequest, UserInfo>
 {
     private readonly SignInManager<ApplicationUser> _signInManager;

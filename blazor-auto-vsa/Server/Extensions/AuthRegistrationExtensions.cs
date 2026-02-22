@@ -5,19 +5,10 @@ using Server.Infrastructure.Data;
 
 namespace Server.Extensions;
 
-/// <summary>
-/// Extension methods for registering authentication and authorization services.
-/// </summary>
 public static class AuthRegistrationExtensions
 {
-    /// <summary>
-    /// Adds authentication and authorization services to the service collection.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddAuthenticationAndAuthorization(this IServiceCollection services)
     {
-        // Configure cookie authentication
         services.AddAuthentication(IdentityConstants.ApplicationScheme)
             .AddCookie(IdentityConstants.ApplicationScheme, options =>
             {
@@ -32,20 +23,16 @@ public static class AuthRegistrationExtensions
                 options.AccessDeniedPath = "/access-denied";
             });
 
-        // Configure Identity
         services.AddIdentityCore<ApplicationUser>(options =>
         {
-            // Password settings
             options.Password.RequireDigit = true;
             options.Password.RequireLowercase = true;
             options.Password.RequireUppercase = true;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequiredLength = 8;
 
-            // User settings
             options.User.RequireUniqueEmail = true;
 
-            // SignIn settings
             options.SignIn.RequireConfirmedEmail = false;
             options.SignIn.RequireConfirmedAccount = false;
         })
@@ -54,7 +41,6 @@ public static class AuthRegistrationExtensions
         .AddSignInManager()
         .AddDefaultTokenProviders();
 
-        // Add authorization services
         services.AddAuthorizationBuilder();
 
         return services;

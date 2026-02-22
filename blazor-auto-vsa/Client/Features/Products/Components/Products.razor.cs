@@ -17,10 +17,6 @@ namespace Client.Features.Products.Components;
 
 public partial class Products : PagedListComponent<ProductResponse, ListProductQuery>
 {
-
-    /// <summary>
-    /// Helper to determine if we are running in the browser (WebAssembly).
-    /// </summary>
     protected bool IsBrowser => OperatingSystem.IsBrowser();
     
     private FluentDataGrid<ProductResponse>? _grid;

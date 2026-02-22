@@ -3,15 +3,8 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace Client.Extensions;
 
-/// <summary>
-/// Extension methods for integrating FluentValidation with Blazor EditContext.
-/// Uses Validate() for synchronous validators (client-side) and handles async validators gracefully.
-/// </summary>
 public static class EditContextExtensions
 {
-    /// <summary>
-    /// Adds FluentValidation support to the EditContext.
-    /// </summary>
     public static void AddFluentValidation(this EditContext editContext, IServiceProvider serviceProvider)
     {
         var messages = editContext.GetMessageStore();
@@ -33,8 +26,6 @@ public static class EditContextExtensions
         var validator = GetValidatorForModel(editContext.Model, serviceProvider);
         if (validator == null)
         {
-            // No validator found - clear any existing messages and consider valid
-            // Server-side validation will handle validation if needed
             messages.Clear();
             editContext.NotifyValidationStateChanged();
             return;
@@ -46,19 +37,16 @@ public static class EditContextExtensions
 
         try
         {
-            // Try synchronous validation first (for client-side validators)
             validationResult = validator.Validate(context);
         }
         catch (AsyncValidatorInvokedSynchronouslyException)
         {
-            // If validator has async rules, skip client-side validation
-            // Server-side validation will catch these errors
             messages.Clear();
             editContext.NotifyValidationStateChanged();
             return;
         }
 
-        messages.Clear(); // Clear messages BEFORE adding new ones from validationResult
+        messages.Clear();
 
         foreach (var error in validationResult.Errors)
         {
@@ -74,7 +62,6 @@ public static class EditContextExtensions
         var validator = GetValidatorForModel(editContext.Model, serviceProvider);
         if (validator == null)
         {
-            // No validator found - clear field errors and consider valid
             messages.Clear(fieldIdentifier);
             editContext.NotifyValidationStateChanged();
             return;
@@ -86,13 +73,10 @@ public static class EditContextExtensions
 
         try
         {
-            // Try synchronous validation first (for client-side validators)
             validationResult = validator.Validate(context);
         }
         catch (AsyncValidatorInvokedSynchronouslyException)
         {
-            // If validator has async rules, skip client-side validation for this field
-            // Server-side validation will catch these errors
             messages.Clear(fieldIdentifier);
             editContext.NotifyValidationStateChanged();
             return;

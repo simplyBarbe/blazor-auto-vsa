@@ -4,15 +4,8 @@ using Server.Domain;
 
 namespace Server.Infrastructure.Data.Configurations;
 
-/// <summary>
-/// Entity Framework Core configuration for the Product entity.
-/// </summary>
 public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
-    /// <summary>
-    /// Configures the Product entity mapping.
-    /// </summary>
-    /// <param name="builder">The entity type builder.</param>
     public void Configure(EntityTypeBuilder<Product> builder)
     {
         builder.ToTable("products");

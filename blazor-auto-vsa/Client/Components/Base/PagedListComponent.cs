@@ -1,4 +1,4 @@
-﻿using Shared.Core;
+using Shared.Core;
 using Microsoft.FluentUI.AspNetCore.Components;
 using System.Linq;
 using Microsoft.AspNetCore.Components;
@@ -6,36 +6,16 @@ using Shared.Core.CRUD;
 
 namespace Client.Components.Base;
 
-/// <summary>
-/// Base class for list components that handle pagination and data loading.
-/// </summary>
-/// <typeparam name="TResponse">The type of items in the list.</typeparam>
-/// <typeparam name="TQuery">The type of the query used to fetch data.</typeparam>
 public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
     where TQuery : IRequest<PagedResult<TResponse>>, IPageableQuery, new()
 {
     private bool _restoredItemsServed;
 
-    /// <summary>
-    /// Default page size for list views.
-    /// </summary>
     protected virtual int ItemsPerPage => 10;
-
-    /// <summary>
-    /// Pagination state for data grids.
-    /// </summary>
     protected PaginationState Pagination { get; } = new();
 
     [PersistentState] public List<TResponse>? Items { get; set; }
-
-    /// <summary>
-    /// The query used for data loading, including pagination and filtering parameters.
-    /// </summary>
     protected TQuery Query { get; set; } = new();
-
-    /// <summary>
-    /// The total count of items across all pages.
-    /// </summary>
     [PersistentState] public int TotalCount { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -48,9 +28,6 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
         }
     }
 
-    /// <summary>
-    /// Loads data using the current Query parameters.
-    /// </summary>
     protected virtual async Task LoadDataAsync()
     {
         var result = await SendAsync(Query);
@@ -61,9 +38,6 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
         }
     }
 
-    /// <summary>
-    /// Shared items provider for data grids with paging.
-    /// </summary>
     protected ValueTask<GridItemsProviderResult<TResponse>> ProvideItemsAsync(GridItemsProviderRequest<TResponse> request)
     {
         var pageSize = request.Count.GetValueOrDefault(Pagination.ItemsPerPage);
@@ -76,7 +50,6 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
         Query.PageNumber = (startIndex / pageSize) + 1;
         Query.PageSize = pageSize;
 
-        // Hydration path: serve restored state synchronously once to avoid the grid loading flash.
         if (!_restoredItemsServed && Items != null)
         {
             _restoredItemsServed = true;

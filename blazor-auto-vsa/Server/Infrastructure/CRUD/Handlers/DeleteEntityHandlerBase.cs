@@ -5,12 +5,7 @@ using Shared.Core.Exceptions;
 
 namespace Server.Infrastructure.CRUD.Handlers;
 
-/// <summary>
-/// Abstract base handler for deleting entities.
-/// Supports simple types (int, Guid, string) and composite keys (tuples, records).
-/// </summary>
-/// <typeparam name="TEntity">The entity type.</typeparam>
-/// <typeparam name="TCommand">The command type.</typeparam>
+/// <summary>Base handler for delete. Supports simple and composite keys.</summary>
 public abstract class DeleteEntityHandlerBase<TEntity, TCommand> : IRequestHandler<TCommand, object?>
     where TEntity : class
     where TCommand : IRequest<object?>, IEntityKeyProvider
@@ -18,18 +13,12 @@ public abstract class DeleteEntityHandlerBase<TEntity, TCommand> : IRequestHandl
     private readonly IUnitOfWork _unitOfWork;
     private readonly KeyExtractor _keyExtractor;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DeleteEntityHandlerBase{TEntity, TCommand}"/> class.
-    /// </summary>
-    /// <param name="unitOfWork">The unit of work.</param>
-    /// <param name="keyExtractor">The key extractor. If null, uses the default instance.</param>
     protected DeleteEntityHandlerBase(IUnitOfWork unitOfWork, KeyExtractor? keyExtractor = null)
     {
         _unitOfWork = unitOfWork;
         _keyExtractor = keyExtractor ?? KeyExtractor.Default;
     }
 
-    /// <inheritdoc />
     public async Task<object?> Handle(TCommand request, CancellationToken cancellationToken = default)
     {
         var keyValues = _keyExtractor.GetKeyValues(request);

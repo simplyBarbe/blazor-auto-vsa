@@ -6,13 +6,7 @@ using Shared.Core.Exceptions;
 
 namespace Server.Infrastructure.CRUD.Handlers;
 
-/// <summary>
-/// Abstract base handler for updating entities.
-/// Supports simple types (int, Guid, string) and composite keys (tuples, records).
-/// </summary>
-/// <typeparam name="TEntity">The entity type.</typeparam>
-/// <typeparam name="TCommand">The command type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
+/// <summary>Base handler for update. Supports simple and composite keys.</summary>
 public abstract class UpdateEntityHandlerBase<TEntity, TCommand, TResponse> : IRequestHandler<TCommand, TResponse>
     where TEntity : class
     where TCommand : IRequest<TResponse>, IEntityKeyProvider
@@ -21,12 +15,6 @@ public abstract class UpdateEntityHandlerBase<TEntity, TCommand, TResponse> : IR
     private readonly IMapper _mapper;
     private readonly KeyExtractor _keyExtractor;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UpdateEntityHandlerBase{TEntity, TCommand, TResponse}"/> class.
-    /// </summary>
-    /// <param name="unitOfWork">The unit of work.</param>
-    /// <param name="mapper">The AutoMapper instance.</param>
-    /// <param name="keyExtractor">The key extractor. If null, uses the default instance.</param>
     protected UpdateEntityHandlerBase(IUnitOfWork unitOfWork, IMapper mapper, KeyExtractor? keyExtractor = null)
     {
         _unitOfWork = unitOfWork;
@@ -34,7 +22,6 @@ public abstract class UpdateEntityHandlerBase<TEntity, TCommand, TResponse> : IR
         _keyExtractor = keyExtractor ?? KeyExtractor.Default;
     }
 
-    /// <inheritdoc />
     public async Task<TResponse> Handle(TCommand request, CancellationToken cancellationToken = default)
     {
         var keyValues = _keyExtractor.GetKeyValues(request);
@@ -52,23 +39,7 @@ public abstract class UpdateEntityHandlerBase<TEntity, TCommand, TResponse> : IR
         return MapToResponse(entity);
     }
 
-    /// <summary>
-    /// Updates the entity with values from the command. Can be overridden for custom update logic.
-    /// </summary>
-    /// <param name="entity">The entity to update.</param>
-    /// <param name="command">The command containing update values.</param>
-    protected virtual void UpdateEntity(TEntity entity, TCommand command)
-    {
-        _mapper.Map(command, entity);
-    }
+    protected virtual void UpdateEntity(TEntity entity, TCommand command) => _mapper.Map(command, entity);
 
-    /// <summary>
-    /// Maps the entity to a response. Can be overridden for custom mapping logic.
-    /// </summary>
-    /// <param name="entity">The entity to map.</param>
-    /// <returns>The mapped response.</returns>
-    protected virtual TResponse MapToResponse(TEntity entity)
-    {
-        return _mapper.Map<TResponse>(entity);
-    }
+    protected virtual TResponse MapToResponse(TEntity entity) => _mapper.Map<TResponse>(entity);
 }

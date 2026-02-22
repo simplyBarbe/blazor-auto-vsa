@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Shared.Core;
@@ -7,9 +7,6 @@ using Client.Extensions;
 
 namespace Client.Components.Base;
 
-/// <summary>
-/// Base class for components with loading, validation, toast, and confirmation dialog support.
-/// </summary>
 public abstract class BaseComponent : ComponentBase
 {
     protected sealed record RequestOptions(bool TrackLoading = true, string? SuccessMessage = null);
@@ -18,7 +15,6 @@ public abstract class BaseComponent : ComponentBase
     [Inject] protected IToastService ToastService { get; set; } = default!;
     [Inject] protected IDialogService DialogService { get; set; } = default!;
 
-    // Loading
     protected bool IsLoading
     {
         get => _isLoading;
@@ -33,9 +29,6 @@ public abstract class BaseComponent : ComponentBase
     }
     private bool _isLoading;
 
-    /// <summary>
-    /// Executes a request with automatic loading state, error handling, and toast notifications.
-    /// </summary>
     protected async Task<TResponse?> SendAsync<TResponse>(
         IRequest<TResponse> request,
         EditContext? editContext = null,
@@ -97,9 +90,6 @@ public abstract class BaseComponent : ComponentBase
         }
     }
 
-    /// <summary>
-    /// Shows a confirmation dialog and returns true if confirmed.
-    /// </summary>
     protected async Task<bool> ConfirmAsync(
         string message, 
         string title = "Confirm", 

@@ -23,15 +23,11 @@ public class AuditTrail
 
     public Dictionary<string, object> PrimaryKey { get; set; } = new();
 
-    // New: Transient properties for handling temporary values (not persisted)
     public List<TemporaryProperty> TemporaryProperties { get; } = new();
-
-    public IAuditableEntity? AuditedEntity { get; set; } // Transient reference to the entity being audited
-
+    public IAuditableEntity? AuditedEntity { get; set; }
     public string? ErrorMessage { get; set; }
 }
 
-// Simple domain class (or use a record: public record TemporaryProperty(string Name, bool IsPrimaryKey);)
 public class TemporaryProperty
 {
     public string Name { get; set; } = null!;

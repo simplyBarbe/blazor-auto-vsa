@@ -4,9 +4,6 @@ using System.Text.RegularExpressions;
 
 namespace Client.Dispatching;
 
-/// <summary>
-/// Maps requests to their corresponding API endpoints.
-/// </summary>
 public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
 {
     private readonly Dictionary<Type, (string Template, HttpMethod Method)> _routes = new();
@@ -34,7 +31,6 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
 
         var used = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // Use Regex to find and replace all placeholders like {Id} or {Id:int}
         var url = Regex.Replace(mapping.Template, @"\{(?<name>\w+)(?::[^}]+)?\}", m =>
         {
             var name = m.Groups["name"].Value;

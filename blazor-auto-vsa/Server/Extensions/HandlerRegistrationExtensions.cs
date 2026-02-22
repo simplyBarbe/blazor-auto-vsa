@@ -3,17 +3,8 @@ using System.Reflection;
 
 namespace Server.Extensions;
 
-/// <summary>
-/// Extension methods for registering request handlers in DI.
-/// </summary>
 public static class HandlerRegistrationExtensions
 {
-    /// <summary>
-    /// Registers all IRequestHandler implementations from the specified assembly.
-    /// </summary>
-    /// <param name="services">The service collection.</param>
-    /// <param name="assembly">The assembly to scan for handlers.</param>
-    /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         var handlerInterfaceType = typeof(IRequestHandler<,>);

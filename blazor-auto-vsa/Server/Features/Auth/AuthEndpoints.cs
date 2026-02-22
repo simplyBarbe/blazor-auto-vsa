@@ -7,15 +7,8 @@ using Shared.Core.Auth;
 
 namespace Server.Infrastructure.Auth;
 
-/// <summary>
-/// Authentication API endpoints for login, logout, and user information.
-/// </summary>
 public static class AuthEndpoints
 {
-    /// <summary>
-    /// Maps authentication endpoints to the application.
-    /// </summary>
-    /// <param name="app">The web application.</param>
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/auth")
@@ -38,9 +31,6 @@ public static class AuthEndpoints
             .WithDescription("Retrieves information about the currently authenticated user including roles and claims");
     }
 
-    /// <summary>
-    /// Authenticates a user with email and password.
-    /// </summary>
     private static async Task<IResult> Login(
         [FromBody] LoginRequest request,
         [FromServices] IRequestSender sender)
@@ -56,9 +46,6 @@ public static class AuthEndpoints
         }
     }
 
-    /// <summary>
-    /// Signs out the current user.
-    /// </summary>
     private static async Task<IResult> Logout(
         [FromServices] IRequestSender sender)
     {
@@ -66,9 +53,6 @@ public static class AuthEndpoints
         return Results.Ok(new { message = "Logged out successfully." });
     }
 
-    /// <summary>
-    /// Gets the current authenticated user's information.
-    /// </summary>
     private static async Task<IResult> GetCurrentUser(
         HttpContext context,
         [FromServices] UserManager<ApplicationUser> userManager)

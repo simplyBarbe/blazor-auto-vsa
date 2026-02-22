@@ -8,22 +8,13 @@ using System.Linq.Expressions;
 
 namespace Server.Features.Products.List;
 
-/// <summary>
-/// Handler for ListProductQuery - retrieves a list of products with pagination and filtering.
-/// </summary>
 public class ListProductHandler : ListEntityHandlerBase<Product, ListProductQuery, ProductResponse>
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ListProductHandler"/> class.
-    /// </summary>
-    /// <param name="unitOfWork">The unit of work.</param>
-    /// <param name="mapper">The AutoMapper instance.</param>
     public ListProductHandler(IUnitOfWork unitOfWork, IMapper mapper)
         : base(unitOfWork, mapper)
     {
     }
 
-    /// <inheritdoc />
     protected override QueryFilter<Product> BuildQueryFilter(ListProductQuery query)
     {
         var pageNumber = query.PageNumber ?? 1;

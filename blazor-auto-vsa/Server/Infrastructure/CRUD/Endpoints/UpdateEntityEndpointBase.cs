@@ -7,37 +7,18 @@ using Shared.Core.Validation;
 
 namespace Server.Infrastructure.CRUD.Endpoints;
 
-/// <summary>
-/// Abstract base endpoint for updating entities.
-/// Defaults to using "id" parameter (int or Guid), but can be easily overridden for custom parameter names or composite keys.
-/// </summary>
-/// <typeparam name="TKey">The key type for route binding (e.g., int, Guid, string).</typeparam>
-/// <typeparam name="TCommand">The command type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
+/// <summary>Base for update endpoints. Supports "id" or composite keys via GetRoute.</summary>
 public abstract class UpdateEntityEndpointBase<TKey, TCommand, TResponse> : IEndpoint
     where TCommand : IRequest<TResponse>
 {
-    /// <inheritdoc />
     public virtual void Map(IEndpointRouteBuilder app)
     {
         app.MapPut(GetRoute(), HandleAsync)
             .WithTags(EndpointTagHelper.GetFeatureTag(GetType()));
     }
 
-    /// <summary>
-    /// Gets the route pattern with key parameter. Must be implemented by derived classes.
-    /// </summary>
-    /// <returns>The route pattern (e.g., "/api/products/{id:int}" or "/api/orders/{year:int}/{month}" for composite keys).</returns>
     protected abstract string GetRoute();
 
-    /// <summary>
-    /// Handles the update request. Can be overridden for custom handling.
-    /// </summary>
-    /// <param name="key">The key from route binding.</param>
-    /// <param name="command">The command.</param>
-    /// <param name="sender">The request sender.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The result.</returns>
     protected virtual async Task<IResult> HandleAsync(
         TKey key,
         [FromBody] TCommand command,

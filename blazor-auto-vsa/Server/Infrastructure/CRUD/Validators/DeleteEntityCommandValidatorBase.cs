@@ -4,17 +4,10 @@ using System.Reflection;
 
 namespace Server.Infrastructure.CRUD.Validators;
 
-/// <summary>
-/// Base validator for delete entity commands.
-/// Validates that either an "Id" property exists and is set, or GetKeys() returns valid keys.
-/// </summary>
-/// <typeparam name="TCommand">The command type.</typeparam>
+/// <summary>Validates delete: either "Id" is set or GetKeys() returns valid keys.</summary>
 public abstract class DeleteEntityCommandValidatorBase<TCommand> : AbstractValidator<TCommand>
     where TCommand : IEntityKeyProvider
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DeleteEntityCommandValidatorBase{TCommand}"/> class.
-    /// </summary>
     protected DeleteEntityCommandValidatorBase()
     {
         var type = typeof(TCommand);
@@ -22,14 +15,12 @@ public abstract class DeleteEntityCommandValidatorBase<TCommand> : AbstractValid
 
         if (idProperty != null && idProperty.CanRead)
         {
-            // Validate "Id" property if it exists
             RuleFor(x => idProperty.GetValue(x))
                 .NotNull()
                 .WithMessage("The Id is required.");
         }
         else
         {
-            // If no "Id" property, validate GetKeys() returns valid keys
             RuleFor(x => x.GetKeys())
                 .NotEmpty()
                 .WithMessage("The key is required.");

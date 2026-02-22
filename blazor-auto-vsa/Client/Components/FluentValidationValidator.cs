@@ -4,10 +4,6 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace Client.Components;
 
-/// <summary>
-/// Blazor component that integrates FluentValidation with EditForm.
-/// Place this component inside an EditForm to enable FluentValidation.
-/// </summary>
 public class FluentValidationValidator : ComponentBase
 {
     [CascadingParameter]

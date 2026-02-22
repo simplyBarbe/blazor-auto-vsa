@@ -1,10 +1,7 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace Shared.Features.Products.Update;
 
-/// <summary>
-/// Validator for UpdateProductCommand.
-/// </summary>
 public class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
 {
     public UpdateProductCommandValidator()

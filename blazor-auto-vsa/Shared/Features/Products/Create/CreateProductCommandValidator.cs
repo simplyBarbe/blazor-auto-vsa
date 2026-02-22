@@ -2,10 +2,6 @@ using FluentValidation;
 
 namespace Shared.Features.Products.Create;
 
-/// <summary>
-/// Base validator for CreateProductCommand with simple synchronous rules.
-/// Used by both client and server.
-/// </summary>
 public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
 {
     public CreateProductCommandValidator()

@@ -5,9 +5,6 @@ using Shared.Core.Auth;
 
 namespace Server.Features.Auth;
 
-/// <summary>
-/// Handler for LogoutCommand - signs out the current user.
-/// </summary>
 public class LogoutHandler : IRequestHandler<LogoutCommand, object?>
 {
     private readonly SignInManager<ApplicationUser> _signInManager;

@@ -19,7 +19,6 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
         _serviceProvider = serviceProvider;
     }
 
-    /// <inheritdoc />
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
         DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
     {
@@ -31,7 +30,6 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
         return await base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    /// <inheritdoc />
     public override async ValueTask<int> SavedChangesAsync(
         SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
     {
@@ -156,7 +154,6 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
             }
         }
 
-        // Skip creating audit log if no changes were detected
         if (!hasChanges) return null;
 
         return AuditLog;
@@ -166,8 +163,8 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
     {
         if (_temporaryAuditLogList.Any())
         {
-            foreach (AuditTrail auditLog in
-                     _temporaryAuditLogList) FinalizeTemporaryProperties(auditLog); // New: Extracted method for reuse
+            foreach (AuditTrail auditLog in _temporaryAuditLogList)
+                FinalizeTemporaryProperties(auditLog);
 
             await context.AddRangeAsync(_temporaryAuditLogList, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
@@ -179,8 +176,8 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
     {
         if (_temporaryAuditLogList.Any())
         {
-            foreach (AuditTrail auditLog in
-                     AuditLogs) FinalizeTemporaryProperties(auditLog); // New: Reuse the same finalization logic
+            foreach (AuditTrail auditLog in AuditLogs)
+                FinalizeTemporaryProperties(auditLog);
 
             using IServiceScope scope = _serviceProvider.CreateScope();
             IDbContextFactory<ApplicationDbContext> dbContextFactory = scope.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
@@ -199,7 +196,7 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
         foreach (TemporaryProperty temp in auditLog.TemporaryProperties)
         {
             System.Reflection.PropertyInfo? propertyInfo = auditLog.AuditedEntity.GetType().GetProperty(temp.Name);
-            if (propertyInfo == null) continue; // Skip if not found (edge case)
+            if (propertyInfo == null) continue;
 
             object? currentValue = propertyInfo.GetValue(auditLog.AuditedEntity);
             object? value = propertyInfo.PropertyType == typeof(byte[]) ? "[Binary Data]" : currentValue;
@@ -209,7 +206,6 @@ public class AuditableEntityInterceptor : SaveChangesInterceptor
             else if (auditLog.NewValues != null && value != null) auditLog.NewValues[temp.Name] = value;
         }
 
-        // Optional: Clear temporary properties after finalization to free memory
         auditLog.TemporaryProperties.Clear();
     }
 }

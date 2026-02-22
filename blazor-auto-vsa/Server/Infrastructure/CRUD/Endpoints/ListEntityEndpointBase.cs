@@ -6,15 +6,9 @@ using Shared.Core.Validation;
 
 namespace Server.Infrastructure.CRUD.Endpoints;
 
-/// <summary>
-/// Abstract base endpoint for listing entities.
-/// </summary>
-/// <typeparam name="TQuery">The query type.</typeparam>
-/// <typeparam name="TResponse">The response type.</typeparam>
 public abstract class ListEntityEndpointBase<TQuery, TResponse> : IEndpoint
     where TQuery : IRequest<PagedResult<TResponse>>
 {
-    /// <inheritdoc />
     public void Map(IEndpointRouteBuilder app)
     {
         app.MapGet(GetRoute(), HandleAsync)
@@ -22,29 +16,10 @@ public abstract class ListEntityEndpointBase<TQuery, TResponse> : IEndpoint
             .DisableAntiforgery();
     }
 
-    /// <summary>
-    /// Gets the route pattern. Must be implemented by derived classes.
-    /// </summary>
-    /// <returns>The route pattern (e.g., "/api/products").</returns>
     protected abstract string GetRoute();
 
-    /// <summary>
-    /// Creates a query from the request. Can be overridden for query string parameter binding.
-    /// </summary>
-    /// <param name="query">The query from model binding.</param>
-    /// <returns>The query to use.</returns>
-    protected virtual TQuery CreateQuery(TQuery query)
-    {
-        return query;
-    }
+    protected virtual TQuery CreateQuery(TQuery query) => query;
 
-    /// <summary>
-    /// Handles the list request. Can be overridden for custom handling.
-    /// </summary>
-    /// <param name="query">The query.</param>
-    /// <param name="sender">The request sender.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The result.</returns>
     protected virtual async Task<IResult> HandleAsync(
         [AsParameters] TQuery query,
         [FromServices] IRequestSender sender,

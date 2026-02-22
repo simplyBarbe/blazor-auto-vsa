@@ -5,9 +5,6 @@ using Microsoft.AspNetCore.Components;
 
 namespace Client.Infrastructure.Auth;
 
-/// <summary>
-/// A DelegatingHandler that adds the antiforgery token to outgoing requests.
-/// </summary>
 public class AntiforgeryHandler : DelegatingHandler
 {
     private readonly PersistentComponentState _state;
