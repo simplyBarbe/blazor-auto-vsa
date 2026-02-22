@@ -53,10 +53,18 @@ public static class DatabaseRegistrationExtensions
             context.Database.Migrate();
         }
 
+        return app;
+    }
+
+    public static WebApplication UseDatabaseSeeding(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Server.Domain.Entities.ApplicationUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        DbSeeder.SeedIdentityAsync(userManager, roleManager).GetAwaiter().GetResult();
 
+        DbSeeder.SeedProductsAsync(context).GetAwaiter().GetResult();
+        DbSeeder.SeedIdentityAsync(userManager, roleManager).GetAwaiter().GetResult();
         return app;
     }
 }

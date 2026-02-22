@@ -1,10 +1,24 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Server.Domain;
 using Server.Domain.Entities;
 
 namespace Server.Infrastructure.Data;
 
 public static class DbSeeder
 {
+    public static async Task SeedProductsAsync(ApplicationDbContext context)
+    {
+        if (await context.Products.AnyAsync())
+            return;
+
+        context.Products.AddRange(
+            new Product { Name = "Seed Product Alpha", Price = 19.99m },
+            new Product { Name = "Seed Product Beta", Price = 29.99m }
+        );
+        await context.SaveChangesAsync();
+    }
+
     public static async Task SeedIdentityAsync(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
     {
         string[] roleNames = { "Admin", "User" };

@@ -11,6 +11,7 @@ public static class MiddlewarePipelineExtensions
     public static WebApplication UseAppMiddleware(this WebApplication app)
     {
         app.UseDatabaseMigration();
+        app.UseDatabaseSeeding();
 
         if (app.Environment.IsDevelopment())
         {
