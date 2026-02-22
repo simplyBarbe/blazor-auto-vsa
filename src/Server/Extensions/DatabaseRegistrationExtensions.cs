@@ -17,11 +17,18 @@ public static class DatabaseRegistrationExtensions
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
-            options.AddInterceptors(
-                sp.GetRequiredService<SoftDeleteInterceptor>(),
-                sp.GetRequiredService<AuditableEntityInterceptor>()
-            );
+            if (configuration.GetValue<bool>("UseInMemoryDatabase"))
+            {
+                options.UseInMemoryDatabase("TestDb");
+            }
+            else
+            {
+                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"));
+                options.AddInterceptors(
+                    sp.GetRequiredService<SoftDeleteInterceptor>(),
+                    sp.GetRequiredService<AuditableEntityInterceptor>()
+                );
+            }
         });
 
         services.AddAutoMapper(_ => { }, mappingAssemblies);
@@ -35,7 +42,16 @@ public static class DatabaseRegistrationExtensions
     {
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        context.Database.Migrate();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        if (configuration.GetValue<bool>("UseInMemoryDatabase"))
+        {
+            context.Database.EnsureCreated();
+        }
+        else
+        {
+            context.Database.Migrate();
+        }
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Server.Domain.Entities.ApplicationUser>>();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();

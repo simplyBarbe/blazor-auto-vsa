@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Integration.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -16,11 +17,12 @@ using Shared.Core.CRUD;
 
 namespace Integration.Features.Common;
 
-public class EndpointScenarioTests : IClassFixture<WebApplicationFactory<Server.Program>>
+[Collection(Integration.Infrastructure.IntegrationCollection.Name)]
+public class EndpointScenarioTests : IClassFixture<TestWebApplicationFactory>
 {
-    private readonly WebApplicationFactory<Server.Program> _factory;
+    private readonly TestWebApplicationFactory _factory;
 
-    public EndpointScenarioTests(WebApplicationFactory<Server.Program> factory)
+    public EndpointScenarioTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
     }

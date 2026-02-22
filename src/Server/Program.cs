@@ -8,7 +8,10 @@ using Shared.Features.Products.Create;
 
 namespace Server
 {
-    public class Program
+    /// <summary>
+    /// Entry point for the application. Made partial so WebApplicationFactory can discover and bootstrap the app in integration tests.
+    /// </summary>
+    public partial class Program
     {
         public static void Main(string[] args)
         {
