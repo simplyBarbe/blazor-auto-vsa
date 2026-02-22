@@ -9,7 +9,7 @@ using Server.Infrastructure.CRUD.Handlers;
 
 using Shared.Core.Exceptions;
 
-namespace Server.Tests.Unit;
+namespace Unit.Features.Common;
 
 public class KeyScenarioTests
 {
@@ -39,7 +39,7 @@ public class KeyScenarioTests
 
     public class GetByCompositeKeyQuery : IRequest<string>, IEntityKeyProvider
     {
-        public CompositeKey Key { get; set; }
+        public required CompositeKey Key { get; set; }
         public object[] GetKeys() => [Key.UserId, Key.GroupId];
     }
 

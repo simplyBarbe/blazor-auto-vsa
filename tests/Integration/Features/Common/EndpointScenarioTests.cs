@@ -14,7 +14,7 @@ using Server.Infrastructure.Endpoints;
 using Shared.Core;
 using Shared.Core.CRUD;
 
-namespace Server.Tests.Integration;
+namespace Integration.Features.Common;
 
 public class EndpointScenarioTests : IClassFixture<WebApplicationFactory<Server.Program>>
 {

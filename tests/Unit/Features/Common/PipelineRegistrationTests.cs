@@ -6,7 +6,7 @@ using Server.Extensions;
 using FluentAssertions;
 using Xunit;
 
-namespace Server.Tests.Integration;
+namespace Unit.Features.Common;
 
 public class PipelineRegistrationTests
 {
