@@ -29,7 +29,7 @@ def main():
     workspace_root = script_dir.parent
     
     # Project path relative to workspace root
-    project_path = workspace_root / "blazor-auto-vsa" / "Server" / "Server.csproj"
+    project_path = workspace_root / "src" / "Server" / "Server.csproj"
     
     # Verify project file exists
     if not project_path.exists():
@@ -44,7 +44,7 @@ def main():
         "--project", str(project_relative),
         "--startup-project", str(project_relative),
         "--context", "ApplicationDbContext",
-        "--output-dir", "Data/Migrations"
+        "--output-dir", "Infrastructure/Data/Migrations"
     ]
     
     print(f"Adding migration: {migration_name}")

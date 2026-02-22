@@ -9,18 +9,18 @@ using Server.Infrastructure.Data;
 
 #nullable disable
 
-namespace Server.Data.Migrations
+namespace Server.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260210150803_AddIdentity")]
-    partial class AddIdentity
+    [Migration("20260222185342_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.0")
+                .HasAnnotation("ProductVersion", "10.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresEnum(modelBuilder, "audit_type", new[] { "created", "updated", "deleted", "error" });
