@@ -1,0 +1,69 @@
+@page "/products"
+@using Client.Components.Base
+@inherits PagedListComponent<ProductResponse, Shared.Features.Products.List.ListProductQuery>
+@using Shared.Features.Products.Responses
+@using Shared.Features.Products.List
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<PageTitle>🛒 Product Management</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20"
+             Style="width: 100%; padding: 2rem; box-sizing: border-box;">
+
+    <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
+        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">🛒 Product Management</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
+    </FluentStack>
+
+    <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
+        <FluentBadge Appearance="@(IsBrowser ? Appearance.Accent : Appearance.Neutral)"
+                     Style="padding: 12px 20px; font-size: 14px;">
+            <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                         HorizontalGap="8">
+                @if (IsBrowser)
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Custom"
+                                CustomColor="var(--foreground-on-accent-rest)"/>
+                    <FluentLabel Color="Color.Custom" CustomColor="var(--foreground-on-accent-rest)">
+                        WebAssembly (HTTP API)
+                    </FluentLabel>
+                }
+                else
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Custom"
+                                CustomColor="var(--neutral-foreground-rest)"/>
+                    <FluentLabel Color="Color.Custom" CustomColor="var(--neutral-foreground-rest)">
+                        Server-Side Rendering (Direct)
+                    </FluentLabel>
+                }
+            </FluentStack>
+        </FluentBadge>
+    </FluentStack>
+
+    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right" Style="width: 100%;">
+        <FluentButton Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom"
+                        CustomColor="var(--foreground-on-accent-rest)"/>
+            Add Product
+        </FluentButton>
+    </FluentStack>
+
+    <DataGridContainer IsLoading="@IsLoading" Pagination="@Pagination">
+        <FluentDataGrid @ref="_grid" ItemsProvider="@ProductProvider" Pagination="@Pagination"
+                        ResizableColumns="true" ResizeColumnOnAllRows="false"
+                        DisplayMode="DataGridDisplayMode.Table"
+                        TGridItem="ProductResponse">
+            <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID"/>
+            <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name"/>
+            <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2"/>
+            <TemplateColumn Title="Actions" Align="Align.End">
+                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnEditProductAsync(context))">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent"/>
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteProductAsync(context))">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error"/>
+                </FluentButton>
+            </TemplateColumn>
+        </FluentDataGrid>
+    </DataGridContainer>
+</FluentStack>

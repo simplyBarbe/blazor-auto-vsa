@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Antiforgery
+@implements IDisposable
+@inject PersistentComponentState PersistentState
+@inject IAntiforgery Antiforgery
+@inject IHttpContextAccessor HttpContextAccessor
+
+<CascadingAuthenticationState>
+    @ChildContent
+</CascadingAuthenticationState>
+
+@code {
+    private PersistingComponentStateSubscription? _subscription;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        _subscription = PersistentState.RegisterOnPersisting(PersistAuthenticationState);
+        return Task.CompletedTask;
+    }
+
+    private Task PersistAuthenticationState()
+    {
+        if (HttpContextAccessor.HttpContext is { } httpContext)
+        {
+            var tokens = Antiforgery.GetAndStoreTokens(httpContext);
+            if (tokens.RequestToken is { } token)
+            {
+                PersistentState.PersistAsJson("AntiforgeryToken", token);
+            }
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        _subscription?.Dispose();
+    }
+}

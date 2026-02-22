@@ -1,3 +1,5 @@
+name: "blazor-auto-vsa"
+
 services:
   fluentui:
     image: ${DOCKER_REGISTRY-}fluentui

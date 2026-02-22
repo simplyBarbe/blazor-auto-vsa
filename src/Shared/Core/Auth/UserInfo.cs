@@ -1,0 +1,9 @@
+namespace Shared.Core.Auth;
+
+public class UserInfo
+{
+    public string UserId { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public List<string> Roles { get; set; } = new();
+    public Dictionary<string, string> Claims { get; set; } = new();
+}

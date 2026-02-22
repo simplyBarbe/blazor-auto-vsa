@@ -1,0 +1,82 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using Client.Extensions
+@using Client.Components.Base
+@typeparam TCommand where TCommand : class
+@inherits BaseComponent
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        @if (IsAddMode)
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="@Color.Accent" />
+        }
+        else
+        {
+            <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" Color="@Color.Accent" />
+        }
+        <FluentLabel Typo="Typography.PaneHeader">
+            @(IsAddMode ? AddTitle : EditTitle)
+        </FluentLabel>
+    </FluentStack>
+</FluentDialogHeader>
+
+<EditForm Model="@Content" OnSubmit="HandleSubmitAsync">
+    <FluentDialogBody>
+        <FluentValidationValidator />
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="15">
+            <ValidationSummary />
+            @ChildContent(Content)
+        </FluentStack>
+    </FluentDialogBody>
+
+    <FluentDialogFooter>
+        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">
+            @SaveButtonText
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync" Disabled="@IsLoading">
+            @CancelButtonText
+        </FluentButton>
+    </FluentDialogFooter>
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired] 
+    public TCommand Content { get; set; } = default!;
+
+    [Parameter, EditorRequired] 
+    public RenderFragment<TCommand> ChildContent { get; set; } = default!;
+
+    [Parameter] public string AddTitle { get; set; } = "Add";
+
+    [Parameter] public string EditTitle { get; set; } = "Edit";
+
+    [Parameter] public string SaveButtonText { get; set; } = "Save";
+
+    [Parameter] public string CancelButtonText { get; set; } = "Cancel";
+
+    [Parameter] public bool IsAddMode { get; set; }
+
+    [Parameter] public EventCallback<EditContext> OnSave { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task HandleSubmitAsync(EditContext editContext)
+    {
+        if (IsLoading) return;
+
+        editContext.ClearValidationMessages();
+
+        if (!editContext.Validate())
+        {
+            editContext.NotifyValidationStateChanged();
+            return;
+        }
+
+        await OnSave.InvokeAsync(editContext);
+    }
+
+    private async Task HandleCancelAsync()
+    {
+        await OnCancel.InvokeAsync();
+    }
+}

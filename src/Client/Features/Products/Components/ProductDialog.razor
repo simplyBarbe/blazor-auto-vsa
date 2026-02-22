@@ -1,0 +1,48 @@
+﻿@using Shared.Features.Products.Update
+@using Shared.Features.Products.Create
+@using Client.Components.Base
+@using Client.Extensions
+@inherits BaseComponent
+@implements IDialogContentComponent<UpdateProductCommand>
+
+<ActionDialog TCommand="UpdateProductCommand"
+                 Content="@Content"
+                 IsAddMode="@(Content.Id == 0)"
+                 AddTitle="Add Product"
+                 EditTitle="Edit Product"
+                 OnSave="SaveAsync"
+                 OnCancel="CancelAsync">
+        <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
+        <FluentValidationMessage For="@(() => Content.Name)"/>
+
+        <FluentNumberField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true"
+                           Style="width: 100%;"/>
+        <FluentValidationMessage For="@(() => Content.Price)"/>
+</ActionDialog>
+
+@code {
+    [Parameter] public UpdateProductCommand Content { get; set; } = default!;
+
+    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+
+    private async Task SaveAsync(EditContext editContext)
+    {
+        if (Content.Id == 0)
+        {
+            var createCommand = new CreateProductCommand(Content.Name, Content.Price);
+            var result = await SendAsync(createCommand, editContext, new RequestOptions(SuccessMessage: "Product created!"));
+            if (result != null) await Dialog.CloseAsync(Content);
+        }
+        else
+        {
+            var result = await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product updated!"));
+            if (result != null) await Dialog.CloseAsync(Content);
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        await Dialog.CancelAsync();
+    }
+
+}

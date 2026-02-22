@@ -1,0 +1,65 @@
+@page "/audit-trails"
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@using Client.Components.Base
+@inherits PagedListComponent<AuditTrailResponse, Shared.Features.AuditTrails.List.ListAuditTrailQuery>
+@using Shared.Features.AuditTrails.Responses
+@using Shared.Features.AuditTrails.List
+@using Shared.Domain.Enums
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<PageTitle>📜 Audit Trails</PageTitle>
+
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20"
+             Style="width: 100%; padding: 2rem; box-sizing: border-box;">
+
+    <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
+        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">📜 Audit Trails</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">System activity and changes.</FluentLabel>
+    </FluentStack>
+
+    <FluentCard AreaRestricted="false" Style="position: relative; z-index: 100; width: 100%;">
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="16" Style="overflow: visible;">
+            <FluentTextField @bind-Value="Query.SearchTerm" Label="Search Table" Placeholder="e.g. products"
+                             @oninput="OnSearchTermChanged"/>
+
+            <FluentSelect TOption="string"
+                          Label="Audit Type"
+                          Items="@_auditTypeOptions"
+                          @bind-Value="SelectedAuditTypeString"
+                          Width="200px"/>
+
+            <FluentButton Appearance="Appearance.Accent" OnClick="LoadDataAsync" Style="align-self: flex-end;">Apply
+                Filter
+            </FluentButton>
+        </FluentStack>
+    </FluentCard>
+
+    <DataGridContainer IsLoading="@IsLoading" Pagination="@Pagination">
+        <FluentDataGrid @ref="_grid" ItemsProvider="@AuditTrailProvider" Pagination="@Pagination"
+                        ResizableColumns="true" ResizeColumnOnAllRows="false"
+                        DisplayMode="DataGridDisplayMode.Table"
+                        TGridItem="AuditTrailResponse">
+            <PropertyColumn Property="@(p => p.TableName)" Sortable="true" Title="Table"/>
+            <PropertyColumn Property="@(p => p.AuditType)" Sortable="true" Title="Type"/>
+            <PropertyColumn Property="@(p => p.DateTime)" Sortable="true" Title="Date" Format="G"/>
+            <TemplateColumn Title="Affected Columns">
+                @if (context.AffectedColumns != null && context.AffectedColumns.Any())
+                {
+                    <span>@string.Join(", ", context.AffectedColumns)</span>
+                }
+                else
+                {
+                    <span></span>
+                }
+            </TemplateColumn>
+            <TemplateColumn Title="Actions" Align="Align.End">
+                <FluentButton Appearance="Appearance.Lightweight"
+                              OnClick="@(() => OnViewDetailsAsync(context))">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="@Color.Accent"/>
+                </FluentButton>
+            </TemplateColumn>
+        </FluentDataGrid>
+    </DataGridContainer>
+</FluentStack>
