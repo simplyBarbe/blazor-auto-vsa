@@ -97,10 +97,10 @@ public abstract class BaseComponent : ComponentBase
         string secondaryButtonText = "No")
     {
         var dialog = await DialogService.ShowConfirmationAsync(
-            message, 
-            title, 
-            primaryButtonText, 
-            secondaryButtonText);
+            message,
+            primaryButtonText,
+            secondaryButtonText,
+            title);
         
         var result = await dialog.Result;
         return !result.Cancelled;
