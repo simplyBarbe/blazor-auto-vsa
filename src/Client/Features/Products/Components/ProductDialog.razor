@@ -1,5 +1,6 @@
-﻿@using Shared.Features.Products.Update
+@using Shared.Features.Products.Update
 @using Shared.Features.Products.Create
+@using Client.Components
 @using Client.Components.Base
 @using Client.Extensions
 @inherits BaseComponent
@@ -15,8 +16,8 @@
         <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
         <FluentValidationMessage For="@(() => Content.Name)"/>
 
-        <FluentNumberField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true"
-                           Style="width: 100%;"/>
+        <CustomNumericField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true"
+                            Style="width: 100%;"/>
         <FluentValidationMessage For="@(() => Content.Price)"/>
 </ActionDialog>
 
