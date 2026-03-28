@@ -12,12 +12,12 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["blazor-auto-vsa/Server/Server.csproj", "blazor-auto-vsa/Server/"]
-COPY ["blazor-auto-vsa/Client/Client.csproj", "blazor-auto-vsa/Client/"]
-COPY ["blazor-auto-vsa/Shared/Shared.csproj", "blazor-auto-vsa/Shared/"]
-RUN dotnet restore "./blazor-auto-vsa/Server/Server.csproj"
+COPY ["src/Server/Server.csproj", "src/Server/"]
+COPY ["src/Client/Client.csproj", "src/Client/"]
+COPY ["src/Shared/Shared.csproj", "src/Shared/"]
+RUN dotnet restore "./src/Server/Server.csproj"
 COPY . .
-WORKDIR "/src/blazor-auto-vsa/Server"
+WORKDIR "/src/src/Server"
 RUN dotnet build "./Server.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Questa fase viene usata per pubblicare il progetto di servizio da copiare nella fase finale
