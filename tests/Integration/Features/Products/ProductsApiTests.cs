@@ -128,6 +128,21 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
+    public async Task CreateProduct_duplicate_name_should_return_400()
+    {
+        var uniqueName = $"Duplicate Name {Guid.NewGuid():N}";
+        var first = new CreateProductCommand(uniqueName, 10m);
+        var createFirst = await _client.PostAsJsonAsync("/api/products", first);
+        createFirst.EnsureSuccessStatusCode();
+
+        var duplicateCase = new CreateProductCommand(uniqueName.ToUpperInvariant(), 20m);
+
+        var response = await _client.PostAsJsonAsync("/api/products", duplicateCase);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
     public async Task UpdateProduct_with_invalid_data_should_return_400()
     {
         var createCommand = new CreateProductCommand("Valid", 10m);
@@ -139,6 +154,24 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
         var updateCommand = new UpdateProductCommand(created!.Id, "", -5m); // empty name, negative price
 
         var response = await _client.PutAsJsonAsync($"/api/products/{created.Id}", updateCommand);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task UpdateProduct_duplicate_name_should_return_400()
+    {
+        var nameA = $"Update Dup A {Guid.NewGuid():N}";
+        var nameB = $"Update Dup B {Guid.NewGuid():N}";
+        var createA = await _client.PostAsJsonAsync("/api/products", new CreateProductCommand(nameA, 1m));
+        createA.EnsureSuccessStatusCode();
+        var createB = await _client.PostAsJsonAsync("/api/products", new CreateProductCommand(nameB, 2m));
+        createB.EnsureSuccessStatusCode();
+        var productB = await createB.Content.ReadFromJsonAsync<ProductResponse>();
+        productB.Should().NotBeNull();
+
+        var updateCommand = new UpdateProductCommand(productB!.Id, nameA.ToUpperInvariant(), 99m);
+        var response = await _client.PutAsJsonAsync($"/api/products/{productB.Id}", updateCommand);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }

@@ -1,28 +1,32 @@
 using FluentValidation;
+using Server.Domain;
+using Server.Infrastructure.Data.Contracts;
 using Shared.Features.Products.Create;
 
 namespace Server.Features.Products.Create;
 
 /// <summary>
 /// Server-side validator for CreateProductCommand.
-/// Extends base validator with async rules that may require database access.
+/// Extends base validation with rules that require database access (e.g. unique name).
 /// </summary>
 public class CreateProductCommandServerValidator : AbstractValidator<CreateProductCommand>
 {
-    public CreateProductCommandServerValidator()
+    public CreateProductCommandServerValidator(IUnitOfWork unitOfWork)
     {
-        // Include base validation rules from Shared
         Include(new CreateProductCommandValidator());
 
-        // Add server-only async validation rules
-        // Example: check if product name already exists in database
         RuleFor(x => x.Name)
             .MustAsync(async (name, cancellationToken) =>
             {
-                // In real scenario: return !await _repository.ExistsByNameAsync(name, cancellationToken);
-                await Task.Delay(1, cancellationToken);
-                return true;
+                var count = await unitOfWork.ReadRepository<Product>().CountAsync(
+                    new QueryFilter<Product>
+                    {
+                        Filters = [p => p.Name.ToLower() == name.ToLower()]
+                    },
+                    cancellationToken);
+                return count == 0;
             })
+            .When(x => !string.IsNullOrWhiteSpace(x.Name))
             .WithMessage("Un prodotto con questo nome esiste già");
     }
 }

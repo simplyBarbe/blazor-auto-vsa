@@ -1,5 +1,4 @@
 using Server.Extensions;
-using Server.Features.Products.Get;
 using Server.Infrastructure.Mapping;
 using Serilog;
 using Serilog.AspNetCore;
@@ -28,9 +27,11 @@ namespace Server
 
                 builder.Services.AddWebUiServices();
 
+                // Register Shared validators first, then Server, so server validators that wrap Shared rules
+                // (same IValidator<T>) win in DI over the standalone Shared validators.
                 builder.Services.AddInfrastructure(
-                    typeof(Program).Assembly,
-                    typeof(CreateProductCommandValidator).Assembly);
+                    typeof(CreateProductCommandValidator).Assembly,
+                    typeof(Program).Assembly);
 
                 builder.Services.AddApplicationDbContext(builder.Configuration, typeof(ProductMappingProfile).Assembly);
 

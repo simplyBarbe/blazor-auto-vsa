@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Integration.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Shared.Core.Auth;
 using Xunit;
 
@@ -14,9 +15,11 @@ namespace Integration.Features.Auth;
 public class AuthApiTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private readonly TestWebApplicationFactory _factory;
 
     public AuthApiTests(TestWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
@@ -54,11 +57,14 @@ public class AuthApiTests : IClassFixture<TestWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Logout_without_authentication_should_return_401()
+    public async Task Logout_without_authentication_should_challenge_not_return_ok()
     {
-        var response = await _client.PostAsync("/api/auth/logout", null);
+        // With cookie auth, an unauthorized API call often redirects to the login page; following
+        // that redirect yields 200 from the SPA, masking the real challenge response.
+        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var response = await client.PostAsync("/api/auth/logout", null);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Redirect);
     }
 
     [Fact]

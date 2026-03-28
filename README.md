@@ -155,8 +155,6 @@ dotnet test tests/Integration/Integration.Tests.csproj
 dotnet test blazor-auto-vsa.slnx --collect:"XPlat Code Coverage"
 ```
 
-Note: `tests/Integration/Integration.Tests.csproj` references `tests/TestCommon/TestCommon.csproj`, which is missing in this snapshot.
-
 ## Deploy
 
 ```bash
@@ -165,7 +163,6 @@ docker compose up --build
 
 - Dockerfile: `src/Server/Dockerfile`
 - Compose files: `docker-compose.yml`, `docker-compose.override.yml`
-- TODO: compose currently points to `blazor-auto-vsa/Server/Dockerfile`; repo path is `src/Server/Dockerfile`.
 
 ## Support
 
