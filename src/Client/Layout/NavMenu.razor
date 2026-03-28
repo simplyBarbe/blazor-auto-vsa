@@ -1,17 +1,12 @@
-﻿<FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" @bind-Expanded="expanded">
-    <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">
+<FluentNav Width="250px">
+    <FluentNavItem Href="/" Match="NavLinkMatch.All" IconRest="@(new Icons.Regular.Size20.Home())" IconActive="@(new Icons.Filled.Size20.Home())">
         Home
-    </FluentNavLink>
-    <FluentNavLink Href="counter" Icon="@(new Icons.Regular.Size20.NumberSymbolSquare())" IconColor="Color.Accent">
+    </FluentNavItem>
+    <FluentNavItem Href="counter" IconRest="@(new Icons.Regular.Size20.NumberSymbolSquare())" IconActive="@(new Icons.Filled.Size20.NumberSymbolSquare())">
         Counter
-    </FluentNavLink>
-    <FluentNavLink Href="products" Icon="@(new Icons.Regular.Size20.Box())" IconColor="Color.Accent">Products
-    </FluentNavLink>
-    <FluentNavLink Href="audit-trails" Icon="@(new Icons.Regular.Size20.History())" IconColor="Color.Accent">Audit Trails
-    </FluentNavLink>
-</FluentNavMenu>
-
-@code {
-    private bool expanded = true;
-
-}
+    </FluentNavItem>
+    <FluentNavItem Href="products" IconRest="@(new Icons.Regular.Size20.Box())" IconActive="@(new Icons.Filled.Size20.Box())">Products
+    </FluentNavItem>
+    <FluentNavItem Href="audit-trails" IconRest="@(new Icons.Regular.Size20.History())" IconActive="@(new Icons.Filled.Size20.History())">Audit Trails
+    </FluentNavItem>
+</FluentNav>

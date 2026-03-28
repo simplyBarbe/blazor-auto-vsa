@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Shared.Core;
 using Shared.Core.Validation;
 using Client.Extensions;
@@ -12,8 +13,8 @@ public abstract class BaseComponent : ComponentBase
     protected sealed record RequestOptions(bool TrackLoading = true, string? SuccessMessage = null);
 
     [Inject] protected IRequestSender RequestSender { get; set; } = default!;
-    [Inject] protected IToastService ToastService { get; set; } = default!;
     [Inject] protected IDialogService DialogService { get; set; } = default!;
+    [Inject] protected ILogger<BaseComponent> Logger { get; set; } = default!;
 
     protected bool IsLoading
     {
@@ -56,7 +57,7 @@ public abstract class BaseComponent : ComponentBase
             
             if (options.SuccessMessage != null)
             {
-                ToastService.ShowSuccess(options.SuccessMessage);
+                Logger.LogInformation("{Message}", options.SuccessMessage);
             }
             
             return result;
@@ -71,14 +72,14 @@ public abstract class BaseComponent : ComponentBase
             {
                 foreach (var error in ex.Errors)
                 {
-                    ToastService.ShowError(error.ErrorMessage);
+                    Logger.LogError("{Message}", error.ErrorMessage);
                 }
             }
             return default;
         }
         catch (Exception ex)
         {
-            ToastService.ShowError(ex.Message);
+            Logger.LogError(ex, "Request failed");
             return default;
         }
         finally
@@ -96,18 +97,17 @@ public abstract class BaseComponent : ComponentBase
         string primaryButtonText = "Yes",
         string secondaryButtonText = "No")
     {
-        var dialog = await DialogService.ShowConfirmationAsync(
+        var result = await DialogService.ShowConfirmationAsync(
             message, 
             title, 
             primaryButtonText, 
             secondaryButtonText);
-        
-        var result = await dialog.Result;
+
         return !result.Cancelled;
     }
 
-    protected void ShowSuccess(string message) => ToastService.ShowSuccess(message);
-    protected void ShowError(string message) => ToastService.ShowError(message);
-    protected void ShowInfo(string message) => ToastService.ShowInfo(message);
-    protected void ShowWarning(string message) => ToastService.ShowWarning(message);
+    protected void ShowSuccess(string message) => Logger.LogInformation("{Message}", message);
+    protected void ShowError(string message) => Logger.LogError("{Message}", message);
+    protected void ShowInfo(string message) => Logger.LogInformation("{Message}", message);
+    protected void ShowWarning(string message) => Logger.LogWarning("{Message}", message);
 }

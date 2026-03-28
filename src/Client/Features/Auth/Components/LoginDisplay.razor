@@ -9,14 +9,17 @@
                      VerticalAlignment="VerticalAlignment.Center" 
                      Style="gap: 10px;" 
                      Width="auto">
+            @* Label is now exclusivly being used for labeling input fields.
+               If you want to use a component that shows text using Fluent's opinions on typography and is more compatible with what was used in v4, you can use the new Text component instead.
+               Weight now determines whether label text is regular or semibold. *@
             <FluentLabel>@context.User.Identity?.Name</FluentLabel>
-            <FluentButton Appearance="Appearance.Lightweight" OnClick="@HandleLogout">
+            <FluentButton Appearance="ButtonAppearance.Transparent" OnClick="@HandleLogout">
                 Logout
             </FluentButton>
         </FluentStack>
     </Authorized>
     <NotAuthorized>
-        <FluentButton Appearance="Appearance.Accent" OnClick="@(() => Navigation.NavigateTo("/login"))">
+        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="@(() => Navigation.NavigateTo("/login"))">
             Login
         </FluentButton>
     </NotAuthorized>

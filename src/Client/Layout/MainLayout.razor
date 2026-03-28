@@ -1,37 +1,28 @@
 @inherits LayoutComponentBase
 
-<FluentDesignTheme Mode="@themeMode" ModeChanged="OnThemeModeChanged" StorageName="blazor-auto-vsa-theme" />
-
 <FluentLayout>
-    <FluentHeader>
+    <FluentLayoutItem Area="LayoutArea.Header">
         <div class="header-bar">
             <div class="header-title">Server</div>
             <FluentStack Orientation="Orientation.Horizontal" 
                          HorizontalAlignment="HorizontalAlignment.End" 
                          VerticalAlignment="VerticalAlignment.Center"
                          Width="auto">
-                <FluentButton Class="theme-toggle"
-                              Appearance="Appearance.Stealth"
-                              OnClick="ToggleTheme"
-                              Title="@ThemeButtonTitle"
-                              IconStart="@ThemeButtonIcon"
-                              AriaLabel="@ThemeButtonTitle" />
                 <Client.Features.Auth.Components.LoginDisplay />
             </FluentStack>
         </div>
-    </FluentHeader>
+    </FluentLayoutItem>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <NavMenu />
-        <FluentBodyContent Class="body-content">
+        <FluentLayoutItem Area="LayoutArea.Content" Class="body-content">
             <div class="content">
                 @Body
             </div>
-        </FluentBodyContent>
+        </FluentLayoutItem>
     </FluentStack>
 </FluentLayout>
 
-<FluentToastProvider />
-<FluentDialogProvider />
+<FluentProviders />
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
@@ -39,31 +30,3 @@
     <span class="dismiss">🗙</span>
 </div>
 
-@code {
-    private DesignThemeModes themeMode = DesignThemeModes.System;
-
-    private string ThemeButtonLabel =>
-        themeMode == DesignThemeModes.Dark ? "Light mode" : "Dark mode";
-
-    private string ThemeButtonTitle =>
-        themeMode == DesignThemeModes.Dark ? "Switch to light mode" : "Switch to dark mode";
-
-    private Icon ThemeButtonIcon =>
-        themeMode == DesignThemeModes.Dark
-            ? new Icons.Regular.Size20.WeatherSunny()
-            : new Icons.Regular.Size20.WeatherMoon();
-
-    private Task OnThemeModeChanged(DesignThemeModes mode)
-    {
-        themeMode = mode;
-        return Task.CompletedTask;
-    }
-
-    private Task ToggleTheme()
-    {
-        themeMode = themeMode == DesignThemeModes.Dark
-            ? DesignThemeModes.Light
-            : DesignThemeModes.Dark;
-        return Task.CompletedTask;
-    }
-}

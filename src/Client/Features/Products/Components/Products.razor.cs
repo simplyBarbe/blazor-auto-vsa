@@ -47,17 +47,18 @@ public partial class Products : PagedListComponent<ProductResponse, ListProductQ
         if (IsLoading) return;
 
         var command = new UpdateProductCommand();
-        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
+        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(new DialogOptions
         {
-            Title = "Add Product",
+            Header = { Title = "Add Product" },
             Width = "400px",
-            TrapFocus = true,
             Modal = true,
-            PreventScroll = true
+            Parameters = new Dictionary<string, object?>
+            {
+                ["Content"] = command
+            }
         });
 
-        var result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!dialog.Cancelled)
         {
             await LoadProductsAsync();
         }
@@ -68,17 +69,18 @@ public partial class Products : PagedListComponent<ProductResponse, ListProductQ
         if (IsLoading) return;
 
         var command = new UpdateProductCommand(product.Id, product.Name, product.Price);
-        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
+        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(new DialogOptions
         {
-            Title = "Edit Product",
+            Header = { Title = "Edit Product" },
             Width = "400px",
-            TrapFocus = true,
             Modal = true,
-            PreventScroll = true
+            Parameters = new Dictionary<string, object?>
+            {
+                ["Content"] = command
+            }
         });
 
-        var result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!dialog.Cancelled)
         {
             await LoadProductsAsync();
         }

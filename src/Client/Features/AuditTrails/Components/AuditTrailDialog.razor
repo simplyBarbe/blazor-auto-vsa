@@ -1,15 +1,17 @@
 @using Shared.Features.AuditTrails.Responses
 @using Shared.Domain.Enums
-@implements IDialogContentComponent<AuditTrailResponse>
 
-<FluentDialogHeader ShowDismiss="true">
+<div style="margin-bottom: 12px;">
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         <FluentIcon Value="@(new Icons.Regular.Size24.History())" />
-        <FluentLabel Typo="Typography.PaneHeader">
+        @* Label is now exclusivly being used for labeling input fields.
+           If you want to use a component that shows text using Fluent's opinions on typography and is more compatible with what was used in v4, you can use the new Text component instead.
+           Weight now determines whether label text is regular or semibold. *@
+        <FluentLabel>
             @Content.TableName - @Content.DateTime.ToString("G")
         </FluentLabel>
     </FluentStack>
-</FluentDialogHeader>
+</div>
 
 <FluentDialogBody>
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" Style="width: 100%;">
@@ -17,21 +19,21 @@
         <FluentCard Style="width: 100%;">
             <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="20">
                 <FluentStack Orientation="Orientation.Vertical">
-                    <FluentLabel Typo="Typography.Body">Type</FluentLabel>
+                    <FluentLabel>Type</FluentLabel>
                     <FluentBadge Appearance="@GetAuditTypeAppearance(Content.AuditType)">@Content.AuditType</FluentBadge>
                 </FluentStack>
                 <FluentStack Orientation="Orientation.Vertical">
-                    <FluentLabel Typo="Typography.Body">User ID</FluentLabel>
+                    <FluentLabel>User ID</FluentLabel>
                     <FluentLabel>@(Content.UserId?.ToString() ?? "System")</FluentLabel>
                 </FluentStack>
                 <FluentStack Orientation="Orientation.Vertical">
-                    <FluentLabel Typo="Typography.Body">Primary Key</FluentLabel>
+                    <FluentLabel>Primary Key</FluentLabel>
                     <FluentLabel>@FormatDictionary(Content.PrimaryKey)</FluentLabel>
                 </FluentStack>
             </FluentStack>
         </FluentCard>
 
-        <FluentLabel Typo="Typography.Header">Changes</FluentLabel>
+        <FluentLabel>Changes</FluentLabel>
 
         <div style="overflow-x: auto; width: 100%;">
             <table class="diff-table" style="width: 100%; border-collapse: collapse;">
@@ -66,16 +68,16 @@
     </FluentStack>
 </FluentDialogBody>
 
-<FluentDialogFooter>
-    <FluentButton Appearance="Appearance.Neutral" OnClick="@(() => Dialog.CloseAsync())">Close</FluentButton>
-</FluentDialogFooter>
+<div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+    <FluentButton Appearance="ButtonAppearance.Default" OnClick="@(() => Dialog.CloseAsync())">Close</FluentButton>
+</div>
 
 @code {
     [Parameter]
     public AuditTrailResponse Content { get; set; } = default!;
 
     [CascadingParameter]
-    public FluentDialog Dialog { get; set; } = default!;
+    public IDialogInstance Dialog { get; set; } = default!;
 
     private IEnumerable<string> GetAllKeys()
     {
@@ -91,12 +93,12 @@
         return string.Join(", ", dict.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
     }
 
-    private Appearance GetAuditTypeAppearance(AuditType type) => type switch
+    private BadgeAppearance GetAuditTypeAppearance(AuditType type) => type switch
     {
-        AuditType.Created => Appearance.Accent,
-        AuditType.Updated => Appearance.Neutral,
-        AuditType.Deleted => Appearance.Lightweight,
-        _ => Appearance.Neutral
+        AuditType.Created => BadgeAppearance.Filled,
+        AuditType.Updated => BadgeAppearance.Outline,
+        AuditType.Deleted => BadgeAppearance.Ghost,
+        _ => BadgeAppearance.Tint
     };
 }
 

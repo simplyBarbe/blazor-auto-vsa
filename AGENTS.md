@@ -3,7 +3,7 @@
 ## Project Structure & Module Organization
 This solution is organized by app and test layers:
 - `src/Server`: ASP.NET Core host, endpoints, EF Core data access, auth, and infrastructure. Reusable CRUD behavior (base handlers, endpoints, validators) lives under `Infrastructure/CRUD/`.
-- `src/Client`: Blazor WebAssembly UI (`Features/*`, `Components/*`, `Layout/*`). Also: `Pages/`, `Dispatching/` (e.g. `HttpRequestSender`, `RequestEndpointMapper`), `Extensions/`, `Infrastructure/`.
+- `src/Client`: Blazor WebAssembly UI (`Features/*`, `Components/*`, `Layout/*`). Also: `Pages/`, `Dispatching/` (e.g. `HttpRequestSender`, `RequestEndpointMapper`), `Extensions/`, `Infrastructure/`. UI components use `Microsoft.FluentUI.AspNetCore.Components` v5 APIs.
 - `src/Shared`: contracts, request/response models, validators, and cross-layer abstractions.
 - `tests/Unit`: fast unit tests for handlers, validators, dispatching, and shared behavior.
 - `tests/Integration`: API/infrastructure tests using `WebApplicationFactory`; they use an in-memory database and the `Testing` environment—no external DB required.
@@ -20,6 +20,7 @@ Keep feature code grouped by domain (for example `Features/Products/Create`, `Ge
 - `dotnet watch --project src/Server/Server.csproj`: run with hot reload during development.
 - `dotnet test tests/Unit/Unit.Tests.csproj`: run unit tests.
 - `dotnet test tests/Integration/Integration.Tests.csproj`: run integration tests.
+  - Note: this project currently references `tests/TestCommon/TestCommon.csproj`, which is missing in this snapshot and can produce restore/build warnings.
 - `dotnet test blazor-auto-vsa.slnx --collect:\"XPlat Code Coverage\"`: collect coverage via Coverlet.
 - `docker compose up --build`: run app dependencies/containers.
 

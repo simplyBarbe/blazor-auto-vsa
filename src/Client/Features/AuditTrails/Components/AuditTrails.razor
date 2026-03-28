@@ -14,23 +14,26 @@
              Style="width: 100%; padding: 2rem; box-sizing: border-box;">
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
-        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">📜 Audit Trails</FluentLabel>
-        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">System activity and changes.</FluentLabel>
+        @* Label is now exclusivly being used for labeling input fields.
+           If you want to use a component that shows text using Fluent's opinions on typography and is more compatible with what was used in v4, you can use the new Text component instead.
+           Weight now determines whether label text is regular or semibold. *@
+        <FluentLabel>📜 Audit Trails</FluentLabel>
+        <FluentLabel>System activity and changes.</FluentLabel>
     </FluentStack>
 
     <FluentCard AreaRestricted="false" Style="position: relative; z-index: 100; width: 100%;">
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
                      HorizontalGap="16" Style="overflow: visible;">
-            <FluentTextField @bind-Value="Query.SearchTerm" Label="Search Table" Placeholder="e.g. products"
+            <FluentTextInput @bind-Value="Query.SearchTerm" Label="Search Table" Placeholder="e.g. products"
                              @oninput="OnSearchTermChanged"/>
 
-            <FluentSelect TOption="string"
+            <FluentSelect TOption="string" TValue="string"
                           Label="Audit Type"
                           Items="@_auditTypeOptions"
                           @bind-Value="SelectedAuditTypeString"
                           Width="200px"/>
 
-            <FluentButton Appearance="Appearance.Accent" OnClick="LoadDataAsync" Style="align-self: flex-end;">Apply
+            <FluentButton Appearance="ButtonAppearance.Primary" OnClick="LoadDataAsync" Style="align-self: flex-end;">Apply
                 Filter
             </FluentButton>
         </FluentStack>
@@ -54,10 +57,10 @@
                     <span></span>
                 }
             </TemplateColumn>
-            <TemplateColumn Title="Actions" Align="Align.End">
-                <FluentButton Appearance="Appearance.Lightweight"
+            <TemplateColumn Title="Actions">
+                <FluentButton Appearance="ButtonAppearance.Transparent"
                               OnClick="@(() => OnViewDetailsAsync(context))">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="@Color.Accent"/>
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="@Color.Primary"/>
                 </FluentButton>
             </TemplateColumn>
         </FluentDataGrid>

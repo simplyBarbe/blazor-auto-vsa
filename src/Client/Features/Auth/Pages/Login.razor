@@ -13,23 +13,23 @@
 
         @if (!string.IsNullOrEmpty(_errorMessage))
         {
-            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 20px;">
+            <FluentMessageBar Title="Error" Intent="MessageBarIntent.Error" Style="margin-bottom: 20px;">
                 @_errorMessage
             </FluentMessageBar>
         }
 
         <EditForm Model="@_loginRequest" OnValidSubmit="@HandleLogin">
             <FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-                <FluentTextField @bind-Value="_loginRequest.Email"
+                <FluentTextInput @bind-Value="_loginRequest.Email"
                                  Label="Email"
                                  Placeholder="Enter your email"
                                  Required="true"
                                  Style="width: 100%;" />
 
-                <FluentTextField @bind-Value="_loginRequest.Password"
+                <FluentTextInput @bind-Value="_loginRequest.Password"
                                  Label="Password"
                                  Placeholder="Enter your password"
-                                 TextFieldType="TextFieldType.Password"
+                                 TextInputType="TextInputType.Password"
                                  Required="true"
                                  Style="width: 100%;" />
 
@@ -37,12 +37,12 @@
                                 Label="Remember me" />
 
                 <FluentButton Type="ButtonType.Submit"
-                              Appearance="Appearance.Accent"
+                              Appearance="ButtonAppearance.Primary"
                               Style="width: 100%;"
                               Disabled="@_isLoading">
                     @if (_isLoading)
                     {
-                        <FluentProgressRing Style="width: 20px; height: 20px;" />
+                        <FluentSpinner Style="width: 20px; height: 20px;" />
                         <span style="margin-left: 10px;">Logging in...</span>
                     }
                     else

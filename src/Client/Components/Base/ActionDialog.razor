@@ -4,21 +4,24 @@
 @typeparam TCommand where TCommand : class
 @inherits BaseComponent
 
-<FluentDialogHeader ShowDismiss="true">
+<div style="margin-bottom: 12px;">
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         @if (IsAddMode)
         {
-            <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="@Color.Accent" />
+            <FluentIcon Value="@(new Icons.Regular.Size24.AddCircle())" Color="@Color.Primary" />
         }
         else
         {
-            <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" Color="@Color.Accent" />
+            <FluentIcon Value="@(new Icons.Regular.Size24.Edit())" Color="@Color.Primary" />
         }
-        <FluentLabel Typo="Typography.PaneHeader">
+        @* Label is now exclusivly being used for labeling input fields.
+           If you want to use a component that shows text using Fluent's opinions on typography and is more compatible with what was used in v4, you can use the new Text component instead.
+           Weight now determines whether label text is regular or semibold. *@
+        <FluentLabel>
             @(IsAddMode ? AddTitle : EditTitle)
         </FluentLabel>
     </FluentStack>
-</FluentDialogHeader>
+</div>
 
 <EditForm Model="@Content" OnSubmit="HandleSubmitAsync">
     <FluentDialogBody>
@@ -29,14 +32,14 @@
         </FluentStack>
     </FluentDialogBody>
 
-    <FluentDialogFooter>
-        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">
+    <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px;">
+        <FluentButton Appearance="ButtonAppearance.Primary" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">
             @SaveButtonText
         </FluentButton>
-        <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync" Disabled="@IsLoading">
+        <FluentButton Appearance="ButtonAppearance.Default" OnClick="HandleCancelAsync" Disabled="@IsLoading">
             @CancelButtonText
         </FluentButton>
-    </FluentDialogFooter>
+    </div>
 </EditForm>
 
 @code {

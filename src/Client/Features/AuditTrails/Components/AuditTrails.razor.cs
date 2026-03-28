@@ -53,13 +53,18 @@ public partial class AuditTrails : PagedListComponent<AuditTrailResponse, ListAu
 
     private async Task OnViewDetailsAsync(AuditTrailResponse auditTrail)
     {
-        await DialogService.ShowDialogAsync<AuditTrailDialog>(auditTrail, new DialogParameters
+        await DialogService.ShowDialogAsync<AuditTrailDialog>(new DialogOptions
         {
-            Title = $"Audit Details - {auditTrail.TableName} ({auditTrail.AuditType})",
+            Header =
+            {
+                Title = $"Audit Details - {auditTrail.TableName} ({auditTrail.AuditType})"
+            },
             Width = "800px",
-            TrapFocus = true,
             Modal = true,
-            PreventScroll = true
+            Parameters = new Dictionary<string, object?>
+            {
+                ["Content"] = auditTrail
+            }
         });
     }
 }

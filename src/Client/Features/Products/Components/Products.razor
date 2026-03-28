@@ -11,12 +11,16 @@
              Style="width: 100%; padding: 2rem; box-sizing: border-box;">
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
-        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">🛒 Product Management</FluentLabel>
-        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
+        @* Label is now exclusivly being used for labeling input fields.
+           If you want to use a component that shows text using Fluent's opinions on typography and is more compatible with what was used in v4, you can use the new Text component instead.
+           Weight now determines whether label text is regular or semibold. *@
+        <FluentLabel>🛒 Product Management</FluentLabel>
+        <FluentLabel>Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
     </FluentStack>
 
     <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
-        <FluentBadge Appearance="@(IsBrowser ? Appearance.Accent : Appearance.Neutral)"
+        <FluentBadge Appearance="BadgeAppearance.Filled"
+                     Color="@(IsBrowser ? BadgeColor.Brand : BadgeColor.Subtle)"
                      Style="padding: 12px 20px; font-size: 14px;">
             <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
                          HorizontalGap="8">
@@ -24,7 +28,7 @@
                 {
                     <FluentIcon Value="@(new Icons.Regular.Size20.Globe())" Color="Color.Custom"
                                 CustomColor="var(--foreground-on-accent-rest)"/>
-                    <FluentLabel Color="Color.Custom" CustomColor="var(--foreground-on-accent-rest)">
+                    <FluentLabel>
                         WebAssembly (HTTP API)
                     </FluentLabel>
                 }
@@ -32,7 +36,7 @@
                 {
                     <FluentIcon Value="@(new Icons.Regular.Size20.Server())" Color="Color.Custom"
                                 CustomColor="var(--neutral-foreground-rest)"/>
-                    <FluentLabel Color="Color.Custom" CustomColor="var(--neutral-foreground-rest)">
+                    <FluentLabel>
                         Server-Side Rendering (Direct)
                     </FluentLabel>
                 }
@@ -41,7 +45,7 @@
     </FluentStack>
 
     <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right" Style="width: 100%;">
-        <FluentButton Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
+        <FluentButton Appearance="ButtonAppearance.Primary" OnClick="OnAddProductAsync" Disabled="@IsLoading">
             <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom"
                         CustomColor="var(--foreground-on-accent-rest)"/>
             Add Product
@@ -56,11 +60,11 @@
             <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID"/>
             <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name"/>
             <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2"/>
-            <TemplateColumn Title="Actions" Align="Align.End">
-                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnEditProductAsync(context))">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent"/>
+            <TemplateColumn Title="Actions">
+                <FluentButton Appearance="ButtonAppearance.Transparent" OnClick="@(() => OnEditProductAsync(context))">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Primary"/>
                 </FluentButton>
-                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteProductAsync(context))">
+                <FluentButton Appearance="ButtonAppearance.Transparent" OnClick="@(() => OnDeleteProductAsync(context))">
                     <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error"/>
                 </FluentButton>
             </TemplateColumn>

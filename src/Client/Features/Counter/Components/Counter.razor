@@ -1,14 +1,14 @@
-﻿@page "/counter"
+@page "/counter"
 
 <PageTitle>Counter</PageTitle>
 
 <h1>Counter</h1>
 
 <div role="status" style="padding-bottom: 1em;">
-    Current count: <FluentBadge Appearance="Appearance.Neutral">@currentCount</FluentBadge>
+    Current count: <FluentCounterBadge Count="@currentCount" />
 </div>
 
-<FluentButton Appearance="Appearance.Accent" @onclick="IncrementCount">Click me</FluentButton>
+<FluentButton Appearance="ButtonAppearance.Primary" @onclick="IncrementCount">Click me</FluentButton>
 
 @code {
     private int currentCount = 0;
