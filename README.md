@@ -1,7 +1,6 @@
 ![CI](https://img.shields.io/badge/CI-not%20configured-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
-![NuGet](https://img.shields.io/badge/NuGet-not%20published-lightgrey?logo=nuget)
 
 # Blazor Auto VSA
 
@@ -91,7 +90,7 @@ The solution is split by boundary (`Server`, `Client`, `Shared`) and by test typ
 ### Clone and run
 
 ```bash
-git clone <your-fork-or-repo-url>
+git clone https://github.com/simplyBarbe/blazor-auto-vsa.git
 cd blazor-auto-vsa
 dotnet restore blazor-auto-vsa.slnx
 dotnet build blazor-auto-vsa.slnx -c Debug
