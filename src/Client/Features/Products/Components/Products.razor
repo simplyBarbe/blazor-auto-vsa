@@ -40,7 +40,22 @@
         </FluentBadge>
     </FluentStack>
 
-    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Right" Style="width: 100%;">
+    <FluentStack Orientation="Orientation.Horizontal"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween"
+                 VerticalAlignment="VerticalAlignment.Center"
+                 HorizontalGap="12"
+                 Style="width: 100%;">
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="8">
+            <FluentTextField @bind-Value="Query.SearchTerm"
+                             Label="Search"
+                             Placeholder="Search product name..."
+                             @oninput="OnSearchTermChanged"
+                             Style="min-width: 280px;" />
+            <FluentButton Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@IsLoading">
+                Apply
+            </FluentButton>
+        </FluentStack>
+
         <FluentButton Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
             <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom"
                         CustomColor="var(--foreground-on-accent-rest)"/>

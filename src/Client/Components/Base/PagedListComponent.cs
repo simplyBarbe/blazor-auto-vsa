@@ -30,6 +30,14 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
 
     protected virtual async Task LoadDataAsync()
     {
+        var pageSize = ItemsPerPage > 0 ? ItemsPerPage : 10;
+        Query.PageNumber = Query.PageNumber.GetValueOrDefault(1);
+        if (Query.PageNumber <= 0)
+        {
+            Query.PageNumber = 1;
+        }
+        Query.PageSize = pageSize;
+
         var result = await SendAsync(Query);
         if (result != null)
         {
@@ -40,10 +48,11 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
 
     protected ValueTask<GridItemsProviderResult<TResponse>> ProvideItemsAsync(GridItemsProviderRequest<TResponse> request)
     {
-        var pageSize = request.Count.GetValueOrDefault(Pagination.ItemsPerPage);
-        if (pageSize <= 0)
+        // Keep page-level override authoritative over incoming grid request count.
+        var pageSize = ItemsPerPage > 0 ? ItemsPerPage : 10;
+        if (Pagination.ItemsPerPage != pageSize)
         {
-            pageSize = ItemsPerPage;
+            Pagination.ItemsPerPage = pageSize;
         }
 
         var startIndex = Math.Max(0, request.StartIndex);
@@ -54,7 +63,8 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
         {
             _restoredItemsServed = true;
             var restoredTotalCount = TotalCount > 0 ? TotalCount : Items.Count;
-            return ValueTask.FromResult(GridItemsProviderResult.From(Items, restoredTotalCount));
+            var restoredItems = Items.Take(pageSize).ToList();
+            return ValueTask.FromResult(GridItemsProviderResult.From(restoredItems, restoredTotalCount));
         }
 
         return ProvideItemsFromRequestAsync();

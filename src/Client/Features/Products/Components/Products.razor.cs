@@ -18,10 +18,10 @@ namespace Client.Features.Products.Components;
 public partial class Products : PagedListComponent<ProductResponse, ListProductQuery>
 {
     protected bool IsBrowser => OperatingSystem.IsBrowser();
-    
+
     private FluentDataGrid<ProductResponse>? _grid;
 
-    protected override int ItemsPerPage => 3;
+    protected override int ItemsPerPage => 5;
 
     protected override async Task LoadDataAsync()
     {
@@ -38,6 +38,25 @@ public partial class Products : PagedListComponent<ProductResponse, ListProductQ
     private async ValueTask<GridItemsProviderResult<ProductResponse>> ProductProvider(GridItemsProviderRequest<ProductResponse> request)
     {
         return await ProvideItemsAsync(request);
+    }
+
+    private void OnSearchTermChanged(ChangeEventArgs e)
+    {
+        Query.SearchTerm = e.Value?.ToString();
+    }
+
+    private async Task OnApplyFilterAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Default filter only on first load
+        Query.SearchTerm ??= "7";   // if your query has this field
+                                         //Query.PageNumber = 1;
+
+        await base.OnInitializedAsync();
     }
 
     private async Task LoadProductsAsync() => await LoadDataAsync();
