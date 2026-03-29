@@ -43,7 +43,7 @@ public abstract class BaseComponent : ComponentBase
         {
             IsLoading = true;
         }
-        
+
         try
         {
             if (editContext != null)
@@ -53,12 +53,12 @@ public abstract class BaseComponent : ComponentBase
             }
 
             var result = await RequestSender.Send(request, ct);
-            
-            if (options.SuccessMessage != null)
+
+            if (!string.IsNullOrWhiteSpace(options.SuccessMessage))
             {
                 ToastService.ShowSuccess(options.SuccessMessage);
             }
-            
+
             return result;
         }
         catch (ValidationException ex)
@@ -91,8 +91,8 @@ public abstract class BaseComponent : ComponentBase
     }
 
     protected async Task<bool> ConfirmAsync(
-        string message, 
-        string title = "Confirm", 
+        string message,
+        string title = "Confirm",
         string primaryButtonText = "Yes",
         string secondaryButtonText = "No")
     {
@@ -101,7 +101,7 @@ public abstract class BaseComponent : ComponentBase
             primaryButtonText,
             secondaryButtonText,
             title);
-        
+
         var result = await dialog.Result;
         return !result.Cancelled;
     }

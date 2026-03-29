@@ -1,25 +1,17 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.FluentUI.AspNetCore.Components;
-using Shared.Core;
 using Shared.Features.Products.Responses;
-using Shared.Features.Products.Create;
 using Shared.Features.Products.Update;
 using Shared.Features.Products.Delete;
 using Shared.Features.Products.List;
-using Shared.Features.Products.Get;
-using Shared.Core.Validation;
-using Client.Extensions;
-
 using Client.Components.Base;
 
 namespace Client.Features.Products.Components;
 
-public partial class Products : PagedListComponent<ProductResponse, ListProductQuery>
+public partial class ProductsBase : PagedListComponent<ProductResponse, ListProductQuery>
 {
     protected bool IsBrowser => OperatingSystem.IsBrowser();
 
-    private FluentDataGrid<ProductResponse>? _grid;
+    protected FluentDataGrid<ProductResponse>? _grid;
 
     protected override int ItemsPerPage => 5;
 
@@ -35,75 +27,42 @@ public partial class Products : PagedListComponent<ProductResponse, ListProductQ
         }
     }
 
-    private async ValueTask<GridItemsProviderResult<ProductResponse>> ProductProvider(GridItemsProviderRequest<ProductResponse> request)
+    protected async ValueTask<GridItemsProviderResult<ProductResponse>> ProductProvider(GridItemsProviderRequest<ProductResponse> request)
     {
         return await ProvideItemsAsync(request);
     }
 
-    private void OnSearchTermChanged(ChangeEventArgs e)
+    protected async Task OnApplyFilterAsync()
     {
-        Query.SearchTerm = e.Value?.ToString();
-    }
-
-    private async Task OnApplyFilterAsync()
-    {
+        Query.PageNumber = 1;
         await LoadDataAsync();
     }
 
     protected override async Task OnInitializedAsync()
     {
-        // Default filter only on first load
-        Query.SearchTerm ??= "7";   // if your query has this field
-                                         //Query.PageNumber = 1;
-
+        if (string.IsNullOrWhiteSpace(Query.SearchTerm))
+        {
+            Query.SearchTerm = "";
+        }
         await base.OnInitializedAsync();
     }
 
-    private async Task LoadProductsAsync() => await LoadDataAsync();
-
-    private async Task OnAddProductAsync()
+    protected async Task OnAddProductAsync()
     {
         if (IsLoading) return;
 
-        var command = new UpdateProductCommand();
-        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
-        {
-            Title = "Add Product",
-            Width = "400px",
-            TrapFocus = true,
-            Modal = true,
-            PreventScroll = true
-        });
-
-        var result = await dialog.Result;
-        if (!result.Cancelled)
-        {
-            await LoadProductsAsync();
-        }
+        await ShowProductDialogAndRefreshAsync(new UpdateProductCommand(), "Add Product");
     }
 
-    private async Task OnEditProductAsync(ProductResponse product)
+    protected async Task OnEditProductAsync(ProductResponse product)
     {
         if (IsLoading) return;
 
         var command = new UpdateProductCommand(product.Id, product.Name, product.Price);
-        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
-        {
-            Title = "Edit Product",
-            Width = "400px",
-            TrapFocus = true,
-            Modal = true,
-            PreventScroll = true
-        });
-
-        var result = await dialog.Result;
-        if (!result.Cancelled)
-        {
-            await LoadProductsAsync();
-        }
+        await ShowProductDialogAndRefreshAsync(command, "Edit Product");
     }
 
-    private async Task OnDeleteProductAsync(ProductResponse product)
+    protected async Task OnDeleteProductAsync(ProductResponse product)
     {
         if (IsLoading) return;
 
@@ -113,7 +72,25 @@ public partial class Products : PagedListComponent<ProductResponse, ListProductQ
             await SendAsync(
                 new DeleteProductCommand(product.Id),
                 options: new RequestOptions(SuccessMessage: "Product deleted!"));
-            await LoadProductsAsync();
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task ShowProductDialogAndRefreshAsync(UpdateProductCommand command, string title)
+    {
+        var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
+        {
+            Title = title,
+            Width = "400px",
+            TrapFocus = true,
+            Modal = true,
+            PreventScroll = true
+        });
+
+        var result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await LoadDataAsync();
         }
     }
 }

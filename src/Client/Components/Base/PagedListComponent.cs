@@ -10,6 +10,7 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
     where TQuery : IRequest<PagedResult<TResponse>>, IPageableQuery, new()
 {
     private bool _restoredItemsServed;
+    private const int FallbackItemsPerPage = 10;
 
     protected virtual int ItemsPerPage => 10;
     protected PaginationState Pagination { get; } = new();
@@ -17,10 +18,11 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
     [PersistentState] public List<TResponse>? Items { get; set; }
     protected TQuery Query { get; set; } = new();
     [PersistentState] public int TotalCount { get; set; }
+    protected int EffectiveItemsPerPage => ItemsPerPage > 0 ? ItemsPerPage : FallbackItemsPerPage;
 
     protected override async Task OnInitializedAsync()
     {
-        Pagination.ItemsPerPage = ItemsPerPage;
+        Pagination.ItemsPerPage = EffectiveItemsPerPage;
 
         if (Items == null)
         {
@@ -30,7 +32,7 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
 
     protected virtual async Task LoadDataAsync()
     {
-        var pageSize = ItemsPerPage > 0 ? ItemsPerPage : 10;
+        var pageSize = EffectiveItemsPerPage;
         Query.PageNumber = Query.PageNumber.GetValueOrDefault(1);
         if (Query.PageNumber <= 0)
         {
@@ -49,7 +51,7 @@ public abstract class PagedListComponent<TResponse, TQuery> : BaseComponent
     protected ValueTask<GridItemsProviderResult<TResponse>> ProvideItemsAsync(GridItemsProviderRequest<TResponse> request)
     {
         // Keep page-level override authoritative over incoming grid request count.
-        var pageSize = ItemsPerPage > 0 ? ItemsPerPage : 10;
+        var pageSize = EffectiveItemsPerPage;
         if (Pagination.ItemsPerPage != pageSize)
         {
             Pagination.ItemsPerPage = pageSize;

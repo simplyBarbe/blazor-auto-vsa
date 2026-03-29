@@ -1,8 +1,7 @@
 @page "/products"
 @using Client.Components.Base
-@inherits PagedListComponent<ProductResponse, Shared.Features.Products.List.ListProductQuery>
+@inherits ProductsBase
 @using Shared.Features.Products.Responses
-@using Shared.Features.Products.List
 @using Microsoft.FluentUI.AspNetCore.Components
 
 <PageTitle>🛒 Product Management</PageTitle>
@@ -49,7 +48,6 @@
             <FluentTextField @bind-Value="Query.SearchTerm"
                              Label="Search"
                              Placeholder="Search product name..."
-                             @oninput="OnSearchTermChanged"
                              Style="min-width: 280px;" />
             <FluentButton Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@IsLoading">
                 Apply

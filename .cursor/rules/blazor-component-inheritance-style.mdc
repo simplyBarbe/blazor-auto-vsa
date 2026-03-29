@@ -1,0 +1,18 @@
+---
+description: Prefer intermediate C# base classes over generic @inherits in Razor
+globs: src/Client/**/*.razor
+alwaysApply: false
+---
+
+# Blazor Component Inheritance Style
+
+When a component needs a custom base type, prefer an intermediate C# base class instead of placing a generic base type directly in the `.razor` file.
+
+- Prefer `@inherits SomeComponentBase` in `.razor`.
+- Define `SomeComponentBase` in C# and inherit from the generic/shared base there.
+- Keep code-behind (`.razor.cs`) focused on page behavior, not generic inheritance plumbing.
+
+Example:
+
+- `ProductsBase : PagedListComponent<ProductResponse, ListProductQuery>` in `ProductsBase.cs`
+- `@inherits ProductsBase` in `Products.razor`
