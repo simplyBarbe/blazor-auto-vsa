@@ -41,7 +41,7 @@ public static class MiddlewarePipelineExtensions
 
         if (!app.Environment.IsEnvironment("Testing"))
         {
-            app.MapStaticAssets();
+            app.MapStaticAssets().AllowAnonymous();
         }
 
         return app;
