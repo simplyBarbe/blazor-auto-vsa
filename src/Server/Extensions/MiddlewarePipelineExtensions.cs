@@ -26,6 +26,9 @@ public static class MiddlewarePipelineExtensions
         app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
         app.UseHttpsRedirection();
 
+        if (!app.Environment.IsEnvironment("Testing"))
+            app.MapStaticAssets();
+
         app.UseAuthentication();
         app.UseAuthorization();
 
@@ -38,11 +41,6 @@ public static class MiddlewarePipelineExtensions
         });
 
         app.UseAntiforgery();
-
-        if (!app.Environment.IsEnvironment("Testing"))
-        {
-            app.MapStaticAssets();
-        }
 
         return app;
     }
