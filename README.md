@@ -1,4 +1,3 @@
-![CI](https://img.shields.io/badge/CI-not%20configured-lightgrey)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)
 
