@@ -8,7 +8,6 @@ COPY ["src/Server/Server.csproj", "src/Server/"]
 COPY ["src/Client/Client.csproj", "src/Client/"]
 COPY ["src/Shared/Shared.csproj", "src/Shared/"]
 RUN dotnet restore "src/Server/Server.csproj"
-RUN dotnet workload install wasm-tools
 
 COPY . .
 WORKDIR "/src/src/Server"
