@@ -30,6 +30,9 @@ public static class MiddlewarePipelineExtensions
 
         if (app.Environment.IsDevelopment())
         {
+            // Note: HTTPS redirection is disabled for Railway
+            // Railway handles SSL termination at the edge
+
             app.UseHttpsRedirection();
         }
 
