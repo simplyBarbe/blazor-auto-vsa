@@ -39,11 +39,6 @@ public static class MiddlewarePipelineExtensions
 
         app.UseAntiforgery();
 
-        if (!app.Environment.IsEnvironment("Testing"))
-        {
-            app.MapStaticAssets().AllowAnonymous();
-        }
-
         return app;
     }
 }
