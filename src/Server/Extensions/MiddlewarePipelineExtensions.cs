@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 
 namespace Server.Extensions;
@@ -13,6 +14,8 @@ public static class MiddlewarePipelineExtensions
         app.UseDatabaseMigration();
         app.UseDatabaseSeeding();
 
+        app.UseForwardedHeaders();
+
         if (app.Environment.IsDevelopment())
         {
             app.UseWebAssemblyDebugging();
@@ -24,7 +27,11 @@ public static class MiddlewarePipelineExtensions
         }
 
         app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-        app.UseHttpsRedirection();
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseHttpsRedirection();
+        }
 
         app.UseAuthentication();
         app.UseAuthorization();
