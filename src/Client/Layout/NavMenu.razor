@@ -1,4 +1,4 @@
-﻿<FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" @bind-Expanded="expanded">
+﻿<FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" Expanded="@Expanded" ExpandedChanged="@ExpandedChanged">
     <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" IconColor="Color.Accent">
         Home
     </FluentNavLink>
@@ -12,6 +12,9 @@
 </FluentNavMenu>
 
 @code {
-    private bool expanded = true;
+    [Parameter]
+    public bool Expanded { get; set; } = true;
 
+    [Parameter]
+    public EventCallback<bool> ExpandedChanged { get; set; }
 }

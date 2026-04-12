@@ -10,8 +10,7 @@
 
 <PageTitle>📜 Audit Trails</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" VerticalGap="20"
-             Style="width: 100%; padding: 2rem; box-sizing: border-box;">
+<FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
         <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">📜 Audit Trails</FluentLabel>
@@ -19,18 +18,19 @@
     </FluentStack>
 
     <FluentCard AreaRestricted="false" Style="position: relative; z-index: 100; width: 100%;">
-        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+        <FluentStack Class="page-toolbar-filters" Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
                      HorizontalGap="16" Style="overflow: visible;">
-            <FluentTextField @bind-Value="Query.SearchTerm" Label="Search Table" Placeholder="e.g. products"
+            <FluentTextField @bind-Value="Query.SearchTerm" Class="page-toolbar-search" Label="Search Table" Placeholder="e.g. products"
                              @oninput="OnSearchTermChanged"/>
 
             <FluentSelect TOption="string"
+                          Class="page-toolbar-select"
                           Label="Audit Type"
                           Items="@_auditTypeOptions"
                           @bind-Value="SelectedAuditTypeString"
                           Width="200px"/>
 
-            <FluentButton Appearance="Appearance.Accent" OnClick="LoadDataAsync" Style="align-self: flex-end;">Apply
+            <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="LoadDataAsync" Style="align-self: flex-end;">Apply
                 Filter
             </FluentButton>
         </FluentStack>

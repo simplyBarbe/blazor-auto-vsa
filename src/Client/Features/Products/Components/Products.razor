@@ -6,8 +6,7 @@
 
 <PageTitle>🛒 Product Management</PageTitle>
 
-<FluentStack Orientation="Orientation.Vertical" VerticalGap="20"
-             Style="width: 100%; padding: 2rem; box-sizing: border-box;">
+<FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
         <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">🛒 Product Management</FluentLabel>
@@ -39,22 +38,21 @@
         </FluentBadge>
     </FluentStack>
 
-    <FluentStack Orientation="Orientation.Horizontal"
+    <FluentStack Class="page-toolbar" Orientation="Orientation.Horizontal"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween"
                  VerticalAlignment="VerticalAlignment.Center"
-                 HorizontalGap="12"
-                 Style="width: 100%;">
-        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="8">
+                 HorizontalGap="12">
+        <FluentStack Class="page-toolbar-filters" Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="8">
             <FluentTextField @bind-Value="Query.SearchTerm"
+                             Class="page-toolbar-search"
                              Label="Search"
-                             Placeholder="Search product name..."
-                             Style="min-width: 280px;" />
-            <FluentButton Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@IsLoading">
+                             Placeholder="Search product name..." />
+            <FluentButton Class="page-toolbar-button" Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@IsLoading">
                 Apply
             </FluentButton>
         </FluentStack>
 
-        <FluentButton Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
+        <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
             <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom"
                         CustomColor="var(--foreground-on-accent-rest)"/>
             Add Product
