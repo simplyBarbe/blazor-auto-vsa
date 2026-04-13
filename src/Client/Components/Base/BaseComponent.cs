@@ -7,27 +7,14 @@ using Client.Extensions;
 
 namespace Client.Components.Base;
 
-public abstract class BaseComponent : ComponentBase
+public abstract class BaseComponent : ComponentBase, IDisposable
 {
-    protected sealed record RequestOptions(bool TrackLoading = true, string? SuccessMessage = null);
+    protected sealed record RequestOptions(string? SuccessMessage = null);
 
     [Inject] protected IRequestSender RequestSender { get; set; } = default!;
     [Inject] protected IToastService ToastService { get; set; } = default!;
     [Inject] protected IDialogService DialogService { get; set; } = default!;
-
-    protected bool IsLoading
-    {
-        get => _isLoading;
-        private set
-        {
-            if (_isLoading != value)
-            {
-                _isLoading = value;
-                InvokeAsync(StateHasChanged);
-            }
-        }
-    }
-    private bool _isLoading;
+    private readonly List<Action> _disposeActions = [];
 
     protected async Task<TResponse?> SendAsync<TResponse>(
         IRequest<TResponse> request,
@@ -36,13 +23,6 @@ public abstract class BaseComponent : ComponentBase
         CancellationToken ct = default)
     {
         options ??= new RequestOptions();
-
-        if (options.TrackLoading && IsLoading) return default;
-
-        if (options.TrackLoading)
-        {
-            IsLoading = true;
-        }
 
         try
         {
@@ -74,20 +54,44 @@ public abstract class BaseComponent : ComponentBase
                     ToastService.ShowError(error.ErrorMessage);
                 }
             }
-            return default;
+
+            throw;
         }
         catch (Exception ex)
         {
             ToastService.ShowError(ex.Message);
-            return default;
+            throw;
         }
-        finally
-        {
-            if (options.TrackLoading)
-            {
-                IsLoading = false;
-            }
-        }
+    }
+
+    protected QueryResult<T> CreateQuery<T>()
+    {
+        var query = new QueryResult<T>();
+        WireStateChange(handler => query.OnChange += handler, handler => query.OnChange -= handler);
+        return query;
+    }
+
+    protected MutationResult CreateMutation()
+    {
+        var mutation = new MutationResult();
+        WireStateChange(handler => mutation.OnChange += handler, handler => mutation.OnChange -= handler);
+        return mutation;
+    }
+
+    protected PagedGridController<TItem> CreatePagedGridController<TItem>(
+        Func<int, int, Task<PagedResult<TItem>?>> fetchPageAsync,
+        int itemsPerPage,
+        IReadOnlyList<TItem>? restoredItems = null,
+        int restoredTotalCount = 0,
+        Action<IReadOnlyList<TItem>, int>? snapshotChanged = null)
+    {
+        return new PagedGridController<TItem>(
+            CreateQuery<PagedResult<TItem>>(),
+            fetchPageAsync,
+            itemsPerPage,
+            restoredItems,
+            restoredTotalCount,
+            snapshotChanged);
     }
 
     protected async Task<bool> ConfirmAsync(
@@ -110,4 +114,21 @@ public abstract class BaseComponent : ComponentBase
     protected void ShowError(string message) => ToastService.ShowError(message);
     protected void ShowInfo(string message) => ToastService.ShowInfo(message);
     protected void ShowWarning(string message) => ToastService.ShowWarning(message);
+
+    public virtual void Dispose()
+    {
+        foreach (var disposeAction in _disposeActions)
+        {
+            disposeAction();
+        }
+
+        _disposeActions.Clear();
+    }
+
+    private void WireStateChange(Action<Action> subscribe, Action<Action> unsubscribe)
+    {
+        Action handler = () => _ = InvokeAsync(StateHasChanged);
+        subscribe(handler);
+        _disposeActions.Add(() => unsubscribe(handler));
+    }
 }

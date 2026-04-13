@@ -11,6 +11,7 @@
                  IsAddMode="@(Content.Id == 0)"
                  AddTitle="Add Product"
                  EditTitle="Edit Product"
+                 SaveState="@_save"
                  OnSave="SaveAsync"
                  OnCancel="CancelAsync">
         <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
@@ -25,19 +26,31 @@
     [Parameter] public UpdateProductCommand Content { get; set; } = default!;
 
     [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+    private MutationResult _save = default!;
+
+    protected override void OnInitialized()
+    {
+        _save = CreateMutation();
+    }
 
     private async Task SaveAsync(EditContext editContext)
     {
         if (Content.Id == 0)
         {
             var createCommand = new CreateProductCommand(Content.Name, Content.Price);
-            var result = await SendAsync(createCommand, editContext, new RequestOptions(SuccessMessage: "Product created!"));
-            if (result != null) await Dialog.CloseAsync(Content);
+            var success = await _save.ExecuteAsync(async () =>
+            {
+                await SendAsync(createCommand, editContext, new RequestOptions(SuccessMessage: "Product created!"));
+            });
+            if (success) await Dialog.CloseAsync(Content);
         }
         else
         {
-            var result = await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product updated!"));
-            if (result != null) await Dialog.CloseAsync(Content);
+            var success = await _save.ExecuteAsync(async () =>
+            {
+                await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product updated!"));
+            });
+            if (success) await Dialog.CloseAsync(Content);
         }
     }
 

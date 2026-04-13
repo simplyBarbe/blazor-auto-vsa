@@ -2,6 +2,45 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentCard Class="hero-card">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+            <FluentLabel Typo="Typography.PageTitle" Class="page-title">
+                Welcome Back
+            </FluentLabel>
+            <FluentLabel Typo="Typography.Body" Class="page-subtitle">
+                Manage products, inspect audit history, and test the dispatcher flow from one place.
+            </FluentLabel>
+        </FluentStack>
+    </FluentCard>
 
-Welcome to your new Fluent Blazor app.
+    <FluentGrid Spacing="3">
+        <FluentGridItem xs="12" md="4">
+            <FluentCard Class="surface-card">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                    <FluentLabel Typo="Typography.Header">Products</FluentLabel>
+                    <FluentLabel Typo="Typography.Body">Create, edit, search, and delete catalog entries.</FluentLabel>
+                    <FluentButton Appearance="Appearance.Accent" Href="/products">Open Products</FluentButton>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+        <FluentGridItem xs="12" md="4">
+            <FluentCard Class="surface-card">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                    <FluentLabel Typo="Typography.Header">Audit Trails</FluentLabel>
+                    <FluentLabel Typo="Typography.Body">Review change history and inspect field-level diffs.</FluentLabel>
+                    <FluentButton Appearance="Appearance.Outline" Href="/audit-trails">Open Audit Trails</FluentButton>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+        <FluentGridItem xs="12" md="4">
+            <FluentCard Class="surface-card">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
+                    <FluentLabel Typo="Typography.Header">Counter</FluentLabel>
+                    <FluentLabel Typo="Typography.Body">Quick sample page for interactive component behavior.</FluentLabel>
+                    <FluentButton Appearance="Appearance.Lightweight" Href="/counter">Open Counter</FluentButton>
+                </FluentStack>
+            </FluentCard>
+        </FluentGridItem>
+    </FluentGrid>
+</FluentStack>

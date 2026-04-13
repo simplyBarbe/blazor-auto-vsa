@@ -1,0 +1,110 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@attribute [CascadingTypeParameter(nameof(TGridItem))]
+@typeparam TGridItem
+
+<FluentCard Class="surface-card" Style="width: 100%;">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" Style="width: 100%;">
+        <div style="position: relative; width: 100%;">
+            <div style="overflow-x: auto; width: 100%;">
+                <FluentDataGrid @ref="_grid"
+                                ItemsProvider="@Controller.ProvideItemsAsync"
+                                Pagination="@Controller.Pagination"
+                                ResizableColumns="@ResizableColumns"
+                                ResizeColumnOnAllRows="@ResizeColumnOnAllRows"
+                                DisplayMode="@DisplayMode"
+                                TGridItem="TGridItem">
+                    @ChildContent
+                </FluentDataGrid>
+            </div>
+
+            @if (Controller.IsPending)
+            {
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--fill-color, rgba(0,0,0,0.02)); min-height: 200px; z-index: 1;">
+                    <FluentProgressRing />
+                </div>
+            }
+        </div>
+
+        @if (!Controller.IsPending && !Controller.HasItems)
+        {
+            if (EmptyContent != null)
+            {
+                @EmptyContent
+            }
+            else
+            {
+                <FluentLabel Typo="Typography.Body" Color="Color.Neutral">
+                    No results found.
+                </FluentLabel>
+            }
+        }
+
+        @if (Controller.TotalCount > 0)
+        {
+            <FluentPaginator State="@Controller.Pagination" />
+        }
+    </FluentStack>
+</FluentCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public PagedGridController<TGridItem> Controller { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? EmptyContent { get; set; }
+
+    [Parameter]
+    public bool ResizableColumns { get; set; } = true;
+
+    [Parameter]
+    public bool ResizeColumnOnAllRows { get; set; }
+
+    [Parameter]
+    public DataGridDisplayMode DisplayMode { get; set; } = DataGridDisplayMode.Table;
+
+    private FluentDataGrid<TGridItem>? _grid;
+    private PagedGridController<TGridItem>? _subscribedController;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_subscribedController, Controller))
+        {
+            return;
+        }
+
+        if (_subscribedController != null)
+        {
+            _subscribedController.RefreshRequested -= HandleRefreshRequested;
+        }
+
+        _subscribedController = Controller;
+        _subscribedController.RefreshRequested += HandleRefreshRequested;
+    }
+
+    private void HandleRefreshRequested(bool resetToFirstPage)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            if (resetToFirstPage)
+            {
+                await Controller.Pagination.SetCurrentPageIndexAsync(0);
+            }
+
+            if (_grid != null)
+            {
+                await _grid.RefreshDataAsync();
+            }
+        });
+    }
+
+    public void Dispose()
+    {
+        if (_subscribedController != null)
+        {
+            _subscribedController.RefreshRequested -= HandleRefreshRequested;
+        }
+    }
+}

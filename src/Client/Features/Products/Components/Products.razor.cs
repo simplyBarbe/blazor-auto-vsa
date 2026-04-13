@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Shared.Core;
 using Shared.Features.Products.Responses;
 using Shared.Features.Products.Update;
 using Shared.Features.Products.Delete;
@@ -7,35 +9,41 @@ using Client.Components.Base;
 
 namespace Client.Features.Products.Components;
 
-public partial class ProductsBase : PagedListComponent<ProductResponse, ListProductQuery>
+public partial class ProductsBase : BaseComponent
 {
+    private const int ItemsPerPage = 5;
+
     protected bool IsBrowser => OperatingSystem.IsBrowser();
+    protected ListProductQuery Query { get; } = new();
+    protected PagedGridController<ProductResponse> GridController { get; private set; } = default!;
+    private MutationResult _delete = default!;
+    private int? _activeDeleteId;
 
-    protected FluentDataGrid<ProductResponse>? _grid;
+    [PersistentState]
+    public List<ProductResponse>? RestoredItems { get; set; }
 
-    protected override int ItemsPerPage => 5;
+    [PersistentState]
+    public int RestoredTotalCount { get; set; }
 
-    protected override async Task LoadDataAsync()
+    protected override void OnInitialized()
     {
-        if (_grid != null)
-        {
-            await _grid.RefreshDataAsync();
-        }
-        else
-        {
-            await base.LoadDataAsync();
-        }
-    }
+        GridController = CreatePagedGridController<ProductResponse>(
+            FetchProductsAsync,
+            ItemsPerPage,
+            RestoredItems,
+            RestoredTotalCount,
+            (items, totalCount) =>
+            {
+                RestoredItems = items.ToList();
+                RestoredTotalCount = totalCount;
+            });
 
-    protected async ValueTask<GridItemsProviderResult<ProductResponse>> ProductProvider(GridItemsProviderRequest<ProductResponse> request)
-    {
-        return await ProvideItemsAsync(request);
+        _delete = CreateMutation();
     }
 
     protected async Task OnApplyFilterAsync()
     {
-        Query.PageNumber = 1;
-        await LoadDataAsync();
+        await GridController.ResetAndRefreshAsync();
     }
 
     protected override async Task OnInitializedAsync()
@@ -47,34 +55,54 @@ public partial class ProductsBase : PagedListComponent<ProductResponse, ListProd
         await base.OnInitializedAsync();
     }
 
+    private Task<PagedResult<ProductResponse>?> FetchProductsAsync(int pageNumber, int pageSize)
+    {
+        Query.PageNumber = pageNumber;
+        Query.PageSize = pageSize;
+        return SendAsync(Query);
+    }
+
     protected async Task OnAddProductAsync()
     {
-        if (IsLoading) return;
-
         await ShowProductDialogAndRefreshAsync(new UpdateProductCommand(), "Add Product");
     }
 
     protected async Task OnEditProductAsync(ProductResponse product)
     {
-        if (IsLoading) return;
-
         var command = new UpdateProductCommand(product.Id, product.Name, product.Price);
         await ShowProductDialogAndRefreshAsync(command, "Edit Product");
     }
 
     protected async Task OnDeleteProductAsync(ProductResponse product)
     {
-        if (IsLoading) return;
+        if (_delete.IsPending) return;
 
         var confirmed = await ConfirmAsync($"Are you sure you want to delete {product.Name}?");
-        if (confirmed)
+        if (!confirmed)
+        {
+            return;
+        }
+
+        _activeDeleteId = product.Id;
+        await InvokeAsync(StateHasChanged);
+
+        var success = await _delete.ExecuteAsync(async () =>
         {
             await SendAsync(
                 new DeleteProductCommand(product.Id),
                 options: new RequestOptions(SuccessMessage: "Product deleted!"));
-            await LoadDataAsync();
+        });
+
+        _activeDeleteId = null;
+        await InvokeAsync(StateHasChanged);
+
+        if (success)
+        {
+            await GridController.RefreshAsync();
         }
     }
+
+    protected bool IsDeletePending(ProductResponse product) => _delete.IsPending && _activeDeleteId == product.Id;
 
     private async Task ShowProductDialogAndRefreshAsync(UpdateProductCommand command, string title)
     {
@@ -90,7 +118,7 @@ public partial class ProductsBase : PagedListComponent<ProductResponse, ListProd
         var result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await LoadDataAsync();
+            await GridController.RefreshAsync();
         }
     }
 }

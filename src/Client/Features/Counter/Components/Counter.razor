@@ -2,13 +2,29 @@
 
 <PageTitle>Counter</PageTitle>
 
-<h1>Counter</h1>
+<FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+        <FluentLabel Typo="Typography.PageTitle" Class="page-title">Counter</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Class="page-subtitle">
+            Lightweight interaction sample using the same page shell and card system as the rest of the app.
+        </FluentLabel>
+    </FluentStack>
 
-<div role="status" style="padding-bottom: 1em;">
-    Current count: <FluentBadge Appearance="Appearance.Neutral">@currentCount</FluentBadge>
-</div>
-
-<FluentButton Appearance="Appearance.Accent" @onclick="IncrementCount">Click me</FluentButton>
+    <FluentCard Class="surface-card surface-card--compact">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="16">
+            <FluentLabel Typo="Typography.Header">Current count</FluentLabel>
+            <div role="status">
+                <FluentBadge Appearance="Appearance.Neutral" Style="font-size: 1rem; padding: 0.4rem 0.75rem;">
+                    @currentCount
+                </FluentBadge>
+            </div>
+            <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12" Wrap="true">
+                <FluentButton Appearance="Appearance.Accent" @onclick="IncrementCount">Increment</FluentButton>
+                <FluentButton Appearance="Appearance.Outline" @onclick="@(() => currentCount = 0)">Reset</FluentButton>
+            </FluentStack>
+        </FluentStack>
+    </FluentCard>
+</FluentStack>
 
 @code {
     private int currentCount = 0;

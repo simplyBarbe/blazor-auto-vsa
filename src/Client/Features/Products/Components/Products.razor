@@ -9,8 +9,8 @@
 <FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
-        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">🛒 Product Management</FluentLabel>
-        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
+        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent" Class="page-title">🛒 Product Management</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Neutral" Class="page-subtitle">Dispatcher Demo - Auto Mode with FluentValidation</FluentLabel>
     </FluentStack>
 
     <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
@@ -47,23 +47,19 @@
                              Class="page-toolbar-search"
                              Label="Search"
                              Placeholder="Search product name..." />
-            <FluentButton Class="page-toolbar-button" Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@IsLoading">
+            <FluentButton Class="page-toolbar-button" Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@GridController.IsPending">
                 Apply
             </FluentButton>
         </FluentStack>
 
-        <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="OnAddProductAsync" Disabled="@IsLoading">
+        <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="OnAddProductAsync">
             <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom"
                         CustomColor="var(--foreground-on-accent-rest)"/>
             Add Product
         </FluentButton>
     </FluentStack>
 
-    <DataGridContainer IsLoading="@IsLoading" Pagination="@Pagination">
-        <FluentDataGrid @ref="_grid" ItemsProvider="@ProductProvider" Pagination="@Pagination"
-                        ResizableColumns="true" ResizeColumnOnAllRows="false"
-                        DisplayMode="DataGridDisplayMode.Table"
-                        TGridItem="ProductResponse">
+    <PagedDataGrid TGridItem="ProductResponse" Controller="@GridController">
             <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID"/>
             <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name"/>
             <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2"/>
@@ -71,10 +67,9 @@
                 <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnEditProductAsync(context))">
                     <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent"/>
                 </FluentButton>
-                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteProductAsync(context))">
+                <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteProductAsync(context))" Loading="@IsDeletePending(context)" Disabled="@IsDeletePending(context)">
                     <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error"/>
                 </FluentButton>
             </TemplateColumn>
-        </FluentDataGrid>
-    </DataGridContainer>
+    </PagedDataGrid>
 </FluentStack>

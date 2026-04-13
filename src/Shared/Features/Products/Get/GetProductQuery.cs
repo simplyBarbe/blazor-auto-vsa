@@ -8,8 +8,6 @@ public class GetProductQuery : IRequest<Shared.Features.Products.Responses.Produ
     public int Id { get; set; }
     public object[] GetKeys() => new object[] { Id };
 
-    public GetProductQuery() { }
-
     public GetProductQuery(int id)
     {
         Id = id;
