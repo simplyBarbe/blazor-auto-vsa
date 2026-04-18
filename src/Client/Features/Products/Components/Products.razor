@@ -59,7 +59,7 @@
         </FluentButton>
     </FluentStack>
 
-    <PagedDataGrid TGridItem="ProductResponse" Controller="@GridController">
+    <PagedDataGrid @ref="Grid" TGridItem="ProductResponse" Controller="@GridController">
             <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID"/>
             <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name"/>
             <PropertyColumn Property="@(p => p.Price)" Sortable="true" Title="Price" Format="C2"/>

@@ -9,6 +9,7 @@
                 <FluentDataGrid @ref="_grid"
                                 ItemsProvider="@Controller.ProvideItemsAsync"
                                 Pagination="@Controller.Pagination"
+                                Loading="false"
                                 ResizableColumns="@ResizableColumns"
                                 ResizeColumnOnAllRows="@ResizeColumnOnAllRows"
                                 DisplayMode="@DisplayMode"
@@ -66,45 +67,17 @@
     public DataGridDisplayMode DisplayMode { get; set; } = DataGridDisplayMode.Table;
 
     private FluentDataGrid<TGridItem>? _grid;
-    private PagedGridController<TGridItem>? _subscribedController;
 
-    protected override void OnParametersSet()
+    public async Task RefreshAsync(bool resetToFirstPage = false)
     {
-        if (ReferenceEquals(_subscribedController, Controller))
+        if (resetToFirstPage)
         {
-            return;
+            await Controller.Pagination.SetCurrentPageIndexAsync(0);
         }
 
-        if (_subscribedController != null)
+        if (_grid != null)
         {
-            _subscribedController.RefreshRequested -= HandleRefreshRequested;
-        }
-
-        _subscribedController = Controller;
-        _subscribedController.RefreshRequested += HandleRefreshRequested;
-    }
-
-    private void HandleRefreshRequested(bool resetToFirstPage)
-    {
-        _ = InvokeAsync(async () =>
-        {
-            if (resetToFirstPage)
-            {
-                await Controller.Pagination.SetCurrentPageIndexAsync(0);
-            }
-
-            if (_grid != null)
-            {
-                await _grid.RefreshDataAsync();
-            }
-        });
-    }
-
-    public void Dispose()
-    {
-        if (_subscribedController != null)
-        {
-            _subscribedController.RefreshRequested -= HandleRefreshRequested;
+            await _grid.RefreshDataAsync();
         }
     }
 }

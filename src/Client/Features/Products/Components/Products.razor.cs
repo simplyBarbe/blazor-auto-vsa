@@ -16,7 +16,8 @@ public partial class ProductsBase : BaseComponent
     protected bool IsBrowser => OperatingSystem.IsBrowser();
     protected ListProductQuery Query { get; } = new();
     protected PagedGridController<ProductResponse> GridController { get; private set; } = default!;
-    private MutationResult _delete = default!;
+    protected PagedDataGrid<ProductResponse>? Grid { get; set; }
+    private readonly AsyncState _delete = new();
     private int? _activeDeleteId;
 
     [PersistentState]
@@ -27,7 +28,7 @@ public partial class ProductsBase : BaseComponent
 
     protected override void OnInitialized()
     {
-        GridController = CreatePagedGridController<ProductResponse>(
+        GridController = new PagedGridController<ProductResponse>(
             FetchProductsAsync,
             ItemsPerPage,
             RestoredItems,
@@ -38,12 +39,8 @@ public partial class ProductsBase : BaseComponent
                 RestoredTotalCount = totalCount;
             });
 
-        _delete = CreateMutation();
-    }
-
-    protected async Task OnApplyFilterAsync()
-    {
-        await GridController.ResetAndRefreshAsync();
+        Track(GridController.State);
+        Track(_delete);
     }
 
     protected override async Task OnInitializedAsync()
@@ -53,6 +50,11 @@ public partial class ProductsBase : BaseComponent
             Query.SearchTerm = "";
         }
         await base.OnInitializedAsync();
+    }
+
+    protected async Task OnApplyFilterAsync()
+    {
+        if (Grid != null) await Grid.RefreshAsync(resetToFirstPage: true);
     }
 
     private Task<PagedResult<ProductResponse>?> FetchProductsAsync(int pageNumber, int pageSize)
@@ -78,27 +80,20 @@ public partial class ProductsBase : BaseComponent
         if (_delete.IsPending) return;
 
         var confirmed = await ConfirmAsync($"Are you sure you want to delete {product.Name}?");
-        if (!confirmed)
-        {
-            return;
-        }
+        if (!confirmed) return;
 
         _activeDeleteId = product.Id;
         await InvokeAsync(StateHasChanged);
 
-        var success = await _delete.ExecuteAsync(async () =>
-        {
-            await SendAsync(
-                new DeleteProductCommand(product.Id),
-                options: new RequestOptions(SuccessMessage: "Product deleted!"));
-        });
+        var success = await _delete.RunAsync(() =>
+            SendAsync(new DeleteProductCommand(product.Id),
+                options: new RequestOptions(SuccessMessage: "Product deleted!")));
 
         _activeDeleteId = null;
-        await InvokeAsync(StateHasChanged);
 
-        if (success)
+        if (success && Grid != null)
         {
-            await GridController.RefreshAsync();
+            await Grid.RefreshAsync();
         }
     }
 
@@ -116,9 +111,9 @@ public partial class ProductsBase : BaseComponent
         });
 
         var result = await dialog.Result;
-        if (!result.Cancelled)
+        if (!result.Cancelled && Grid != null)
         {
-            await GridController.RefreshAsync();
+            await Grid.RefreshAsync();
         }
     }
 }

@@ -14,6 +14,7 @@ public partial class AuditTrails : BaseComponent
 
     protected ListAuditTrailQuery Query { get; } = new();
     protected PagedGridController<AuditTrailResponse> GridController { get; private set; } = default!;
+    protected PagedDataGrid<AuditTrailResponse>? Grid { get; set; }
 
     private IEnumerable<string> _auditTypeOptions = Enum.GetNames<AuditType>().Prepend("All");
 
@@ -39,7 +40,7 @@ public partial class AuditTrails : BaseComponent
 
     protected override void OnInitialized()
     {
-        GridController = CreatePagedGridController<AuditTrailResponse>(
+        GridController = new PagedGridController<AuditTrailResponse>(
             FetchAuditTrailsAsync,
             ItemsPerPage,
             RestoredItems,
@@ -49,6 +50,8 @@ public partial class AuditTrails : BaseComponent
                 RestoredItems = items.ToList();
                 RestoredTotalCount = totalCount;
             });
+
+        Track(GridController.State);
     }
 
     private Task<PagedResult<AuditTrailResponse>?> FetchAuditTrailsAsync(int pageNumber, int pageSize)
@@ -65,7 +68,7 @@ public partial class AuditTrails : BaseComponent
 
     private async Task OnApplyFilterAsync()
     {
-        await GridController.ResetAndRefreshAsync();
+        if (Grid != null) await Grid.RefreshAsync(resetToFirstPage: true);
     }
 
     private async Task OnViewDetailsAsync(AuditTrailResponse auditTrail)

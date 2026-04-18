@@ -7,14 +7,14 @@ using Shared.Features.Products.Update;
 
 namespace Client.Features.Products;
 
-public class ProductRoutes : IRouteDefinition
+public sealed class ProductRoutes : IRouteDefinition
 {
-    public void Define(IRouteMap map)
+    public void Define(RequestEndpointMapper routes)
     {
-        map.Map<GetProductQuery>("/api/products/{Id}", HttpMethod.Get);
-        map.Map<ListProductQuery>("/api/products", HttpMethod.Get);
-        map.Map<CreateProductCommand>("/api/products", HttpMethod.Post);
-        map.Map<UpdateProductCommand>("/api/products/{Id}", HttpMethod.Put);
-        map.Map<DeleteProductCommand>("/api/products/{Id}", HttpMethod.Delete);
+        routes.Map<GetProductQuery>("/api/products/{Id}", HttpMethod.Get);
+        routes.Map<ListProductQuery>("/api/products", HttpMethod.Get);
+        routes.Map<CreateProductCommand>("/api/products", HttpMethod.Post);
+        routes.Map<UpdateProductCommand>("/api/products/{Id}", HttpMethod.Put);
+        routes.Map<DeleteProductCommand>("/api/products/{Id}", HttpMethod.Delete);
     }
 }

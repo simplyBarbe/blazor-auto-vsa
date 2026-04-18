@@ -14,6 +14,7 @@ public abstract class BaseComponent : ComponentBase, IDisposable
     [Inject] protected IRequestSender RequestSender { get; set; } = default!;
     [Inject] protected IToastService ToastService { get; set; } = default!;
     [Inject] protected IDialogService DialogService { get; set; } = default!;
+
     private readonly List<Action> _disposeActions = [];
 
     protected async Task<TResponse?> SendAsync<TResponse>(
@@ -64,35 +65,20 @@ public abstract class BaseComponent : ComponentBase, IDisposable
         }
     }
 
-    protected QueryResult<T> CreateQuery<T>()
+    /// <summary>Subscribes an AsyncState's OnChange to StateHasChanged and auto-unsubscribes on dispose.</summary>
+    protected TState Track<TState>(TState state, Action<Action> subscribe, Action<Action> unsubscribe)
     {
-        var query = new QueryResult<T>();
-        WireStateChange(handler => query.OnChange += handler, handler => query.OnChange -= handler);
-        return query;
+        Action handler = () => _ = InvokeAsync(StateHasChanged);
+        subscribe(handler);
+        _disposeActions.Add(() => unsubscribe(handler));
+        return state;
     }
 
-    protected MutationResult CreateMutation()
-    {
-        var mutation = new MutationResult();
-        WireStateChange(handler => mutation.OnChange += handler, handler => mutation.OnChange -= handler);
-        return mutation;
-    }
+    protected AsyncState<T> Track<T>(AsyncState<T> state)
+        => Track(state, h => state.OnChange += h, h => state.OnChange -= h);
 
-    protected PagedGridController<TItem> CreatePagedGridController<TItem>(
-        Func<int, int, Task<PagedResult<TItem>?>> fetchPageAsync,
-        int itemsPerPage,
-        IReadOnlyList<TItem>? restoredItems = null,
-        int restoredTotalCount = 0,
-        Action<IReadOnlyList<TItem>, int>? snapshotChanged = null)
-    {
-        return new PagedGridController<TItem>(
-            CreateQuery<PagedResult<TItem>>(),
-            fetchPageAsync,
-            itemsPerPage,
-            restoredItems,
-            restoredTotalCount,
-            snapshotChanged);
-    }
+    protected AsyncState Track(AsyncState state)
+        => Track(state, h => state.OnChange += h, h => state.OnChange -= h);
 
     protected async Task<bool> ConfirmAsync(
         string message,
@@ -123,12 +109,5 @@ public abstract class BaseComponent : ComponentBase, IDisposable
         }
 
         _disposeActions.Clear();
-    }
-
-    private void WireStateChange(Action<Action> subscribe, Action<Action> unsubscribe)
-    {
-        Action handler = () => _ = InvokeAsync(StateHasChanged);
-        subscribe(handler);
-        _disposeActions.Add(() => unsubscribe(handler));
     }
 }

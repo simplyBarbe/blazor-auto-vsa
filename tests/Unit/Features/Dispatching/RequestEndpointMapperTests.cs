@@ -13,18 +13,14 @@ namespace Unit.Features.Dispatching;
 public class RequestEndpointMapperTests
 {
     private static RequestEndpointMapper CreateMapper()
-    {
-        var definitions = new IRouteDefinition[] { new ProductRoutes() };
-        return new RequestEndpointMapper(definitions);
-    }
+        => new(new IRouteDefinition[] { new ProductRoutes() });
 
     [Fact]
     public void GetEndpoint_GetProductQuery_should_substitute_Id_and_return_Get()
     {
         var mapper = CreateMapper();
-        var request = new GetProductQuery(42);
 
-        var (url, method) = mapper.GetEndpoint<ProductResponse>(request);
+        var (url, method) = mapper.GetEndpoint<ProductResponse>(new GetProductQuery(42));
 
         url.Should().Contain("42");
         url.Should().Contain("/api/products/");
@@ -35,9 +31,9 @@ public class RequestEndpointMapperTests
     public void GetEndpoint_ListProductQuery_should_append_query_string_for_GET()
     {
         var mapper = CreateMapper();
-        var request = new ListProductQuery { PageNumber = 2, PageSize = 5 };
 
-        var (url, method) = mapper.GetEndpoint<PagedResult<ProductResponse>>(request);
+        var (url, method) = mapper.GetEndpoint<PagedResult<ProductResponse>>(
+            new ListProductQuery { PageNumber = 2, PageSize = 5 });
 
         url.Should().Contain("/api/products");
         url.Should().Contain("PageNumber=2");
@@ -49,9 +45,8 @@ public class RequestEndpointMapperTests
     public void GetEndpoint_CreateProductCommand_should_return_post_and_base_url()
     {
         var mapper = CreateMapper();
-        var request = new CreateProductCommand("Test", 10m);
 
-        var (url, method) = mapper.GetEndpoint<ProductResponse>(request);
+        var (url, method) = mapper.GetEndpoint<ProductResponse>(new CreateProductCommand("Test", 10m));
 
         url.Should().Be("/api/products");
         method.Should().Be(HttpMethod.Post);
@@ -61,15 +56,12 @@ public class RequestEndpointMapperTests
     public void GetEndpoint_unmapped_request_type_should_throw()
     {
         var mapper = CreateMapper();
-        var request = new UnmappedRequest();
 
-        var act = () => mapper.GetEndpoint<object?>(request);
+        var act = () => mapper.GetEndpoint<object?>(new UnmappedRequest());
 
         act.Should().Throw<InvalidOperationException>()
             .WithMessage("*No route mapped*UnmappedRequest*");
     }
 
-    private sealed class UnmappedRequest : IRequest<object?>
-    {
-    }
+    private sealed class UnmappedRequest : IRequest<object?> { }
 }

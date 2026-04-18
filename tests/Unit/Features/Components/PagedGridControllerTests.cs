@@ -14,7 +14,7 @@ public class PagedGridControllerTests
         var capturedPageNumber = 0;
         var capturedPageSize = 0;
 
-        var controller = CreateController<int>(
+        var controller = new PagedGridController<int>(
             async (pageNumber, pageSize) =>
             {
                 capturedPageNumber = pageNumber;
@@ -44,7 +44,7 @@ public class PagedGridControllerTests
     {
         var fetchCalls = 0;
 
-        var controller = CreateController<int>(
+        var controller = new PagedGridController<int>(
             async (_, _) =>
             {
                 fetchCalls++;
@@ -73,7 +73,7 @@ public class PagedGridControllerTests
     [Fact]
     public async Task ProvideItemsAsync_should_keep_existing_snapshot_when_fetch_fails()
     {
-        var controller = CreateController<int>(
+        var controller = new PagedGridController<int>(
             (_, _) => Task.FromException<PagedResult<int>?>(new InvalidOperationException("boom")),
             itemsPerPage: 5,
             restoredItems: [1, 2],
@@ -89,50 +89,12 @@ public class PagedGridControllerTests
         controller.Items.Should().Equal(1, 2);
     }
 
-    [Fact]
-    public async Task RefreshAsync_should_raise_refresh_request_without_reset()
-    {
-        var controller = CreateController<int>((_, _) => Task.FromResult<PagedResult<int>?>(null), itemsPerPage: 5);
-        var resetToFirstPage = new List<bool>();
-
-        controller.RefreshRequested += reset => resetToFirstPage.Add(reset);
-
-        await controller.RefreshAsync();
-
-        resetToFirstPage.Should().Equal(false);
-    }
-
-    [Fact]
-    public async Task ResetAndRefreshAsync_should_raise_refresh_request_with_reset()
-    {
-        var controller = CreateController<int>((_, _) => Task.FromResult<PagedResult<int>?>(null), itemsPerPage: 5);
-        var resetToFirstPage = new List<bool>();
-
-        controller.RefreshRequested += reset => resetToFirstPage.Add(reset);
-
-        await controller.ResetAndRefreshAsync();
-
-        resetToFirstPage.Should().Equal(true);
-    }
-
-    private static PagedGridController<T> CreateController<T>(
-        Func<int, int, Task<PagedResult<T>?>> fetchPageAsync,
-        int itemsPerPage,
-        IReadOnlyList<T>? restoredItems = null,
-        int restoredTotalCount = 0)
-    {
-        return new PagedGridController<T>(
-            new QueryResult<PagedResult<T>>(),
-            fetchPageAsync,
-            itemsPerPage,
-            restoredItems,
-            restoredTotalCount);
-    }
-
     private static GridItemsProviderRequest<T> CreateRequest<T>(int startIndex, int count)
     {
-        var constructor = typeof(GridItemsProviderRequest<T>).GetConstructors(BindingFlags.Public | BindingFlags.Instance)
-            .Single();
+        var constructor = typeof(GridItemsProviderRequest<T>)
+            .GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .OrderBy(c => c.GetParameters().Length)
+            .First();
 
         var arguments = constructor.GetParameters()
             .Select(parameter => parameter.Name switch
@@ -142,10 +104,13 @@ public class PagedGridControllerTests
                 "sortByColumn" => null!,
                 "sortByAscending" => true,
                 "cancellationToken" => CancellationToken.None,
-                _ => throw new InvalidOperationException($"Unsupported GridItemsProviderRequest parameter '{parameter.Name}'.")
+                _ => parameter.HasDefaultValue ? parameter.DefaultValue! : GetDefaultValue(parameter.ParameterType)!
             })
             .ToArray();
 
         return (GridItemsProviderRequest<T>)constructor.Invoke(arguments);
     }
+
+    private static object? GetDefaultValue(Type type)
+        => type.IsValueType ? Activator.CreateInstance(type) : null;
 }

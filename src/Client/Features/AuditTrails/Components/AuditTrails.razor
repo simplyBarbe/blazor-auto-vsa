@@ -36,7 +36,7 @@
         </FluentStack>
     </FluentCard>
 
-    <PagedDataGrid TGridItem="AuditTrailResponse" Controller="@GridController">
+    <PagedDataGrid @ref="Grid" TGridItem="AuditTrailResponse" Controller="@GridController">
             <PropertyColumn Property="@(p => p.TableName)" Sortable="true" Title="Table"/>
             <PropertyColumn Property="@(p => p.AuditType)" Sortable="true" Title="Type"/>
             <PropertyColumn Property="@(p => p.DateTime)" Sortable="true" Title="Date" Format="G"/>

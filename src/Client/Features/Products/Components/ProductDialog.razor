@@ -26,37 +26,24 @@
     [Parameter] public UpdateProductCommand Content { get; set; } = default!;
 
     [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
-    private MutationResult _save = default!;
+    private readonly AsyncState _save = new();
 
-    protected override void OnInitialized()
-    {
-        _save = CreateMutation();
-    }
+    protected override void OnInitialized() => Track(_save);
 
     private async Task SaveAsync(EditContext editContext)
     {
-        if (Content.Id == 0)
-        {
-            var createCommand = new CreateProductCommand(Content.Name, Content.Price);
-            var success = await _save.ExecuteAsync(async () =>
-            {
-                await SendAsync(createCommand, editContext, new RequestOptions(SuccessMessage: "Product created!"));
-            });
-            if (success) await Dialog.CloseAsync(Content);
-        }
-        else
-        {
-            var success = await _save.ExecuteAsync(async () =>
-            {
-                await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product updated!"));
-            });
-            if (success) await Dialog.CloseAsync(Content);
-        }
+        var success = Content.Id == 0
+            ? await _save.RunAsync(() => SendAsync(
+                new CreateProductCommand(Content.Name, Content.Price),
+                editContext,
+                new RequestOptions(SuccessMessage: "Product created!")))
+            : await _save.RunAsync(() => SendAsync(
+                Content,
+                editContext,
+                new RequestOptions(SuccessMessage: "Product updated!")));
+
+        if (success) await Dialog.CloseAsync(Content);
     }
 
-    private async Task CancelAsync()
-    {
-        await Dialog.CancelAsync();
-    }
-
+    private Task CancelAsync() => Dialog.CancelAsync();
 }

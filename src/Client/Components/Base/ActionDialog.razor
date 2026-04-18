@@ -56,7 +56,7 @@
     [Parameter] public bool IsAddMode { get; set; }
 
     [Parameter, EditorRequired]
-    public MutationResult SaveState { get; set; } = default!;
+    public AsyncState SaveState { get; set; } = default!;
 
     [Parameter] public EventCallback<EditContext> OnSave { get; set; }
 
