@@ -57,10 +57,18 @@ public partial class ProductsBase : BaseComponent
         if (Grid != null) await Grid.RefreshAsync(resetToFirstPage: true);
     }
 
-    private Task<PagedResult<ProductResponse>?> FetchProductsAsync(int pageNumber, int pageSize)
+    private Task<PagedResult<ProductResponse>?> FetchProductsAsync(
+        int pageNumber,
+        int pageSize,
+        GridItemsProviderRequest<ProductResponse> gridRequest)
     {
         Query.PageNumber = pageNumber;
         Query.PageSize = pageSize;
+        GridItemsProviderRequestSort.Apply(gridRequest, (sortBy, ascending) =>
+        {
+            Query.SortBy = sortBy;
+            Query.SortAscending = ascending;
+        });
         return SendAsync(Query);
     }
 

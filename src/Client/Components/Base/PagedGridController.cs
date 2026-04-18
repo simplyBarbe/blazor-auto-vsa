@@ -6,13 +6,13 @@ namespace Client.Components.Base;
 public sealed class PagedGridController<TGridItem>
 {
     private const int FallbackItemsPerPage = 10;
-    private readonly Func<int, int, Task<PagedResult<TGridItem>?>> _fetchPageAsync;
+    private readonly Func<int, int, GridItemsProviderRequest<TGridItem>, Task<PagedResult<TGridItem>?>> _fetchPageAsync;
     private readonly Action<IReadOnlyList<TGridItem>, int>? _snapshotChanged;
     private readonly int _itemsPerPage;
     private bool _restoredSnapshotServed;
 
     public PagedGridController(
-        Func<int, int, Task<PagedResult<TGridItem>?>> fetchPageAsync,
+        Func<int, int, GridItemsProviderRequest<TGridItem>, Task<PagedResult<TGridItem>?>> fetchPageAsync,
         int itemsPerPage,
         IReadOnlyList<TGridItem>? restoredItems = null,
         int restoredTotalCount = 0,
@@ -54,7 +54,7 @@ public sealed class PagedGridController<TGridItem>
         }
 
         var pageNumber = (Math.Max(0, request.StartIndex) / _itemsPerPage) + 1;
-        var result = await State.RunAsync(() => _fetchPageAsync(pageNumber, _itemsPerPage));
+        var result = await State.RunAsync(() => _fetchPageAsync(pageNumber, _itemsPerPage, request));
 
         if (result == null)
         {

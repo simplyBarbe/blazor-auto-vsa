@@ -15,7 +15,7 @@ public class PagedGridControllerTests
         var capturedPageSize = 0;
 
         var controller = new PagedGridController<int>(
-            async (pageNumber, pageSize) =>
+            async (pageNumber, pageSize, _) =>
             {
                 capturedPageNumber = pageNumber;
                 capturedPageSize = pageSize;
@@ -45,7 +45,7 @@ public class PagedGridControllerTests
         var fetchCalls = 0;
 
         var controller = new PagedGridController<int>(
-            async (_, _) =>
+            async (_, _, _) =>
             {
                 fetchCalls++;
                 return await Task.FromResult(new PagedResult<int>
@@ -74,7 +74,7 @@ public class PagedGridControllerTests
     public async Task ProvideItemsAsync_should_keep_existing_snapshot_when_fetch_fails()
     {
         var controller = new PagedGridController<int>(
-            (_, _) => Task.FromException<PagedResult<int>?>(new InvalidOperationException("boom")),
+            (_, _, _) => Task.FromException<PagedResult<int>?>(new InvalidOperationException("boom")),
             itemsPerPage: 5,
             restoredItems: [1, 2],
             restoredTotalCount: 2);

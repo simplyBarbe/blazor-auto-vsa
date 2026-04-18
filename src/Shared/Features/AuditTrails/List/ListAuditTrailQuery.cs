@@ -11,4 +11,9 @@ public class ListAuditTrailQuery : IRequest<PagedResult<AuditTrailResponse>>, IP
     public int? PageSize { get; set; } = 10;
     public string? SearchTerm { get; set; }
     public AuditType? AuditType { get; set; }
+
+    /// <summary>Sort field: TableName, AuditType, or DateTime.</summary>
+    public string? SortBy { get; set; }
+
+    public bool? SortAscending { get; set; }
 }

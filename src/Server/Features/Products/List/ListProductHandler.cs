@@ -24,10 +24,7 @@ public class ListProductHandler : ListEntityHandlerBase<Product, ListProductQuer
         {
             Skip = (pageNumber - 1) * pageSize,
             Take = pageSize,
-            OrderBy = new List<SortExpression<Product>>
-            {
-                new(p => p.Name, SortDirection.Ascending)
-            }
+            OrderBy = new List<SortExpression<Product>> { BuildSort(query) }
         };
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
@@ -39,5 +36,20 @@ public class ListProductHandler : ListEntityHandlerBase<Product, ListProductQuer
         }
 
         return filter;
+    }
+
+    private static SortExpression<Product> BuildSort(ListProductQuery query)
+    {
+        var field = query.SortBy?.Trim();
+        var ascending = query.SortAscending ?? true;
+        var direction = ascending ? SortDirection.Ascending : SortDirection.Descending;
+
+        return field?.ToLowerInvariant() switch
+        {
+            "id" => new SortExpression<Product>(p => p.Id, direction),
+            "name" => new SortExpression<Product>(p => p.Name, direction),
+            "price" => new SortExpression<Product>(p => p.Price, direction),
+            _ => new SortExpression<Product>(p => p.Name, SortDirection.Ascending)
+        };
     }
 }
