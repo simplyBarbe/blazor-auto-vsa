@@ -15,6 +15,17 @@ public class UpdateProductCommandServerValidator : AbstractValidator<UpdateProdu
     {
         Include(new UpdateProductCommandValidator());
 
+        RuleFor(x => x.GroupId)
+            .MustAsync(async (groupId, cancellationToken) =>
+            {
+                var count = await unitOfWork.ReadRepository<ProductGroup>().CountAsync(
+                    new QueryFilter<ProductGroup> { Filters = [g => g.Id == groupId] },
+                    cancellationToken);
+                return count == 1;
+            })
+            .When(x => x.GroupId > 0)
+            .WithMessage("Il gruppo selezionato non è valido");
+
         RuleFor(x => x)
             .MustAsync(async (command, cancellationToken) =>
             {

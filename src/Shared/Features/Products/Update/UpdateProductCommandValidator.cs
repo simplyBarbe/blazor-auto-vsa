@@ -9,6 +9,9 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
         RuleFor(x => x.Id)
             .GreaterThanOrEqualTo(0).WithMessage("L'ID del prodotto non può essere negativo");
 
+        RuleFor(x => x.GroupId)
+            .GreaterThan(0).WithMessage("Il gruppo è obbligatorio");
+
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Il nome del prodotto è obbligatorio")
             .MinimumLength(3).WithMessage("Il nome deve essere di almeno 3 caratteri")

@@ -61,7 +61,7 @@ public class FluentValidationRequestValidatorTests
         var provider = services.BuildServiceProvider();
         var validator = new FluentValidationRequestValidator(provider);
 
-        var request = new CreateProductCommand("", -1m);
+        var request = new CreateProductCommand(1, "", -1m);
         var result = await validator.ValidateAsync(request);
 
         result.IsValid.Should().BeFalse();

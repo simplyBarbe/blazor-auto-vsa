@@ -1,0 +1,48 @@
+@using Shared.Features.Categories.Create
+@using Shared.Features.Categories.Update
+@using Client.Components
+@using Client.Components.Base
+@using Client.Extensions
+@inherits BaseComponent
+@implements IDialogContentComponent<UpdateCategoryCommand>
+
+<ActionDialog TCommand="UpdateCategoryCommand"
+              Content="@Content"
+              IsAddMode="@(Content.Id == 0)"
+              AddTitle="Add Category"
+              EditTitle="Edit Category"
+              SaveState="@_save"
+              OnSave="SaveAsync"
+              OnCancel="CancelAsync">
+    <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
+    <FluentValidationMessage For="@(() => Content.Name)"/>
+</ActionDialog>
+
+@code {
+    [Parameter] public UpdateCategoryCommand Content { get; set; } = default!;
+
+    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+    private readonly AsyncState _save = new();
+
+    protected override void OnInitialized() => Track(_save);
+
+    private async Task SaveAsync(EditContext editContext)
+    {
+        var success = Content.Id == 0
+            ? await _save.RunAsync(() => SendAsync(
+                new CreateCategoryCommand(Content.Name),
+                editContext,
+                new RequestOptions(SuccessMessage: "Category created!")))
+            : await _save.RunAsync(() => SendAsync(
+                Content,
+                editContext,
+                new RequestOptions(SuccessMessage: "Category updated!")));
+
+        if (success)
+        {
+            await Dialog.CloseAsync(Content);
+        }
+    }
+
+    private Task CancelAsync() => Dialog.CancelAsync();
+}

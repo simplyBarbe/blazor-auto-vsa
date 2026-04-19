@@ -25,5 +25,14 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnName("price")
             .IsRequired()
             .HasPrecision(18, 2);
+
+        builder.Property(p => p.GroupId)
+            .HasColumnName("group_id")
+            .IsRequired();
+
+        builder.HasOne(p => p.Group)
+            .WithMany(g => g.Products)
+            .HasForeignKey(p => p.GroupId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

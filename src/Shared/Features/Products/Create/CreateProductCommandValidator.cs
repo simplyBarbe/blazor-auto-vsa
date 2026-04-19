@@ -6,6 +6,9 @@ public class CreateProductCommandValidator : AbstractValidator<CreateProductComm
 {
     public CreateProductCommandValidator()
     {
+        RuleFor(x => x.GroupId)
+            .GreaterThan(0).WithMessage("Il gruppo è obbligatorio");
+
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Il nome del prodotto è obbligatorio")
             .MinimumLength(3).WithMessage("Il nome deve essere di almeno 3 caratteri")

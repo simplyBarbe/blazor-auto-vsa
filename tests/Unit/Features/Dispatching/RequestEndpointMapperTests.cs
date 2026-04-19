@@ -1,20 +1,29 @@
 using Client.Dispatching;
+using Client.Features.Categories;
+using Client.Features.ProductGroups;
 using Client.Features.Products;
 using FluentAssertions;
 using Shared.Core;
+using Shared.Features.Categories.List;
+using Shared.Features.Categories.Responses;
+using Shared.Features.ProductGroups.List;
+using Shared.Features.ProductGroups.Responses;
 using Shared.Features.Products.Create;
 using Shared.Features.Products.Get;
 using Shared.Features.Products.List;
 using Shared.Features.Products.Responses;
 using Xunit;
-
 namespace Unit.Features.Dispatching;
 
 public class RequestEndpointMapperTests
 {
     private static RequestEndpointMapper CreateMapper()
-        => new(new IRouteDefinition[] { new ProductRoutes() });
-
+        => new(new IRouteDefinition[]
+        {
+            new ProductRoutes(),
+            new CategoryRoutes(),
+            new GroupRoutes()
+        });
     [Fact]
     public void GetEndpoint_GetProductQuery_should_substitute_Id_and_return_Get()
     {
@@ -42,11 +51,49 @@ public class RequestEndpointMapperTests
     }
 
     [Fact]
+    public void GetEndpoint_ListProductQuery_should_include_category_and_group_filters()
+    {
+        var mapper = CreateMapper();
+
+        var (url, method) = mapper.GetEndpoint<PagedResult<ProductResponse>>(
+            new ListProductQuery { PageNumber = 1, PageSize = 10, CategoryId = 3, GroupId = 7 });
+
+        url.Should().Contain("/api/products");
+        url.Should().Contain("CategoryId=3");
+        url.Should().Contain("GroupId=7");
+        method.Should().Be(HttpMethod.Get);
+    }
+
+    [Fact]
+    public void GetEndpoint_ListProductGroupQuery_should_include_category_filter()
+    {
+        var mapper = CreateMapper();
+
+        var (url, method) = mapper.GetEndpoint<PagedResult<ProductGroupResponse>>(
+            new ListProductGroupQuery { PageNumber = 1, PageSize = 20, CategoryId = 5 });
+
+        url.Should().Contain("/api/groups");
+        url.Should().Contain("CategoryId=5");
+        method.Should().Be(HttpMethod.Get);
+    }
+
+    [Fact]
+    public void GetEndpoint_ListCategoryQuery_should_resolve()
+    {
+        var mapper = CreateMapper();
+
+        var (url, method) = mapper.GetEndpoint<PagedResult<CategoryResponse>>(
+            new ListCategoryQuery { PageNumber = 1, PageSize = 10 });
+
+        url.Should().Contain("/api/categories");
+        method.Should().Be(HttpMethod.Get);
+    }
+    [Fact]
     public void GetEndpoint_CreateProductCommand_should_return_post_and_base_url()
     {
         var mapper = CreateMapper();
 
-        var (url, method) = mapper.GetEndpoint<ProductResponse>(new CreateProductCommand("Test", 10m));
+        var (url, method) = mapper.GetEndpoint<ProductResponse>(new CreateProductCommand(1, "Test", 10m));
 
         url.Should().Be("/api/products");
         method.Should().Be(HttpMethod.Post);

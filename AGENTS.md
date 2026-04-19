@@ -23,6 +23,11 @@ Keep feature code grouped by domain (for example `Features/Products/Create`, `Ge
 - `dotnet test blazor-auto-vsa.slnx --collect:\"XPlat Code Coverage\"`: collect coverage via Coverlet.
 - `docker compose up --build`: run app dependencies/containers.
 
+## Command contracts (Shared)
+Commands are **write** contracts: include only properties the server **persists or applies** for that operation (including fields required for validation or business rules that are part of the write).
+
+- Do **not** add properties used only for UI state, cascading selects, or convenience when they are not written by the handler (for example a redundant parent key when a single foreign key already identifies the row). Resolve those on the client (e.g. with a read query) or derive them server-side from the persisted key.
+
 ## Coding Style & Naming Conventions
 Use C# conventions already present in the repo:
 - 4-space indentation, nullable enabled, implicit usings enabled.

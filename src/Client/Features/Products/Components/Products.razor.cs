@@ -5,6 +5,10 @@ using Shared.Features.Products.Responses;
 using Shared.Features.Products.Update;
 using Shared.Features.Products.Delete;
 using Shared.Features.Products.List;
+using Shared.Features.Categories.Responses;
+using Shared.Features.Categories.List;
+using Shared.Features.ProductGroups.Responses;
+using Shared.Features.ProductGroups.List;
 using Client.Components.Base;
 
 namespace Client.Features.Products.Components;
@@ -41,7 +45,20 @@ public partial class ProductsBase : BaseComponent
 
         Track(GridController.State);
         Track(_delete);
+        Track(FilterCategoryInit);
+        Track(FilterGroupListLoad);
     }
+
+    /// <summary>Initial load: category filter options and default &quot;All groups&quot; row (first async track on the toolbar).</summary>
+    protected readonly AsyncState FilterCategoryInit = new();
+
+    /// <summary>Loads group filter options when a concrete category is selected (second async track).</summary>
+    protected readonly AsyncState<List<ProductGroupResponse>> FilterGroupListLoad = new();
+
+    protected List<CategoryResponse> FilterCategories { get; private set; } = [];
+    protected List<ProductGroupResponse> FilterGroups { get; private set; } = [];
+    protected CategoryResponse? SelectedFilterCategory { get; set; }
+    protected ProductGroupResponse? SelectedFilterGroup { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,7 +66,77 @@ public partial class ProductsBase : BaseComponent
         {
             Query.SearchTerm = "";
         }
+
+        await LoadFilterCategoriesAsync();
         await base.OnInitializedAsync();
+    }
+
+    private async Task LoadFilterCategoriesAsync()
+    {
+        if (FilterCategoryInit.IsPending)
+        {
+            return;
+        }
+
+        await FilterCategoryInit.RunAsync(async () =>
+        {
+            var all = new CategoryResponse(0, "All categories");
+            var page = await SendAsync(new ListCategoryQuery { PageNumber = 1, PageSize = 500 });
+            FilterCategories = new List<CategoryResponse> { all };
+            if (page?.Items != null)
+            {
+                FilterCategories.AddRange(page.Items);
+            }
+
+            SelectedFilterCategory ??= all;
+            var allGroups = new ProductGroupResponse(0, 0, "", "All groups");
+            FilterGroups = [allGroups];
+            SelectedFilterGroup ??= allGroups;
+        });
+    }
+
+    protected async Task OnFilterCategoryChangedAsync(CategoryResponse? value)
+    {
+        SelectedFilterCategory = value;
+        Query.CategoryId = value is { Id: > 0 } ? value.Id : null;
+        Query.GroupId = null;
+        SelectedFilterGroup = new ProductGroupResponse(0, 0, "", "All groups");
+        FilterGroups = [SelectedFilterGroup];
+
+        if (value is { Id: > 0 } c)
+        {
+            await FilterGroupListLoad.RunAsync(async () =>
+            {
+                var page = await SendAsync(new ListProductGroupQuery
+                {
+                    PageNumber = 1,
+                    PageSize = 500,
+                    CategoryId = c.Id
+                });
+                var allG = new ProductGroupResponse(0, c.Id, "", "All groups");
+                var list = new List<ProductGroupResponse> { allG };
+                if (page?.Items != null)
+                {
+                    list.AddRange(page.Items);
+                }
+
+                return list;
+            });
+            if (FilterGroupListLoad.Data is { } loaded)
+            {
+                FilterGroups = loaded;
+                SelectedFilterGroup = loaded[0];
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    protected Task OnFilterGroupChangedAsync(ProductGroupResponse? value)
+    {
+        SelectedFilterGroup = value;
+        Query.GroupId = value is { Id: > 0 } ? value.Id : null;
+        return Task.CompletedTask;
     }
 
     protected async Task OnApplyFilterAsync()
@@ -79,7 +166,11 @@ public partial class ProductsBase : BaseComponent
 
     protected async Task OnEditProductAsync(ProductResponse product)
     {
-        var command = new UpdateProductCommand(product.Id, product.Name, product.Price);
+        var command = new UpdateProductCommand(
+            product.Id,
+            product.GroupId,
+            product.Name,
+            product.Price);
         await ShowProductDialogAndRefreshAsync(command, "Edit Product");
     }
 
@@ -112,7 +203,7 @@ public partial class ProductsBase : BaseComponent
         var dialog = await DialogService.ShowDialogAsync<ProductDialog>(command, new DialogParameters
         {
             Title = title,
-            Width = "400px",
+            Width = "520px",
             TrapFocus = true,
             Modal = true,
             PreventScroll = true

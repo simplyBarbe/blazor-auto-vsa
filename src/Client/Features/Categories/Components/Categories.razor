@@ -1,0 +1,48 @@
+@page "/categories"
+@using Client.Components.Base
+@inherits CategoriesBase
+@using Shared.Features.Categories.Responses
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<PageTitle>Categories</PageTitle>
+
+<FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
+    <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
+        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent" Class="page-title">Categories</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Neutral" Class="page-subtitle">Manage product categories.</FluentLabel>
+    </FluentStack>
+
+    <FluentStack Class="page-toolbar" Orientation="Orientation.Horizontal"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween"
+                 VerticalAlignment="VerticalAlignment.Center"
+                 HorizontalGap="12">
+        <FluentStack Class="page-toolbar-filters" Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" HorizontalGap="8">
+            <FluentTextField @bind-Value="Query.SearchTerm"
+                             Class="page-toolbar-search"
+                             Label="Search"
+                             Placeholder="Category name..."/>
+            <FluentButton Class="page-toolbar-button" Appearance="Appearance.Outline" OnClick="OnApplyFilterAsync" Disabled="@GridController.IsPending">
+                Apply
+            </FluentButton>
+        </FluentStack>
+
+        <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="OnAddAsync">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" Color="Color.Custom"
+                        CustomColor="var(--foreground-on-accent-rest)"/>
+            Add Category
+        </FluentButton>
+    </FluentStack>
+
+    <PagedDataGrid @ref="Grid" TGridItem="CategoryResponse" Controller="@GridController">
+        <PropertyColumn Property="@(c => c.Id)" Sortable="true" Title="ID"/>
+        <PropertyColumn Property="@(c => c.Name)" Sortable="true" Title="Name"/>
+        <TemplateColumn Title="Actions" Align="Align.End">
+            <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnEditAsync(context))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Edit())" Color="@Color.Accent"/>
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => OnDeleteAsync(context))" Loading="@IsDeletePending(context)" Disabled="@IsDeletePending(context)">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Error"/>
+            </FluentButton>
+        </TemplateColumn>
+    </PagedDataGrid>
+</FluentStack>

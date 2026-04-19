@@ -15,7 +15,7 @@ public class CreateProductCommandServerValidatorTests
         await using (context)
         {
             var validator = new CreateProductCommandServerValidator(unitOfWork);
-            var command = new CreateProductCommand("Valid Product", 99.99m);
+            var command = new CreateProductCommand(ProductValidatorTestFactory.DefaultGroupId, "Valid Product", 99.99m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeTrue();
         }
@@ -27,11 +27,16 @@ public class CreateProductCommandServerValidatorTests
         var (context, unitOfWork) = ProductValidatorTestFactory.CreateUnitOfWork();
         await using (context)
         {
-            await unitOfWork.WriteRepository<Product>().AddAsync(new Product { Name = "Existing Product", Price = 1m });
+            await unitOfWork.WriteRepository<Product>().AddAsync(new Product
+            {
+                GroupId = ProductValidatorTestFactory.DefaultGroupId,
+                Name = "Existing Product",
+                Price = 1m
+            });
             await unitOfWork.SaveChangesAsync();
 
             var validator = new CreateProductCommandServerValidator(unitOfWork);
-            var command = new CreateProductCommand("existing product", 99.99m);
+            var command = new CreateProductCommand(ProductValidatorTestFactory.DefaultGroupId, "existing product", 99.99m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeFalse();
             result.Errors.Should().Contain(e => e.ErrorMessage == "Un prodotto con questo nome esiste già");
@@ -46,7 +51,7 @@ public class CreateProductCommandServerValidatorTests
         {
             var validator = new CreateProductCommandServerValidator(unitOfWork);
 
-            var command = new CreateProductCommand("", 10m);
+            var command = new CreateProductCommand(ProductValidatorTestFactory.DefaultGroupId, "", 10m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeFalse();
             result.Errors.Should().Contain(e => e.ErrorMessage == "Il nome del prodotto è obbligatorio");
