@@ -20,7 +20,7 @@ public class CreateProductGroupCommandServerValidator : AbstractValidator<Create
                 return count == 1;
             })
             .When(x => x.CategoryId > 0)
-            .WithMessage("La categoria selezionata non è valida");
+            .WithMessage("Selected category is not valid");
 
         RuleFor(x => x)
             .MustAsync(async (cmd, cancellationToken) =>
@@ -38,6 +38,6 @@ public class CreateProductGroupCommandServerValidator : AbstractValidator<Create
                 return count == 0;
             })
             .When(x => x.CategoryId > 0 && !string.IsNullOrWhiteSpace(x.Name))
-            .WithMessage("Esiste già un gruppo con questo nome nella categoria");
+            .WithMessage("A group with this name already exists in the category");
     }
 }

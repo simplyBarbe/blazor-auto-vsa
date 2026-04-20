@@ -76,7 +76,7 @@ public class UpdateProductCommandServerValidatorTests
             var command = new UpdateProductCommand(second.Id, ProductValidatorTestFactory.DefaultGroupId, "FIRST", 99m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.ErrorMessage == "Un prodotto con questo nome esiste già");
+            result.Errors.Should().Contain(e => e.ErrorMessage == "A product with this name already exists");
         }
     }
 
@@ -90,7 +90,7 @@ public class UpdateProductCommandServerValidatorTests
             var command = new UpdateProductCommand(1, ProductValidatorTestFactory.DefaultGroupId, "", 10m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.ErrorMessage == "Il nome del prodotto è obbligatorio");
+            result.Errors.Should().Contain(e => e.ErrorMessage == "Product name is required");
         }
     }
 }

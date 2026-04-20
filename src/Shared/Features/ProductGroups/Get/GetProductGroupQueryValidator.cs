@@ -7,6 +7,6 @@ public class GetProductGroupQueryValidator : AbstractValidator<GetProductGroupQu
     public GetProductGroupQueryValidator()
     {
         RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("L'ID del gruppo deve essere maggiore di zero");
+            .GreaterThan(0).WithMessage("Group ID must be greater than zero");
     }
 }

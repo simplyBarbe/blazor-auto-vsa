@@ -50,7 +50,7 @@ public class FluentValidationRequestValidatorTests
         var result = await validator.ValidateAsync(request);
 
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().ContainSingle(e => e.PropertyName == "Id" && e.ErrorMessage == "L'ID del prodotto deve essere maggiore di zero");
+        result.Errors.Should().ContainSingle(e => e.PropertyName == "Id" && e.ErrorMessage == "Product ID must be greater than zero");
     }
 
     [Fact]

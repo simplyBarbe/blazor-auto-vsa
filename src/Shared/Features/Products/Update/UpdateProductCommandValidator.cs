@@ -7,19 +7,19 @@ public class UpdateProductCommandValidator : AbstractValidator<UpdateProductComm
     public UpdateProductCommandValidator()
     {
         RuleFor(x => x.Id)
-            .GreaterThanOrEqualTo(0).WithMessage("L'ID del prodotto non può essere negativo");
+            .GreaterThanOrEqualTo(0).WithMessage("Product ID cannot be negative");
 
         RuleFor(x => x.GroupId)
-            .GreaterThan(0).WithMessage("Il gruppo è obbligatorio");
+            .GreaterThan(0).WithMessage("Group is required");
 
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Il nome del prodotto è obbligatorio")
-            .MinimumLength(3).WithMessage("Il nome deve essere di almeno 3 caratteri")
-            .MaximumLength(100).WithMessage("Il nome non può superare i 100 caratteri");
+            .NotEmpty().WithMessage("Product name is required")
+            .MinimumLength(3).WithMessage("Name must be at least 3 characters")
+            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters");
 
         RuleFor(x => x.Price)
-            .PrecisionScale(8, 2, false).WithMessage("Il prezzo deve avere al massimo 8 cifre e 2 decimali")
-            .GreaterThan(0).WithMessage("Il prezzo deve essere maggiore di zero")
-            .LessThanOrEqualTo(999999.99m).WithMessage("Il prezzo non può superare 999999,99");
+            .PrecisionScale(8, 2, false).WithMessage("Price must have at most 8 digits and 2 decimals")
+            .GreaterThan(0).WithMessage("Price must be greater than zero")
+            .LessThanOrEqualTo(999999.99m).WithMessage("Price cannot exceed 999999.99");
     }
 }

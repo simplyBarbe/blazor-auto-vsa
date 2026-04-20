@@ -22,7 +22,7 @@ public class UpdateProductCommandValidatorTests
         var command = new UpdateProductCommand(-1, 1, "Product", 10m);
         var result = _validator.Validate(command);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "L'ID del prodotto non può essere negativo");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Product ID cannot be negative");
     }
 
     [Theory]
@@ -34,7 +34,7 @@ public class UpdateProductCommandValidatorTests
         var command = new UpdateProductCommand(1, 1, name ?? "", 10m);
         var result = _validator.Validate(command);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "Il nome del prodotto è obbligatorio");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Product name is required");
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class UpdateProductCommandValidatorTests
         var command = new UpdateProductCommand(1, 1, "Ab", 10m);
         var result = _validator.Validate(command);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "Il nome deve essere di almeno 3 caratteri");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Name must be at least 3 characters");
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class UpdateProductCommandValidatorTests
         var command = new UpdateProductCommand(1, 1, new string('x', 101), 10m);
         var result = _validator.Validate(command);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "Il nome non può superare i 100 caratteri");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Name cannot exceed 100 characters");
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class UpdateProductCommandValidatorTests
         var command = new UpdateProductCommand(1, 1, "Product", 0m);
         var result = _validator.Validate(command);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "Il prezzo deve essere maggiore di zero");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Price must be greater than zero");
     }
 
     [Fact]
@@ -70,6 +70,6 @@ public class UpdateProductCommandValidatorTests
         var command = new UpdateProductCommand(1, 1, "Product", 1000000m);
         var result = _validator.Validate(command);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "Il prezzo non può superare 999999,99");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Price cannot exceed 999999.99");
     }
 }

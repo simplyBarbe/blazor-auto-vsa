@@ -20,6 +20,6 @@ public class CreateCategoryCommandServerValidator : AbstractValidator<CreateCate
                 return count == 0;
             })
             .When(x => !string.IsNullOrWhiteSpace(x.Name))
-            .WithMessage("Esiste già una categoria con questo nome");
+            .WithMessage("A category with this name already exists");
     }
 }

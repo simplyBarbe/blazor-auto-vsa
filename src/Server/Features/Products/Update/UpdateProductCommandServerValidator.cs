@@ -24,7 +24,7 @@ public class UpdateProductCommandServerValidator : AbstractValidator<UpdateProdu
                 return count == 1;
             })
             .When(x => x.GroupId > 0)
-            .WithMessage("Il gruppo selezionato non è valido");
+            .WithMessage("Selected group is not valid");
 
         RuleFor(x => x)
             .MustAsync(async (command, cancellationToken) =>
@@ -41,6 +41,6 @@ public class UpdateProductCommandServerValidator : AbstractValidator<UpdateProdu
                 return count == 0;
             })
             .When(x => !string.IsNullOrWhiteSpace(x.Name) && x.Id > 0)
-            .WithMessage("Un prodotto con questo nome esiste già");
+            .WithMessage("A product with this name already exists");
     }
 }

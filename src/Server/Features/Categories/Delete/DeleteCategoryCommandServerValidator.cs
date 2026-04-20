@@ -18,6 +18,6 @@ public class DeleteCategoryCommandServerValidator : AbstractValidator<DeleteCate
                 return count == 0;
             })
             .When(x => x.Id > 0)
-            .WithMessage("Impossibile eliminare: esistono gruppi collegati a questa categoria");
+            .WithMessage("Cannot delete category: linked groups exist");
     }
 }

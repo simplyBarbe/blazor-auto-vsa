@@ -12,7 +12,7 @@ public class UpdateCategoryCommandServerValidator : AbstractValidator<UpdateCate
         Include(new UpdateCategoryCommandValidator());
 
         RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("L'ID della categoria deve essere maggiore di zero");
+            .GreaterThan(0).WithMessage("Category ID must be greater than zero");
 
         RuleFor(x => x)
             .MustAsync(async (command, cancellationToken) =>
@@ -30,6 +30,6 @@ public class UpdateCategoryCommandServerValidator : AbstractValidator<UpdateCate
                 return count == 0;
             })
             .When(x => !string.IsNullOrWhiteSpace(x.Name) && x.Id > 0)
-            .WithMessage("Esiste già una categoria con questo nome");
+            .WithMessage("A category with this name already exists");
     }
 }

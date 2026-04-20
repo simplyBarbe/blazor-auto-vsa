@@ -18,6 +18,6 @@ public class DeleteProductGroupCommandServerValidator : AbstractValidator<Delete
                 return count == 0;
             })
             .When(x => x.Id > 0)
-            .WithMessage("Impossibile eliminare: esistono prodotti collegati a questo gruppo");
+            .WithMessage("Cannot delete group: linked products exist");
     }
 }
