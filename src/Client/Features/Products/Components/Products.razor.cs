@@ -21,7 +21,7 @@ public partial class ProductsBase : BaseComponent
     protected ListProductQuery Query { get; } = new();
     protected PagedGridController<ProductResponse> GridController { get; private set; } = default!;
     protected PagedDataGrid<ProductResponse>? Grid { get; set; }
-    private readonly AsyncState _delete = new();
+    private AsyncState _delete = default!;
     private int? _activeDeleteId;
 
     [PersistentState]
@@ -44,16 +44,16 @@ public partial class ProductsBase : BaseComponent
             });
 
         Track(GridController.State);
-        Track(_delete);
-        Track(FilterCategoryInit);
-        Track(FilterGroupListLoad);
+        _delete = UseAsyncState();
+        FilterCategoryInit = UseAsyncState();
+        FilterGroupListLoad = UseAsyncState<List<ProductGroupResponse>>();
     }
 
     /// <summary>Initial load: category filter options and default &quot;All groups&quot; row (first async track on the toolbar).</summary>
-    protected readonly AsyncState FilterCategoryInit = new();
+    protected AsyncState FilterCategoryInit { get; private set; } = default!;
 
     /// <summary>Loads group filter options when a concrete category is selected (second async track).</summary>
-    protected readonly AsyncState<List<ProductGroupResponse>> FilterGroupListLoad = new();
+    protected AsyncState<List<ProductGroupResponse>> FilterGroupListLoad { get; private set; } = default!;
 
     protected List<CategoryResponse> FilterCategories { get; private set; } = [];
     protected List<ProductGroupResponse> FilterGroups { get; private set; } = [];

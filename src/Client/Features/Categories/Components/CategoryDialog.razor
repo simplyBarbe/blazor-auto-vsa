@@ -22,9 +22,9 @@
     [Parameter] public UpdateCategoryCommand Content { get; set; } = default!;
 
     [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
-    private readonly AsyncState _save = new();
+    private AsyncState _save = default!;
 
-    protected override void OnInitialized() => Track(_save);
+    protected override void OnInitialized() => _save = UseAsyncState();
 
     private async Task SaveAsync(EditContext editContext)
     {

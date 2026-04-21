@@ -50,9 +50,9 @@
     [Parameter] public UpdateProductCommand Content { get; set; } = default!;
 
     [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
-    private readonly AsyncState _saveCommand = new();
-    private readonly AsyncState<List<CategoryResponse>> _categoryListLoad = new();
-    private readonly AsyncState<List<ProductGroupResponse>> _groupListLoad = new();
+    private AsyncState _saveCommand = default!;
+    private AsyncState<List<CategoryResponse>> _categoryListLoad = default!;
+    private AsyncState<List<ProductGroupResponse>> _groupListLoad = default!;
 
     private CategoryResponse? _selectedCategory;
     private ProductGroupResponse? _selectedGroup;
@@ -61,9 +61,9 @@
 
     protected override void OnInitialized()
     {
-        Track(_saveCommand);
-        Track(_categoryListLoad);
-        Track(_groupListLoad);
+        _saveCommand = UseAsyncState();
+        _categoryListLoad = UseAsyncState<List<CategoryResponse>>();
+        _groupListLoad = UseAsyncState<List<ProductGroupResponse>>();
     }
 
     protected override async Task OnParametersSetAsync()

@@ -16,7 +16,7 @@ public partial class CategoriesBase : BaseComponent
     protected ListCategoryQuery Query { get; } = new();
     protected PagedGridController<CategoryResponse> GridController { get; private set; } = default!;
     protected PagedDataGrid<CategoryResponse>? Grid { get; set; }
-    private readonly AsyncState _delete = new();
+    private AsyncState _delete = default!;
     private int? _activeDeleteId;
 
     [PersistentState]
@@ -39,7 +39,7 @@ public partial class CategoriesBase : BaseComponent
             });
 
         Track(GridController.State);
-        Track(_delete);
+        _delete = UseAsyncState();
     }
 
     protected async Task OnApplyFilterAsync()

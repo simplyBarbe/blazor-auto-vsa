@@ -80,6 +80,18 @@ public abstract class BaseComponent : ComponentBase, IDisposable
     protected AsyncState Track(AsyncState state)
         => Track(state, h => state.OnChange += h, h => state.OnChange -= h);
 
+    /// <summary>
+    /// Creates and tracks a component-owned AsyncState instance.
+    /// Use Track(...) directly for states created outside this component (for example GridController.State).
+    /// </summary>
+    protected AsyncState UseAsyncState() => Track(new AsyncState());
+
+    /// <summary>
+    /// Creates and tracks a component-owned AsyncState instance that stores data.
+    /// Use Track(...) directly for states created outside this component (for example GridController.State).
+    /// </summary>
+    protected AsyncState<T> UseAsyncState<T>() => Track(new AsyncState<T>());
+
     protected async Task<bool> ConfirmAsync(
         string message,
         string title = "Confirm",
