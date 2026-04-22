@@ -11,24 +11,22 @@ namespace Client.Components.Base;
 /// </summary>
 public sealed class PagedGridController<TGridItem>
 {
-    private const int FallbackItemsPerPage = 10;
+    public const int DefaultItemsPerPage = 10;
+    public static IReadOnlyList<int> SupportedItemsPerPageOptions { get; } = [10, 20, 50, 100];
 
     private readonly Func<int, int, GridItemsProviderRequest<TGridItem>, Task<PagedResult<TGridItem>?>> _fetchPageAsync;
     private readonly Action<IReadOnlyList<TGridItem>, int>? _onSnapshotChanged;
-    private readonly int _itemsPerPage;
     private bool _restoredSnapshotServed;
 
     public PagedGridController(
         Func<int, int, GridItemsProviderRequest<TGridItem>, Task<PagedResult<TGridItem>?>> fetchPageAsync,
-        int itemsPerPage,
         IReadOnlyList<TGridItem>? restoredItems = null,
         int restoredTotalCount = 0,
         Action<IReadOnlyList<TGridItem>, int>? snapshotChanged = null)
     {
         _fetchPageAsync = fetchPageAsync ?? throw new ArgumentNullException(nameof(fetchPageAsync));
         _onSnapshotChanged = snapshotChanged;
-        _itemsPerPage = itemsPerPage > 0 ? itemsPerPage : FallbackItemsPerPage;
-        Pagination = new PaginationState { ItemsPerPage = _itemsPerPage };
+        Pagination = new PaginationState { ItemsPerPage = DefaultItemsPerPage };
 
         if (restoredItems is { Count: > 0 } && restoredTotalCount > 0)
         {
@@ -51,26 +49,27 @@ public sealed class PagedGridController<TGridItem>
     public Exception? Error => State.Error;
     public bool HasItems => Items.Count > 0;
     public bool HasNoResults => !IsPending && !HasItems && TotalCount == 0;
-    public bool CanPaginate => TotalCount > _itemsPerPage;
+    public bool CanPaginate => TotalCount > GetValidatedItemsPerPage(Pagination.ItemsPerPage);
 
     public async ValueTask<GridItemsProviderResult<TGridItem>> ProvideItemsAsync(GridItemsProviderRequest<TGridItem> request)
     {
-        if (Pagination.ItemsPerPage != _itemsPerPage)
+        var pageSize = GetValidatedItemsPerPage(Pagination.ItemsPerPage);
+        if (Pagination.ItemsPerPage != pageSize)
         {
-            Pagination.ItemsPerPage = _itemsPerPage;
+            Pagination.ItemsPerPage = pageSize;
         }
 
         if (!_restoredSnapshotServed && HasItems)
         {
             _restoredSnapshotServed = true;
-            return GridItemsProviderResult.From(Items.Take(_itemsPerPage).ToList(), TotalCount);
+            return GridItemsProviderResult.From(Items.Take(pageSize).ToList(), TotalCount);
         }
 
-        var pageNumber = (Math.Max(0, request.StartIndex) / _itemsPerPage) + 1;
+        var pageNumber = (Math.Max(0, request.StartIndex) / pageSize) + 1;
 
         await State.RunAsync(async () =>
         {
-            var result = await _fetchPageAsync(pageNumber, _itemsPerPage, request);
+            var result = await _fetchPageAsync(pageNumber, pageSize, request);
             if (result is not null)
             {
                 Items = result.Items.ToList();
@@ -81,5 +80,15 @@ public sealed class PagedGridController<TGridItem>
         });
 
         return GridItemsProviderResult.From(Items.ToList(), TotalCount);
+    }
+
+    private static int GetValidatedItemsPerPage(int value)
+    {
+        if (SupportedItemsPerPageOptions.Contains(value))
+        {
+            return value;
+        }
+
+        return DefaultItemsPerPage;
     }
 }

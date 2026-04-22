@@ -11,8 +11,6 @@ namespace Client.Features.Categories.Components;
 
 public partial class CategoriesBase : BaseComponent
 {
-    private const int ItemsPerPage = 10;
-
     protected ListCategoryQuery Query { get; } = new();
     protected PagedGridController<CategoryResponse> GridController { get; private set; } = default!;
     protected PagedDataGrid<CategoryResponse>? Grid { get; set; }
@@ -29,7 +27,6 @@ public partial class CategoriesBase : BaseComponent
     {
         GridController = new PagedGridController<CategoryResponse>(
             FetchAsync,
-            ItemsPerPage,
             RestoredItems,
             RestoredTotalCount,
             (items, totalCount) =>

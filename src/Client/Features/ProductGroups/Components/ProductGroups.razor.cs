@@ -11,8 +11,6 @@ namespace Client.Features.ProductGroups.Components;
 
 public partial class ProductGroupsBase : BaseComponent
 {
-    private const int ItemsPerPage = 10;
-
     protected ListProductGroupQuery Query { get; } = new();
     protected PagedGridController<ProductGroupResponse> GridController { get; private set; } = default!;
     protected PagedDataGrid<ProductGroupResponse>? Grid { get; set; }
@@ -29,7 +27,6 @@ public partial class ProductGroupsBase : BaseComponent
     {
         GridController = new PagedGridController<ProductGroupResponse>(
             FetchAsync,
-            ItemsPerPage,
             RestoredItems,
             RestoredTotalCount,
             (items, totalCount) =>

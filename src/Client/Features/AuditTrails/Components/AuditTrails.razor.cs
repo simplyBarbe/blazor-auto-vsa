@@ -10,8 +10,6 @@ namespace Client.Features.AuditTrails.Components;
 
 public partial class AuditTrails : BaseComponent
 {
-    private const int ItemsPerPage = 10;
-
     protected ListAuditTrailQuery Query { get; } = new();
     protected PagedGridController<AuditTrailResponse> GridController { get; private set; } = default!;
     protected PagedDataGrid<AuditTrailResponse>? Grid { get; set; }
@@ -42,7 +40,6 @@ public partial class AuditTrails : BaseComponent
     {
         GridController = new PagedGridController<AuditTrailResponse>(
             FetchAuditTrailsAsync,
-            ItemsPerPage,
             RestoredItems,
             RestoredTotalCount,
             (items, totalCount) =>

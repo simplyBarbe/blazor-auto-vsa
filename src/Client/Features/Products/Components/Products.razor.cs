@@ -15,8 +15,6 @@ namespace Client.Features.Products.Components;
 
 public partial class ProductsBase : BaseComponent
 {
-    private const int ItemsPerPage = 5;
-
     protected bool IsBrowser => OperatingSystem.IsBrowser();
     protected ListProductQuery Query { get; } = new();
     protected PagedGridController<ProductResponse> GridController { get; private set; } = default!;
@@ -34,7 +32,6 @@ public partial class ProductsBase : BaseComponent
     {
         GridController = new PagedGridController<ProductResponse>(
             FetchProductsAsync,
-            ItemsPerPage,
             RestoredItems,
             RestoredTotalCount,
             (items, totalCount) =>

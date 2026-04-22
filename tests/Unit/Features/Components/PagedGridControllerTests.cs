@@ -26,13 +26,14 @@ public class PagedGridControllerTests
                     PageNumber = pageNumber,
                     PageSize = pageSize
                 });
-            },
-            itemsPerPage: 5);
+            });
 
-        var result = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 10, count: 5));
+        controller.Pagination.ItemsPerPage = 20;
+
+        var result = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 40, count: 20));
 
         capturedPageNumber.Should().Be(3);
-        capturedPageSize.Should().Be(5);
+        capturedPageSize.Should().Be(20);
         result.Items.Should().Equal(11, 12, 13);
         result.TotalItemCount.Should().Be(25);
         controller.Items.Should().Equal(11, 12, 13);
@@ -53,15 +54,16 @@ public class PagedGridControllerTests
                     Items = [9, 10],
                     TotalCount = 10,
                     PageNumber = 1,
-                    PageSize = 5
+                    PageSize = 20
                 });
             },
-            itemsPerPage: 5,
             restoredItems: [1, 2, 3, 4, 5],
             restoredTotalCount: 10);
 
-        var restored = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 5));
-        var live = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 5));
+        controller.Pagination.ItemsPerPage = 20;
+
+        var restored = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 20));
+        var live = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 20));
 
         fetchCalls.Should().Be(1);
         restored.Items.Should().Equal(1, 2, 3, 4, 5);
@@ -75,18 +77,45 @@ public class PagedGridControllerTests
     {
         var controller = new PagedGridController<int>(
             (_, _, _) => Task.FromException<PagedResult<int>?>(new InvalidOperationException("boom")),
-            itemsPerPage: 5,
             restoredItems: [1, 2],
             restoredTotalCount: 2);
 
-        await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 5));
-        var failed = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 5));
+        controller.Pagination.ItemsPerPage = 20;
+
+        await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 20));
+        var failed = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 20));
 
         controller.IsError.Should().BeTrue();
         controller.Error.Should().BeOfType<InvalidOperationException>();
         failed.Items.Should().Equal(1, 2);
         failed.TotalItemCount.Should().Be(2);
         controller.Items.Should().Equal(1, 2);
+    }
+
+    [Fact]
+    public async Task ProvideItemsAsync_should_fallback_to_default_page_size_for_unsupported_values()
+    {
+        var capturedPageSize = 0;
+
+        var controller = new PagedGridController<int>(
+            async (_, pageSize, _) =>
+            {
+                capturedPageSize = pageSize;
+                return await Task.FromResult(new PagedResult<int>
+                {
+                    Items = [1, 2, 3],
+                    TotalCount = 3,
+                    PageNumber = 1,
+                    PageSize = pageSize
+                });
+            });
+
+        controller.Pagination.ItemsPerPage = 7;
+
+        _ = await controller.ProvideItemsAsync(CreateRequest<int>(startIndex: 0, count: 10));
+
+        capturedPageSize.Should().Be(PagedGridController<int>.DefaultItemsPerPage);
+        controller.Pagination.ItemsPerPage.Should().Be(PagedGridController<int>.DefaultItemsPerPage);
     }
 
     private static GridItemsProviderRequest<T> CreateRequest<T>(int startIndex, int count)
