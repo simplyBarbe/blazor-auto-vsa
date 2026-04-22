@@ -28,6 +28,25 @@ Commands are **write** contracts: include only properties the server **persists 
 
 - Do **not** add properties used only for UI state, cascading selects, or convenience when they are not written by the handler (for example a redundant parent key when a single foreign key already identifies the row). Resolve those on the client (e.g. with a read query) or derive them server-side from the persisted key.
 
+## Client UI conventions
+
+Small rules that have been debugged into existence. Follow them to avoid regressions.
+
+### Async UI state
+- Use `AsyncState` / `AsyncState<T>` for any async work that affects rendering. Create them via `UseAsyncState()` / `UseAsyncState<T>()` on `BaseComponent` so subscription and disposal are automatic.
+- Bind `Disabled` / loading UI to `state.IsPending`; bind content to `state.Data`. Do not keep parallel `bool _loading` flags.
+
+### Cascading selects in dialogs
+- Do **not** put `Required="true"` on a `FluentSelect` whose value is set programmatically (e.g. preselected from a parent). Rely on the command validator (e.g. `GroupId > 0`) and render `<FluentValidationMessage For="..." />` next to the control.
+- Centralize dialog initialization in a single `AlignSelectionWithContentAsync` method with two explicit branches: resolve-from-existing (edit mode) and preselect-first (add mode, `Content.Id == 0` / key == 0). Guard programmatic selection with an `_isResolvingDialogSelection` flag so `SelectedOptionChanged` callbacks don't clobber state.
+
+### Paged grids
+- Use `PagedGridController<T>` + `PagedDataGrid<T>`. The controller is the single source of truth for `Items`, `TotalCount`, `IsPending`, `HasItems`, `HasNoResults`, and `CanPaginate`; the view reads those directly instead of duplicating flags.
+- After a dialog add/edit, call `grid.RefreshAsync()` (no page reset) so the user stays on the current page and filter. Use `RefreshAsync(resetToFirstPage: true)` only when filters change.
+
+### Shared vs. server-only validation
+- Shared validators (in `src/Shared/**`) run on both client and server; keep them lenient enough that add-mode dialogs (where IDs are `0`) pass. Put strict database-level rules (e.g. `Id > 0`, uniqueness, existence checks) in a server-only `*ServerValidator` that `Include`s the shared one.
+
 ## Coding Style & Naming Conventions
 Use C# conventions already present in the repo:
 - 4-space indentation, nullable enabled, implicit usings enabled.

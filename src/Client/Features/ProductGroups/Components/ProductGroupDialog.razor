@@ -22,9 +22,9 @@
                   SelectedOption="@_selectedCategory"
                   SelectedOptionChanged="OnCategoryChangedAsync"
                   Label="Category"
-                  Required="true"
                   Style="width: 100%;"
                   Disabled="@_loading"/>
+    <FluentValidationMessage For="@(() => Content.CategoryId)"/>
 
     <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
     <FluentValidationMessage For="@(() => Content.Name)"/>
@@ -59,9 +59,19 @@
             }
         }
 
-        _selectedCategory = Content.CategoryId > 0
-            ? _categories.FirstOrDefault(c => c.Id == Content.CategoryId)
-            : null;
+        if (Content.CategoryId > 0)
+        {
+            _selectedCategory = _categories.FirstOrDefault(c => c.Id == Content.CategoryId);
+        }
+        else if (Content.Id == 0 && _categories.Count > 0)
+        {
+            _selectedCategory = _categories[0];
+            Content.CategoryId = _selectedCategory.Id;
+        }
+        else
+        {
+            _selectedCategory = null;
+        }
     }
 
     private Task OnCategoryChangedAsync(CategoryResponse? value)

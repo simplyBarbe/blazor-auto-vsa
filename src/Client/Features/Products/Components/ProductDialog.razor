@@ -69,63 +69,83 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        await SyncSelectorsWithContentAsync();
+        await EnsureCategoriesLoadedAsync();
+        await AlignSelectionWithContentAsync();
     }
 
-    /// <summary>Loads category/group lists and aligns the two selects with <see cref="Content"/> (e.g. edit mode).</summary>
-    private async Task SyncSelectorsWithContentAsync()
+    private Task EnsureCategoriesLoadedAsync()
     {
-        if (_categoryListLoad.Data is null && !_categoryListLoad.IsPending)
+        if (_categoryListLoad.Data is not null || _categoryListLoad.IsPending)
         {
-            await _categoryListLoad.RunAsync(async () =>
-            {
-                var page = await SendAsync(new ListCategoryQuery { PageNumber = 1, PageSize = 500 });
-                return page?.Items?.ToList() ?? [];
-            });
+            return Task.CompletedTask;
         }
 
+        return _categoryListLoad.RunAsync(async () =>
+        {
+            var page = await SendAsync(new ListCategoryQuery { PageNumber = 1, PageSize = 500 });
+            return page?.Items?.ToList() ?? [];
+        });
+    }
+
+    /// <summary>
+    /// Picks category + group to match <see cref="Content"/>.
+    /// Edit mode: resolve category from the existing group.
+    /// Add mode (GroupId == 0): preselect the first category + its first group so Save works immediately.
+    /// </summary>
+    private async Task AlignSelectionWithContentAsync()
+    {
         var categories = _categoryListLoad.Data ?? [];
+        if (categories.Count == 0)
+        {
+            return;
+        }
 
         if (Content.GroupId > 0 && Content.GroupId != _lastResolvedGroupId)
         {
-            _isResolvingDialogSelection = true;
-            try
-            {
-                var grp = await SendAsync(new GetProductGroupQuery(Content.GroupId));
-                if (grp is not null)
-                {
-                    _selectedCategory = categories.FirstOrDefault(c => c.Id == grp.CategoryId);
-                    await LoadGroupsForCategoryAsync(grp.CategoryId);
-                    _selectedGroup = (_groupListLoad.Data ?? []).FirstOrDefault(g => g.Id == Content.GroupId);
-                    _lastResolvedGroupId = Content.GroupId;
-                }
-            }
-            finally
-            {
-                _isResolvingDialogSelection = false;
-            }
+            await ResolveFromExistingGroupAsync(categories);
+            return;
         }
-        else if (Content.GroupId == 0)
-        {
-            _lastResolvedGroupId = null;
 
-            // Add mode: initialize from the first available category so Group is enabled immediately.
-            if (_selectedCategory is null && categories.Count > 0)
+        if (Content.GroupId == 0 && _selectedCategory is null)
+        {
+            await PreselectFirstAsync(categories[0]);
+        }
+    }
+
+    private async Task ResolveFromExistingGroupAsync(IReadOnlyList<CategoryResponse> categories)
+    {
+        _isResolvingDialogSelection = true;
+        try
+        {
+            var grp = await SendAsync(new GetProductGroupQuery(Content.GroupId));
+            if (grp is null)
             {
-                _selectedCategory = categories[0];
-                await LoadGroupsForCategoryAsync(_selectedCategory.Id);
-                SelectGroupAfterListLoad();
+                return;
             }
-            else if (_selectedCategory is null)
-            {
-                await _groupListLoad.RunAsync(() => Task.FromResult<List<ProductGroupResponse>?>([]));
-                _selectedGroup = null;
-            }
-            else if (_groupListLoad.Data is null)
-            {
-                await LoadGroupsForCategoryAsync(_selectedCategory.Id);
-                SelectGroupAfterListLoad();
-            }
+
+            _selectedCategory = categories.FirstOrDefault(c => c.Id == grp.CategoryId);
+            await LoadGroupsForCategoryAsync(grp.CategoryId);
+            _selectedGroup = (_groupListLoad.Data ?? []).FirstOrDefault(g => g.Id == Content.GroupId);
+            _lastResolvedGroupId = Content.GroupId;
+        }
+        finally
+        {
+            _isResolvingDialogSelection = false;
+        }
+    }
+
+    private async Task PreselectFirstAsync(CategoryResponse category)
+    {
+        _isResolvingDialogSelection = true;
+        try
+        {
+            _selectedCategory = category;
+            await LoadGroupsForCategoryAsync(category.Id);
+            ApplyFirstGroupSelection();
+        }
+        finally
+        {
+            _isResolvingDialogSelection = false;
         }
     }
 
@@ -144,7 +164,7 @@
         if (value is { Id: > 0 } c)
         {
             await LoadGroupsForCategoryAsync(c.Id);
-            SelectGroupAfterListLoad();
+            ApplyFirstGroupSelection();
         }
         else
         {
@@ -162,7 +182,7 @@
         return Task.CompletedTask;
     }
 
-    private void SelectGroupAfterListLoad()
+    private void ApplyFirstGroupSelection()
     {
         var firstGroup = (_groupListLoad.Data ?? []).FirstOrDefault();
         _selectedGroup = firstGroup;

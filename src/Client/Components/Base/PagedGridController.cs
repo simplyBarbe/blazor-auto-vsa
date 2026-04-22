@@ -3,13 +3,19 @@ using Shared.Core;
 
 namespace Client.Components.Base;
 
+/// <summary>
+/// Paged grid state holder used with <see cref="PagedDataGrid{TGridItem}"/>.
+/// Single source of truth: <see cref="Items"/>/<see cref="TotalCount"/> are always
+/// consistent when <see cref="State"/>.OnChange fires, because they are updated
+/// inside the fetch callback before <see cref="AsyncState{T}"/> flips its pending flag.
+/// </summary>
 public sealed class PagedGridController<TGridItem>
 {
     private const int FallbackItemsPerPage = 10;
+
     private readonly Func<int, int, GridItemsProviderRequest<TGridItem>, Task<PagedResult<TGridItem>?>> _fetchPageAsync;
-    private readonly Action<IReadOnlyList<TGridItem>, int>? _snapshotChanged;
+    private readonly Action<IReadOnlyList<TGridItem>, int>? _onSnapshotChanged;
     private readonly int _itemsPerPage;
-    private readonly bool _hasRestoredSnapshot;
     private bool _restoredSnapshotServed;
 
     public PagedGridController(
@@ -20,16 +26,18 @@ public sealed class PagedGridController<TGridItem>
         Action<IReadOnlyList<TGridItem>, int>? snapshotChanged = null)
     {
         _fetchPageAsync = fetchPageAsync ?? throw new ArgumentNullException(nameof(fetchPageAsync));
-        _snapshotChanged = snapshotChanged;
+        _onSnapshotChanged = snapshotChanged;
         _itemsPerPage = itemsPerPage > 0 ? itemsPerPage : FallbackItemsPerPage;
-
         Pagination = new PaginationState { ItemsPerPage = _itemsPerPage };
 
-        if (restoredItems != null && restoredTotalCount > 0)
+        if (restoredItems is { Count: > 0 } && restoredTotalCount > 0)
         {
             Items = restoredItems.ToList();
             TotalCount = restoredTotalCount;
-            _hasRestoredSnapshot = true;
+        }
+        else
+        {
+            _restoredSnapshotServed = true;
         }
     }
 
@@ -37,18 +45,13 @@ public sealed class PagedGridController<TGridItem>
     public PaginationState Pagination { get; }
     public IReadOnlyList<TGridItem> Items { get; private set; } = [];
     public int TotalCount { get; private set; }
-    private IReadOnlyList<TGridItem> LatestItems => Items.Count > 0
-        ? Items
-        : (State.Data?.Items?.ToList() ?? []);
-    private int LatestTotalCount => TotalCount > 0
-        ? TotalCount
-        : (State.Data?.TotalCount ?? 0);
+
     public bool IsPending => State.IsPending;
     public bool IsError => State.IsError;
     public Exception? Error => State.Error;
-    public bool HasItems => LatestItems.Count > 0;
-    public bool HasNoResults => !IsPending && LatestTotalCount == 0 && !HasItems;
-    public bool CanPaginate => LatestTotalCount > _itemsPerPage;
+    public bool HasItems => Items.Count > 0;
+    public bool HasNoResults => !IsPending && !HasItems && TotalCount == 0;
+    public bool CanPaginate => TotalCount > _itemsPerPage;
 
     public async ValueTask<GridItemsProviderResult<TGridItem>> ProvideItemsAsync(GridItemsProviderRequest<TGridItem> request)
     {
@@ -57,24 +60,26 @@ public sealed class PagedGridController<TGridItem>
             Pagination.ItemsPerPage = _itemsPerPage;
         }
 
-        if (!_restoredSnapshotServed && _hasRestoredSnapshot && HasItems)
+        if (!_restoredSnapshotServed && HasItems)
         {
             _restoredSnapshotServed = true;
-            return GridItemsProviderResult.From<TGridItem>(Items.Take(_itemsPerPage).ToList(), TotalCount);
+            return GridItemsProviderResult.From(Items.Take(_itemsPerPage).ToList(), TotalCount);
         }
 
         var pageNumber = (Math.Max(0, request.StartIndex) / _itemsPerPage) + 1;
-        var result = await State.RunAsync(() => _fetchPageAsync(pageNumber, _itemsPerPage, request));
 
-        if (result == null)
+        await State.RunAsync(async () =>
         {
-            return GridItemsProviderResult.From<TGridItem>(Items.ToList(), TotalCount);
-        }
+            var result = await _fetchPageAsync(pageNumber, _itemsPerPage, request);
+            if (result is not null)
+            {
+                Items = result.Items.ToList();
+                TotalCount = result.TotalCount;
+                _onSnapshotChanged?.Invoke(Items, TotalCount);
+            }
+            return result;
+        });
 
-        Items = result.Items.ToList();
-        TotalCount = result.TotalCount;
-        _snapshotChanged?.Invoke(Items, TotalCount);
-
-        return GridItemsProviderResult.From<TGridItem>(Items.ToList(), result.TotalCount);
+        return GridItemsProviderResult.From(Items.ToList(), TotalCount);
     }
 }

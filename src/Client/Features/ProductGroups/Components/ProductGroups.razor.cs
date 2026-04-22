@@ -11,7 +11,7 @@ namespace Client.Features.ProductGroups.Components;
 
 public partial class ProductGroupsBase : BaseComponent
 {
-    private const int ItemsPerPage = 2;
+    private const int ItemsPerPage = 10;
 
     protected ListProductGroupQuery Query { get; } = new();
     protected PagedGridController<ProductGroupResponse> GridController { get; private set; } = default!;

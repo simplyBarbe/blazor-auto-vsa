@@ -21,7 +21,7 @@
             @if (Controller.IsPending)
             {
                 <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--fill-color, rgba(0,0,0,0.02)); min-height: 200px; z-index: 1;">
-                    <FluentProgressRing />
+                    <FluentProgressRing/>
                 </div>
             }
         </div>
@@ -42,7 +42,7 @@
 
         @if (Controller.CanPaginate)
         {
-            <FluentPaginator State="@Controller.Pagination" />
+            <FluentPaginator State="@Controller.Pagination"/>
         }
     </FluentStack>
 </FluentCard>
@@ -70,36 +70,16 @@
 
     public async Task RefreshAsync(bool resetToFirstPage = false)
     {
-        if (resetToFirstPage)
+        if (resetToFirstPage && Controller.Pagination.CurrentPageIndex != 0)
         {
-            await ResetToFirstPageSafelyAsync();
-        }
-
-        if (_grid != null)
-        {
-            await _grid.RefreshDataAsync();
-        }
-    }
-
-    private async Task ResetToFirstPageSafelyAsync()
-    {
-        if (Controller.Pagination.CurrentPageIndex == 0)
-        {
-            return;
-        }
-
-        try
-        {
+            // Yield so FluentUI finishes enumerating its subscriber list before we mutate it.
+            await Task.Yield();
             await Controller.Pagination.SetCurrentPageIndexAsync(0);
         }
-        catch (InvalidOperationException ex) when (ex.Message.Contains("EnumFailedVersion", StringComparison.Ordinal))
+
+        if (_grid is not null)
         {
-            // FluentUI callback subscribers can be mutated during a render pass; retry in next turn.
-            await Task.Yield();
-            if (Controller.Pagination.CurrentPageIndex != 0)
-            {
-                await Controller.Pagination.SetCurrentPageIndexAsync(0);
-            }
+            await _grid.RefreshDataAsync();
         }
     }
 }
