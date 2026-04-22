@@ -9,6 +9,7 @@ public sealed class PagedGridController<TGridItem>
     private readonly Func<int, int, GridItemsProviderRequest<TGridItem>, Task<PagedResult<TGridItem>?>> _fetchPageAsync;
     private readonly Action<IReadOnlyList<TGridItem>, int>? _snapshotChanged;
     private readonly int _itemsPerPage;
+    private readonly bool _hasRestoredSnapshot;
     private bool _restoredSnapshotServed;
 
     public PagedGridController(
@@ -24,10 +25,11 @@ public sealed class PagedGridController<TGridItem>
 
         Pagination = new PaginationState { ItemsPerPage = _itemsPerPage };
 
-        if (restoredItems != null)
+        if (restoredItems != null && restoredTotalCount > 0)
         {
             Items = restoredItems.ToList();
-            TotalCount = restoredTotalCount > 0 ? restoredTotalCount : Items.Count;
+            TotalCount = restoredTotalCount;
+            _hasRestoredSnapshot = true;
         }
     }
 
@@ -35,10 +37,18 @@ public sealed class PagedGridController<TGridItem>
     public PaginationState Pagination { get; }
     public IReadOnlyList<TGridItem> Items { get; private set; } = [];
     public int TotalCount { get; private set; }
+    private IReadOnlyList<TGridItem> LatestItems => Items.Count > 0
+        ? Items
+        : (State.Data?.Items?.ToList() ?? []);
+    private int LatestTotalCount => TotalCount > 0
+        ? TotalCount
+        : (State.Data?.TotalCount ?? 0);
     public bool IsPending => State.IsPending;
     public bool IsError => State.IsError;
     public Exception? Error => State.Error;
-    public bool HasItems => Items.Count > 0;
+    public bool HasItems => LatestItems.Count > 0;
+    public bool HasNoResults => !IsPending && LatestTotalCount == 0 && !HasItems;
+    public bool CanPaginate => LatestTotalCount > _itemsPerPage;
 
     public async ValueTask<GridItemsProviderResult<TGridItem>> ProvideItemsAsync(GridItemsProviderRequest<TGridItem> request)
     {
@@ -47,7 +57,7 @@ public sealed class PagedGridController<TGridItem>
             Pagination.ItemsPerPage = _itemsPerPage;
         }
 
-        if (!_restoredSnapshotServed && HasItems)
+        if (!_restoredSnapshotServed && _hasRestoredSnapshot && HasItems)
         {
             _restoredSnapshotServed = true;
             return GridItemsProviderResult.From<TGridItem>(Items.Take(_itemsPerPage).ToList(), TotalCount);

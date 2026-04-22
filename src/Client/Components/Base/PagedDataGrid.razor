@@ -26,7 +26,7 @@
             }
         </div>
 
-        @if (!Controller.IsPending && !Controller.HasItems)
+        @if (Controller.HasNoResults)
         {
             if (EmptyContent != null)
             {
@@ -40,7 +40,7 @@
             }
         }
 
-        @if (Controller.TotalCount > 0)
+        @if (Controller.CanPaginate)
         {
             <FluentPaginator State="@Controller.Pagination" />
         }
@@ -72,12 +72,34 @@
     {
         if (resetToFirstPage)
         {
-            await Controller.Pagination.SetCurrentPageIndexAsync(0);
+            await ResetToFirstPageSafelyAsync();
         }
 
         if (_grid != null)
         {
             await _grid.RefreshDataAsync();
+        }
+    }
+
+    private async Task ResetToFirstPageSafelyAsync()
+    {
+        if (Controller.Pagination.CurrentPageIndex == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await Controller.Pagination.SetCurrentPageIndexAsync(0);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("EnumFailedVersion", StringComparison.Ordinal))
+        {
+            // FluentUI callback subscribers can be mutated during a render pass; retry in next turn.
+            await Task.Yield();
+            if (Controller.Pagination.CurrentPageIndex != 0)
+            {
+                await Controller.Pagination.SetCurrentPageIndexAsync(0);
+            }
         }
     }
 }
