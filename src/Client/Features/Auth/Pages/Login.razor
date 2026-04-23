@@ -7,51 +7,58 @@
 
 <PageTitle>Login</PageTitle>
 
-<div style="max-width: 400px; margin: 100px auto; padding: 20px;">
-    <FluentCard Style="padding: 30px;">
-        <h2 style="text-align: center; margin-bottom: 30px;">Login</h2>
-
-        @if (!string.IsNullOrEmpty(_errorMessage))
-        {
-            <FluentMessageBar Title="Error" Intent="MessageIntent.Error" Style="margin-bottom: 20px;">
-                @_errorMessage
-            </FluentMessageBar>
-        }
-
-        <EditForm Model="@_loginRequest" OnValidSubmit="@HandleLogin">
-            <FluentStack Orientation="Orientation.Vertical" Style="gap: 20px;">
-                <FluentTextField @bind-Value="_loginRequest.Email"
-                                 Label="Email"
-                                 Placeholder="Enter your email"
-                                 Required="true"
-                                 Style="width: 100%;" />
-
-                <FluentTextField @bind-Value="_loginRequest.Password"
-                                 Label="Password"
-                                 Placeholder="Enter your password"
-                                 TextFieldType="TextFieldType.Password"
-                                 Required="true"
-                                 Style="width: 100%;" />
-
-                <FluentCheckbox @bind-Value="_loginRequest.RememberMe"
-                                Label="Remember me" />
-
-                <FluentButton Type="ButtonType.Submit"
-                              Appearance="Appearance.Accent"
-                              Style="width: 100%;"
-                              Disabled="@_isLoading">
-                    @if (_isLoading)
-                    {
-                        <FluentProgressRing Style="width: 20px; height: 20px;" />
-                        <span style="margin-left: 10px;">Logging in...</span>
-                    }
-                    else
-                    {
-                        <span>Login</span>
-                    }
-                </FluentButton>
+<div class="auth-page">
+    <FluentCard Class="surface-card auth-card">
+        <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                <FluentLabel Typo="Typography.PageTitle" Class="page-title">Login</FluentLabel>
+                <FluentLabel Typo="Typography.Body" Class="page-subtitle">
+                    Sign in to access audit history and protected workflows.
+                </FluentLabel>
             </FluentStack>
-        </EditForm>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <FluentMessageBar Title="Error" Intent="MessageIntent.Error">
+                    @_errorMessage
+                </FluentMessageBar>
+            }
+
+            <EditForm Model="@_loginRequest" OnValidSubmit="@HandleLogin">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
+                    <FluentTextField @bind-Value="_loginRequest.Email"
+                                     Label="Email"
+                                     Placeholder="Enter your email"
+                                     Required="true"
+                                     Style="width: 100%;" />
+
+                    <FluentTextField @bind-Value="_loginRequest.Password"
+                                     Label="Password"
+                                     Placeholder="Enter your password"
+                                     TextFieldType="TextFieldType.Password"
+                                     Required="true"
+                                     Style="width: 100%;" />
+
+                    <FluentCheckbox @bind-Value="_loginRequest.RememberMe"
+                                    Label="Remember me" />
+
+                    <FluentButton Type="ButtonType.Submit"
+                                  Appearance="Appearance.Accent"
+                                  Style="width: 100%;"
+                                  Disabled="@_isLoading">
+                        @if (_isLoading)
+                        {
+                            <FluentProgressRing Style="width: 20px; height: 20px;" />
+                            <span style="margin-left: 10px;">Logging in...</span>
+                        }
+                        else
+                        {
+                            <span>Login</span>
+                        }
+                    </FluentButton>
+                </FluentStack>
+            </EditForm>
+        </FluentStack>
     </FluentCard>
 </div>
 

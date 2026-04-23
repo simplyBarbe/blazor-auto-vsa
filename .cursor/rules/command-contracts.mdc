@@ -1,0 +1,12 @@
+---
+description: Shared commands only include properties used for writes on the server
+globs: src/Shared/**/*Command*.cs
+alwaysApply: false
+---
+
+# Command contracts
+
+- Commands model **mutations**. Properties must be ones the handler **reads to write** (persist, update relationships) or that **shared/server validators** need for rules tied to that write.
+- Do **not** add fields that exist only for the Blazor UI (cascading dropdowns, display, navigation) if the handler does not persist them. Use `ProductResponse` / read queries on the client to fill UI; on the server, derive redundant parents from the stored key when needed.
+
+This avoids drift (UI-only fields on DTOs) and keeps API contracts minimal.

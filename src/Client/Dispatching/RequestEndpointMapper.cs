@@ -4,7 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace Client.Dispatching;
 
-public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
+/// <summary>
+/// Resolves an <see cref="IRequest{TResponse}"/> to its client-side HTTP (url, method).
+/// Routes are populated at construction time by <see cref="IRouteDefinition"/> implementations.
+/// </summary>
+public sealed class RequestEndpointMapper : IRequestEndpointMapper
 {
     private readonly Dictionary<Type, (string Template, HttpMethod Method)> _routes = new();
 
@@ -35,7 +39,7 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
         {
             var name = m.Groups["name"].Value;
             var prop = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-            
+
             if (prop != null)
             {
                 var val = prop.GetValue(request)?.ToString();
@@ -45,7 +49,7 @@ public class RequestEndpointMapper : IRequestEndpointMapper, IRouteMap
                     return Uri.EscapeDataString(val);
                 }
             }
-            return m.Value; // Keep placeholder if no property match or value is null
+            return m.Value;
         }, RegexOptions.IgnoreCase);
 
         if (mapping.Method == HttpMethod.Get)

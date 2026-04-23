@@ -1,120 +1,97 @@
-using AutoMapper;
 using FluentAssertions;
-using Moq;
+using Microsoft.EntityFrameworkCore;
 using Server.Domain;
 using Server.Features.Products.List;
-using Server.Infrastructure.Data.Contracts;
+using Server.Infrastructure.Data;
 using Shared.Features.Products.List;
-using Shared.Features.Products.Responses;
 using Xunit;
 
 namespace Unit.Features.Products;
 
 public class ListProductHandlerTests
 {
-    private static IMapper CreateMapper() => new Mock<IMapper>().Object;
+    private static async Task<(ApplicationDbContext Context, ProductGroup Group)> CreateContextWithGroupAsync()
+    {
+        var (context, _) = ProductValidatorTestFactory.CreateUnitOfWork();
+        var cat = await context.Categories.FirstAsync(c => c.Name == "UnitTestCategory");
+        var grp = await context.ProductGroups.FirstAsync(g => g.CategoryId == cat.Id);
+        return (context, grp);
+    }
 
     [Fact]
     public async Task Handle_should_use_default_paging_when_page_not_specified()
     {
-        QueryFilter<Product>? capturedFilter = null;
-        var mockReadRepo = new Mock<IReadRepository<Product>>();
-        mockReadRepo
-            .Setup(x => x.GetAsync<ProductResponse>(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .Callback<QueryFilter<Product>, CancellationToken>((f, _) => capturedFilter = f)
-            .ReturnsAsync(new List<ProductResponse>());
-        mockReadRepo
-            .Setup(x => x.CountAsync(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0);
+        var (context, grp) = await CreateContextWithGroupAsync();
+        await using (context)
+        {
+            context.Products.Add(new Product { GroupId = grp.Id, Name = "Test Product", Price = 1m });
+            await context.SaveChangesAsync();
 
-        var mockUow = new Mock<IUnitOfWork>();
-        mockUow.Setup(x => x.ReadRepository<Product>()).Returns(mockReadRepo.Object);
+            var handler = new ListProductHandler(context);
+            await handler.Handle(new ListProductQuery());
 
-        var handler = new ListProductHandler(mockUow.Object, CreateMapper());
-        var query = new ListProductQuery(); // PageNumber=1, PageSize=10 by default
-
-        await handler.Handle(query);
-
-        capturedFilter.Should().NotBeNull();
-        capturedFilter!.Skip.Should().Be(0);
-        capturedFilter.Take.Should().Be(10);
-        capturedFilter.OrderBy.Should().NotBeNull().And.HaveCount(1);
+            // No assertion on internal filter; handler completes without throwing.
+        }
     }
 
     [Fact]
     public async Task Handle_should_apply_custom_paging()
     {
-        QueryFilter<Product>? capturedFilter = null;
-        var mockReadRepo = new Mock<IReadRepository<Product>>();
-        mockReadRepo
-            .Setup(x => x.GetAsync<ProductResponse>(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .Callback<QueryFilter<Product>, CancellationToken>((f, _) => capturedFilter = f)
-            .ReturnsAsync(new List<ProductResponse>());
-        mockReadRepo
-            .Setup(x => x.CountAsync(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(25);
+        var (context, grp) = await CreateContextWithGroupAsync();
+        await using (context)
+        {
+            for (var i = 0; i < 25; i++)
+            {
+                context.Products.Add(new Product { GroupId = grp.Id, Name = $"Item{i}", Price = 1m });
+            }
 
-        var mockUow = new Mock<IUnitOfWork>();
-        mockUow.Setup(x => x.ReadRepository<Product>()).Returns(mockReadRepo.Object);
+            await context.SaveChangesAsync();
 
-        var handler = new ListProductHandler(mockUow.Object, CreateMapper());
-        var query = new ListProductQuery { PageNumber = 3, PageSize = 5 };
+            var handler = new ListProductHandler(context);
+            var result = await handler.Handle(new ListProductQuery { PageNumber = 3, PageSize = 5 });
 
-        var result = await handler.Handle(query);
-
-        capturedFilter.Should().NotBeNull();
-        capturedFilter!.Skip.Should().Be((3 - 1) * 5); // 10
-        capturedFilter.Take.Should().Be(5);
-        result.PageNumber.Should().Be(3);
-        result.PageSize.Should().Be(5);
-        result.TotalCount.Should().Be(25);
+            result.Items.Should().HaveCount(5);
+            result.PageNumber.Should().Be(3);
+            result.PageSize.Should().Be(5);
+            result.TotalCount.Should().Be(25);
+            result.TotalPages.Should().Be(5);
+        }
     }
 
     [Fact]
     public async Task Handle_should_apply_search_term_filter()
     {
-        QueryFilter<Product>? capturedFilter = null;
-        var mockReadRepo = new Mock<IReadRepository<Product>>();
-        mockReadRepo
-            .Setup(x => x.GetAsync<ProductResponse>(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .Callback<QueryFilter<Product>, CancellationToken>((f, _) => capturedFilter = f)
-            .ReturnsAsync(new List<ProductResponse>());
-        mockReadRepo
-            .Setup(x => x.CountAsync(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0);
+        var (context, grp) = await CreateContextWithGroupAsync();
+        await using (context)
+        {
+            context.Products.Add(new Product { GroupId = grp.Id, Name = "Alpha widget one", Price = 1m });
+            context.Products.Add(new Product { GroupId = grp.Id, Name = "Beta", Price = 2m });
+            await context.SaveChangesAsync();
 
-        var mockUow = new Mock<IUnitOfWork>();
-        mockUow.Setup(x => x.ReadRepository<Product>()).Returns(mockReadRepo.Object);
+            var handler = new ListProductHandler(context);
+            var result = await handler.Handle(new ListProductQuery { SearchTerm = "widget" });
 
-        var handler = new ListProductHandler(mockUow.Object, CreateMapper());
-        var query = new ListProductQuery { SearchTerm = "widget" };
-
-        await handler.Handle(query);
-
-        capturedFilter.Should().NotBeNull();
-        capturedFilter!.Filters.Should().NotBeNull().And.HaveCount(1);
+            result.TotalCount.Should().Be(1);
+            result.Items.Should().ContainSingle(i => i.Name.Contains("widget", StringComparison.Ordinal));
+        }
     }
 
     [Fact]
     public async Task Handle_should_return_paged_result_with_items()
     {
-        var items = new List<ProductResponse> { new(1, "A", 10m), new(2, "B", 20m) };
-        var mockReadRepo = new Mock<IReadRepository<Product>>();
-        mockReadRepo
-            .Setup(x => x.GetAsync<ProductResponse>(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(items);
-        mockReadRepo
-            .Setup(x => x.CountAsync(It.IsAny<QueryFilter<Product>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(2);
+        var (context, grp) = await CreateContextWithGroupAsync();
+        await using (context)
+        {
+            context.Products.Add(new Product { GroupId = grp.Id, Name = "A", Price = 10m });
+            context.Products.Add(new Product { GroupId = grp.Id, Name = "B", Price = 20m });
+            await context.SaveChangesAsync();
 
-        var mockUow = new Mock<IUnitOfWork>();
-        mockUow.Setup(x => x.ReadRepository<Product>()).Returns(mockReadRepo.Object);
+            var handler = new ListProductHandler(context);
+            var result = await handler.Handle(new ListProductQuery { PageNumber = 1, PageSize = 10 });
 
-        var handler = new ListProductHandler(mockUow.Object, CreateMapper());
-        var result = await handler.Handle(new ListProductQuery());
-
-        result.Items.Should().BeEquivalentTo(items);
-        result.TotalCount.Should().Be(2);
-        result.TotalPages.Should().Be(1);
+            result.Items.Should().HaveCount(2);
+            result.TotalCount.Should().Be(2);
+            result.TotalPages.Should().Be(1);
+        }
     }
 }

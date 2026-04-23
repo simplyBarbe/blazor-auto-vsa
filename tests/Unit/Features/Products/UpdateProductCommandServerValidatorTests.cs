@@ -14,11 +14,16 @@ public class UpdateProductCommandServerValidatorTests
         var (context, unitOfWork) = ProductValidatorTestFactory.CreateUnitOfWork();
         await using (context)
         {
-            await unitOfWork.WriteRepository<Product>().AddAsync(new Product { Name = "Other", Price = 1m });
+            await unitOfWork.WriteRepository<Product>().AddAsync(new Product
+            {
+                GroupId = ProductValidatorTestFactory.DefaultGroupId,
+                Name = "Other",
+                Price = 1m
+            });
             await unitOfWork.SaveChangesAsync();
 
             var validator = new UpdateProductCommandServerValidator(unitOfWork);
-            var command = new UpdateProductCommand(1, "Unique Name", 99.99m);
+            var command = new UpdateProductCommand(1, ProductValidatorTestFactory.DefaultGroupId, "Unique Name", 99.99m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeTrue();
         }
@@ -30,12 +35,17 @@ public class UpdateProductCommandServerValidatorTests
         var (context, unitOfWork) = ProductValidatorTestFactory.CreateUnitOfWork();
         await using (context)
         {
-            var product = new Product { Name = "My Product", Price = 5m };
+            var product = new Product
+            {
+                GroupId = ProductValidatorTestFactory.DefaultGroupId,
+                Name = "My Product",
+                Price = 5m
+            };
             await unitOfWork.WriteRepository<Product>().AddAsync(product);
             await unitOfWork.SaveChangesAsync();
 
             var validator = new UpdateProductCommandServerValidator(unitOfWork);
-            var command = new UpdateProductCommand(product.Id, "my product", 10m);
+            var command = new UpdateProductCommand(product.Id, ProductValidatorTestFactory.DefaultGroupId, "my product", 10m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeTrue();
         }
@@ -47,16 +57,26 @@ public class UpdateProductCommandServerValidatorTests
         var (context, unitOfWork) = ProductValidatorTestFactory.CreateUnitOfWork();
         await using (context)
         {
-            await unitOfWork.WriteRepository<Product>().AddAsync(new Product { Name = "First", Price = 1m });
-            var second = new Product { Name = "Second", Price = 2m };
+            await unitOfWork.WriteRepository<Product>().AddAsync(new Product
+            {
+                GroupId = ProductValidatorTestFactory.DefaultGroupId,
+                Name = "First",
+                Price = 1m
+            });
+            var second = new Product
+            {
+                GroupId = ProductValidatorTestFactory.DefaultGroupId,
+                Name = "Second",
+                Price = 2m
+            };
             await unitOfWork.WriteRepository<Product>().AddAsync(second);
             await unitOfWork.SaveChangesAsync();
 
             var validator = new UpdateProductCommandServerValidator(unitOfWork);
-            var command = new UpdateProductCommand(second.Id, "FIRST", 99m);
+            var command = new UpdateProductCommand(second.Id, ProductValidatorTestFactory.DefaultGroupId, "FIRST", 99m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.ErrorMessage == "Un prodotto con questo nome esiste già");
+            result.Errors.Should().Contain(e => e.ErrorMessage == "A product with this name already exists");
         }
     }
 
@@ -67,10 +87,10 @@ public class UpdateProductCommandServerValidatorTests
         await using (context)
         {
             var validator = new UpdateProductCommandServerValidator(unitOfWork);
-            var command = new UpdateProductCommand(1, "", 10m);
+            var command = new UpdateProductCommand(1, ProductValidatorTestFactory.DefaultGroupId, "", 10m);
             var result = await validator.ValidateAsync(command);
             result.IsValid.Should().BeFalse();
-            result.Errors.Should().Contain(e => e.ErrorMessage == "Il nome del prodotto è obbligatorio");
+            result.Errors.Should().Contain(e => e.ErrorMessage == "Product name is required");
         }
     }
 }

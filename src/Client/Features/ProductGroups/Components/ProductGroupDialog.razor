@@ -1,0 +1,103 @@
+@using Shared.Features.ProductGroups.Create
+@using Shared.Features.ProductGroups.Update
+@using Shared.Features.Categories.Responses
+@using Shared.Features.Categories.List
+@using Client.Components
+@using Client.Components.Base
+@using Client.Extensions
+@inherits BaseComponent
+@implements IDialogContentComponent<UpdateProductGroupCommand>
+
+<ActionDialog TCommand="UpdateProductGroupCommand"
+              Content="@Content"
+              IsAddMode="@(Content.Id == 0)"
+              AddTitle="Add Group"
+              EditTitle="Edit Group"
+              SaveState="@_save"
+              OnSave="SaveAsync"
+              OnCancel="CancelAsync">
+    <FluentSelect TOption="CategoryResponse"
+                  Items="@_categories"
+                  OptionText="@(c => c.Name)"
+                  SelectedOption="@_selectedCategory"
+                  SelectedOptionChanged="OnCategoryChangedAsync"
+                  Label="Category"
+                  Style="width: 100%;"
+                  Disabled="@_loading"/>
+    <FluentValidationMessage For="@(() => Content.CategoryId)"/>
+
+    <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
+    <FluentValidationMessage For="@(() => Content.Name)"/>
+</ActionDialog>
+
+@code {
+    [Parameter] public UpdateProductGroupCommand Content { get; set; } = default!;
+
+    [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+    private AsyncState _save = default!;
+
+    private List<CategoryResponse> _categories = [];
+    private CategoryResponse? _selectedCategory;
+    private bool _loading;
+
+    protected override void OnInitialized() => _save = UseAsyncState();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (_categories.Count == 0 && !_loading)
+        {
+            _loading = true;
+            try
+            {
+                var page = await SendAsync(new ListCategoryQuery { PageNumber = 1, PageSize = 500 });
+                _categories = page?.Items?.ToList() ?? [];
+            }
+            finally
+            {
+                _loading = false;
+            }
+        }
+
+        if (Content.CategoryId > 0)
+        {
+            _selectedCategory = _categories.FirstOrDefault(c => c.Id == Content.CategoryId);
+        }
+        else if (Content.Id == 0 && _categories.Count > 0)
+        {
+            _selectedCategory = _categories[0];
+            Content.CategoryId = _selectedCategory.Id;
+        }
+        else
+        {
+            _selectedCategory = null;
+        }
+    }
+
+    private Task OnCategoryChangedAsync(CategoryResponse? value)
+    {
+        _selectedCategory = value;
+        Content.CategoryId = value?.Id ?? 0;
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveAsync(EditContext editContext)
+    {
+        var success = Content.Id == 0
+            ? await _save.RunAsync(() => SendAsync(
+                new CreateProductGroupCommand(Content.CategoryId, Content.Name),
+                editContext,
+                new RequestOptions(SuccessMessage: "Group created!")))
+            : await _save.RunAsync(() => SendAsync(
+                Content,
+                editContext,
+                new RequestOptions(SuccessMessage: "Group updated!")));
+
+        if (success)
+        {
+            await Dialog.CloseAsync(Content);
+        }
+    }
+
+    private Task CancelAsync() => Dialog.CancelAsync();
+}

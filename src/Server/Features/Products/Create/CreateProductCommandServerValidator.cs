@@ -15,6 +15,17 @@ public class CreateProductCommandServerValidator : AbstractValidator<CreateProdu
     {
         Include(new CreateProductCommandValidator());
 
+        RuleFor(x => x.GroupId)
+            .MustAsync(async (groupId, cancellationToken) =>
+            {
+                var count = await unitOfWork.ReadRepository<ProductGroup>().CountAsync(
+                    new QueryFilter<ProductGroup> { Filters = [g => g.Id == groupId] },
+                    cancellationToken);
+                return count == 1;
+            })
+            .When(x => x.GroupId > 0)
+            .WithMessage("Selected group is not valid");
+
         RuleFor(x => x.Name)
             .MustAsync(async (name, cancellationToken) =>
             {
@@ -27,6 +38,6 @@ public class CreateProductCommandServerValidator : AbstractValidator<CreateProdu
                 return count == 0;
             })
             .When(x => !string.IsNullOrWhiteSpace(x.Name))
-            .WithMessage("Un prodotto con questo nome esiste già");
+            .WithMessage("A product with this name already exists");
     }
 }

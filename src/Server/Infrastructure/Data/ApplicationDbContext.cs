@@ -17,6 +17,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<AuditTrail> AuditTrails { get; set; } = null!;
     
+    public DbSet<Category> Categories { get; set; } = null!;
+
+    public DbSet<ProductGroup> ProductGroups { get; set; } = null!;
+
     public DbSet<Product> Products { get; set; } = null!;
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>

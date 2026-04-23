@@ -4,11 +4,11 @@ using Shared.Features.AuditTrails.List;
 
 namespace Client.Features.AuditTrails;
 
-public class AuditTrailRoutes : IRouteDefinition
+public sealed class AuditTrailRoutes : IRouteDefinition
 {
-    public void Define(IRouteMap map)
+    public void Define(RequestEndpointMapper routes)
     {
-        map.Map<GetAuditTrailQuery>("/api/audit-trails/{Id}", HttpMethod.Get);
-        map.Map<ListAuditTrailQuery>("/api/audit-trails", HttpMethod.Get);
+        routes.Map<GetAuditTrailQuery>("/api/audit-trails/{Id}", HttpMethod.Get);
+        routes.Map<ListAuditTrailQuery>("/api/audit-trails", HttpMethod.Get);
     }
 }

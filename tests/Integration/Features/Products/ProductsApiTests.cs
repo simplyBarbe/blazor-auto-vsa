@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using Integration.Infrastructure;
 using Shared.Core;
+using Shared.Features.ProductGroups.Responses;
 using Shared.Features.Products.Create;
 using Shared.Features.Products.Responses;
 using Shared.Features.Products.Update;
@@ -20,10 +21,21 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
         _client = factory.CreateClient();
     }
 
+    private async Task<int> GetAnyGroupIdAsync()
+    {
+        var response = await _client.GetAsync("/api/groups?PageNumber=1&PageSize=1");
+        response.EnsureSuccessStatusCode();
+        var page = await response.Content.ReadFromJsonAsync<PagedResult<ProductGroupResponse>>();
+        page.Should().NotBeNull();
+        page!.Items.Should().NotBeEmpty();
+        return page.Items[0].Id;
+    }
+
     [Fact]
     public async Task CreateProduct_should_return_201_and_location_and_body()
     {
-        var command = new CreateProductCommand("Integration Product", 19.99m);
+        var groupId = await GetAnyGroupIdAsync();
+        var command = new CreateProductCommand(groupId, "Integration Product", 19.99m);
 
         var response = await _client.PostAsJsonAsync("/api/products", command);
 
@@ -41,7 +53,8 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task GetProduct_after_create_should_return_200_and_same_data()
     {
-        var command = new CreateProductCommand("Get Test Product", 29.99m);
+        var groupId = await GetAnyGroupIdAsync();
+        var command = new CreateProductCommand(groupId, "Get Test Product", 29.99m);
         var createResponse = await _client.PostAsJsonAsync("/api/products", command);
         createResponse.EnsureSuccessStatusCode();
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
@@ -80,13 +93,18 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task UpdateProduct_should_return_200_and_updated_data()
     {
-        var createCommand = new CreateProductCommand("To Update", 10m);
+        var groupId = await GetAnyGroupIdAsync();
+        var createCommand = new CreateProductCommand(groupId, "To Update", 10m);
         var createResponse = await _client.PostAsJsonAsync("/api/products", createCommand);
         createResponse.EnsureSuccessStatusCode();
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
         created.Should().NotBeNull();
 
-        var updateCommand = new UpdateProductCommand(created!.Id, "Updated Name", 99.99m);
+        var updateCommand = new UpdateProductCommand(
+            created!.Id,
+            groupId,
+            "Updated Name",
+            99.99m);
         var updateResponse = await _client.PutAsJsonAsync($"/api/products/{created.Id}", updateCommand);
 
         updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -103,7 +121,8 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task DeleteProduct_should_return_204_and_then_get_404()
     {
-        var createCommand = new CreateProductCommand("To Delete", 5m);
+        var groupId = await GetAnyGroupIdAsync();
+        var createCommand = new CreateProductCommand(groupId, "To Delete", 5m);
         var createResponse = await _client.PostAsJsonAsync("/api/products", createCommand);
         createResponse.EnsureSuccessStatusCode();
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
@@ -120,7 +139,8 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task CreateProduct_with_invalid_data_should_return_400()
     {
-        var command = new CreateProductCommand("", -1m); // empty name, negative price
+        var groupId = await GetAnyGroupIdAsync();
+        var command = new CreateProductCommand(groupId, "", -1m); // empty name, negative price
 
         var response = await _client.PostAsJsonAsync("/api/products", command);
 
@@ -130,12 +150,13 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task CreateProduct_duplicate_name_should_return_400()
     {
+        var groupId = await GetAnyGroupIdAsync();
         var uniqueName = $"Duplicate Name {Guid.NewGuid():N}";
-        var first = new CreateProductCommand(uniqueName, 10m);
+        var first = new CreateProductCommand(groupId, uniqueName, 10m);
         var createFirst = await _client.PostAsJsonAsync("/api/products", first);
         createFirst.EnsureSuccessStatusCode();
 
-        var duplicateCase = new CreateProductCommand(uniqueName.ToUpperInvariant(), 20m);
+        var duplicateCase = new CreateProductCommand(groupId, uniqueName.ToUpperInvariant(), 20m);
 
         var response = await _client.PostAsJsonAsync("/api/products", duplicateCase);
 
@@ -145,13 +166,14 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task UpdateProduct_with_invalid_data_should_return_400()
     {
-        var createCommand = new CreateProductCommand("Valid", 10m);
+        var groupId = await GetAnyGroupIdAsync();
+        var createCommand = new CreateProductCommand(groupId, "Valid", 10m);
         var createResponse = await _client.PostAsJsonAsync("/api/products", createCommand);
         createResponse.EnsureSuccessStatusCode();
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponse>();
         created.Should().NotBeNull();
 
-        var updateCommand = new UpdateProductCommand(created!.Id, "", -5m); // empty name, negative price
+        var updateCommand = new UpdateProductCommand(created!.Id, groupId, "", -5m);
 
         var response = await _client.PutAsJsonAsync($"/api/products/{created.Id}", updateCommand);
 
@@ -161,16 +183,21 @@ public class ProductsApiTests : IClassFixture<TestWebApplicationFactory>
     [Fact]
     public async Task UpdateProduct_duplicate_name_should_return_400()
     {
+        var groupId = await GetAnyGroupIdAsync();
         var nameA = $"Update Dup A {Guid.NewGuid():N}";
         var nameB = $"Update Dup B {Guid.NewGuid():N}";
-        var createA = await _client.PostAsJsonAsync("/api/products", new CreateProductCommand(nameA, 1m));
+        var createA = await _client.PostAsJsonAsync("/api/products", new CreateProductCommand(groupId, nameA, 1m));
         createA.EnsureSuccessStatusCode();
-        var createB = await _client.PostAsJsonAsync("/api/products", new CreateProductCommand(nameB, 2m));
+        var createB = await _client.PostAsJsonAsync("/api/products", new CreateProductCommand(groupId, nameB, 2m));
         createB.EnsureSuccessStatusCode();
         var productB = await createB.Content.ReadFromJsonAsync<ProductResponse>();
         productB.Should().NotBeNull();
 
-        var updateCommand = new UpdateProductCommand(productB!.Id, nameA.ToUpperInvariant(), 99m);
+        var updateCommand = new UpdateProductCommand(
+            productB!.Id,
+            groupId,
+            nameA.ToUpperInvariant(),
+            99m);
         var response = await _client.PutAsJsonAsync($"/api/products/{productB.Id}", updateCommand);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

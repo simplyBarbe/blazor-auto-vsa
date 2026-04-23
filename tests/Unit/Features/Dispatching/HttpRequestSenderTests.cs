@@ -14,9 +14,7 @@ public class HttpRequestSenderTests
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     private static HttpClient CreateClient(HttpMessageHandler handler)
-    {
-        return new HttpClient(handler) { BaseAddress = new Uri("http://localhost/") };
-    }
+        => new(handler) { BaseAddress = new Uri("http://localhost/") };
 
     [Fact]
     public async Task Send_Get_with_success_returns_deserialized_response()
@@ -28,8 +26,7 @@ public class HttpRequestSenderTests
             .Returns(("/api/test/42", HttpMethod.Get));
         var sender = new HttpRequestSender(CreateClient(handler), mapper.Object);
 
-        var request = new TestGetRequest();
-        var response = await sender.Send<TestResponse>(request);
+        var response = await sender.Send<TestResponse>(new TestGetRequest());
 
         response.Should().NotBeNull();
         response!.Id.Should().Be(42);
@@ -48,8 +45,7 @@ public class HttpRequestSenderTests
             .Returns(("/api/test", HttpMethod.Post));
         var sender = new HttpRequestSender(CreateClient(handler), mapper.Object);
 
-        var request = new TestCreateRequest { Name = "New" };
-        var response = await sender.Send<TestResponse>(request);
+        var response = await sender.Send<TestResponse>(new TestCreateRequest { Name = "New" });
 
         response!.Name.Should().Be("Created");
         handler.LastRequest!.Method.Should().Be(HttpMethod.Post);
@@ -64,8 +60,7 @@ public class HttpRequestSenderTests
             .Returns(("/api/test/1", HttpMethod.Delete));
         var sender = new HttpRequestSender(CreateClient(handler), mapper.Object);
 
-        var request = new TestDeleteRequest();
-        var response = await sender.Send<object?>(request);
+        var response = await sender.Send<object?>(new TestDeleteRequest());
 
         response.Should().BeNull();
         handler.LastRequest!.Method.Should().Be(HttpMethod.Delete);
@@ -76,10 +71,7 @@ public class HttpRequestSenderTests
     {
         var errorResponse = new ValidationErrorResponse
         {
-            Errors = new List<ValidationError>
-            {
-                new() { PropertyName = "Name", ErrorMessage = "Name is required" }
-            }
+            Errors = [new() { PropertyName = "Name", ErrorMessage = "Name is required" }]
         };
         var handler = new MockHttpMessageHandler(HttpStatusCode.BadRequest, JsonSerializer.Serialize(errorResponse, JsonOptions));
         var mapper = new Mock<IRequestEndpointMapper>();
@@ -87,8 +79,7 @@ public class HttpRequestSenderTests
             .Returns(("/api/test", HttpMethod.Post));
         var sender = new HttpRequestSender(CreateClient(handler), mapper.Object);
 
-        var request = new TestCreateRequest();
-        var act = () => sender.Send<TestResponse>(request);
+        var act = () => sender.Send<TestResponse>(new TestCreateRequest());
 
         (await act.Invoking(x => x()).Should().ThrowAsync<ValidationException>())
             .And.Errors.Should().ContainSingle(e => e.PropertyName == "Name" && e.ErrorMessage == "Name is required");
@@ -103,8 +94,7 @@ public class HttpRequestSenderTests
             .Returns(("/api/test/999", HttpMethod.Get));
         var sender = new HttpRequestSender(CreateClient(handler), mapper.Object);
 
-        var request = new TestGetRequest();
-        var act = () => sender.Send<TestResponse>(request);
+        var act = () => sender.Send<TestResponse>(new TestGetRequest());
 
         await act.Invoking(x => x()).Should().ThrowAsync<HttpRequestException>();
     }

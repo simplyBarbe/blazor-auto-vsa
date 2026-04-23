@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Shared.Core;
 using Shared.Features.AuditTrails.Responses;
 using Shared.Features.AuditTrails.List;
 using Client.Components.Base;
@@ -7,11 +8,19 @@ using Shared.Domain.Enums;
 
 namespace Client.Features.AuditTrails.Components;
 
-public partial class AuditTrails : PagedListComponent<AuditTrailResponse, ListAuditTrailQuery>
+public partial class AuditTrails : BaseComponent
 {
-    private FluentDataGrid<AuditTrailResponse>? _grid;
+    protected ListAuditTrailQuery Query { get; } = new();
+    protected PagedGridController<AuditTrailResponse> GridController { get; private set; } = default!;
+    protected PagedDataGrid<AuditTrailResponse>? Grid { get; set; }
 
     private IEnumerable<string> _auditTypeOptions = Enum.GetNames<AuditType>().Prepend("All");
+
+    [PersistentState]
+    public List<AuditTrailResponse>? RestoredItems { get; set; }
+
+    [PersistentState]
+    public int RestoredTotalCount { get; set; }
 
     private string _selectedAuditTypeString = "All";
     private string SelectedAuditTypeString
@@ -27,28 +36,44 @@ public partial class AuditTrails : PagedListComponent<AuditTrailResponse, ListAu
         }
     }
 
-    protected override int ItemsPerPage => 10;
-
-    protected override async Task LoadDataAsync()
+    protected override void OnInitialized()
     {
-        if (_grid != null)
-        {
-            await _grid.RefreshDataAsync();
-        }
-        else
-        {
-            await base.LoadDataAsync();
-        }
+        GridController = new PagedGridController<AuditTrailResponse>(
+            FetchAuditTrailsAsync,
+            RestoredItems,
+            RestoredTotalCount,
+            (items, totalCount) =>
+            {
+                RestoredItems = items.ToList();
+                RestoredTotalCount = totalCount;
+            });
+
+        Track(GridController.State);
     }
 
-    private async ValueTask<GridItemsProviderResult<AuditTrailResponse>> AuditTrailProvider(GridItemsProviderRequest<AuditTrailResponse> request)
+    private Task<PagedResult<AuditTrailResponse>?> FetchAuditTrailsAsync(
+        int pageNumber,
+        int pageSize,
+        GridItemsProviderRequest<AuditTrailResponse> gridRequest)
     {
-        return await ProvideItemsAsync(request);
+        Query.PageNumber = pageNumber;
+        Query.PageSize = pageSize;
+        GridItemsProviderRequestSort.Apply(gridRequest, (sortBy, ascending) =>
+        {
+            Query.SortBy = sortBy;
+            Query.SortAscending = ascending;
+        });
+        return SendAsync(Query);
     }
 
     private void OnSearchTermChanged(ChangeEventArgs e)
     {
         Query.SearchTerm = e.Value?.ToString();
+    }
+
+    private async Task OnApplyFilterAsync()
+    {
+        if (Grid != null) await Grid.RefreshAsync(resetToFirstPage: true);
     }
 
     private async Task OnViewDetailsAsync(AuditTrailResponse auditTrail)

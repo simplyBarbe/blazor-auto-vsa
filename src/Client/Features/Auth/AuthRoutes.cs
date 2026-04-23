@@ -3,11 +3,11 @@ using Shared.Core.Auth;
 
 namespace Client.Features.Auth;
 
-public class AuthRoutes : IRouteDefinition
+public sealed class AuthRoutes : IRouteDefinition
 {
-    public void Define(IRouteMap map)
+    public void Define(RequestEndpointMapper routes)
     {
-        map.Map<LoginRequest>("/api/auth/login", HttpMethod.Post);
-        map.Map<LogoutCommand>("/api/auth/logout", HttpMethod.Post);
+        routes.Map<LoginRequest>("/api/auth/login", HttpMethod.Post);
+        routes.Map<LogoutCommand>("/api/auth/logout", HttpMethod.Post);
     }
 }

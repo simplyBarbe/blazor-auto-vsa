@@ -1,0 +1,140 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@attribute [CascadingTypeParameter(nameof(TGridItem))]
+@typeparam TGridItem
+
+<FluentCard Class="surface-card" Style="width: 100%;">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" Style="width: 100%;">
+        <div style="position: relative; width: 100%;">
+            <div style="overflow-x: auto; width: 100%;">
+                <FluentDataGrid @ref="_grid"
+                                ItemsProvider="@Controller.ProvideItemsAsync"
+                                Pagination="@Controller.Pagination"
+                                Loading="false"
+                                ResizableColumns="@ResizableColumns"
+                                ResizeColumnOnAllRows="@ResizeColumnOnAllRows"
+                                DisplayMode="@DisplayMode"
+                                TGridItem="TGridItem">
+                    @ChildContent
+                </FluentDataGrid>
+            </div>
+
+            @if (Controller.IsPending)
+            {
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--fill-color, rgba(0,0,0,0.02)); min-height: 200px; z-index: 1;">
+                    <FluentProgressRing/>
+                </div>
+            }
+        </div>
+
+        @if (Controller.HasNoResults)
+        {
+            if (EmptyContent != null)
+            {
+                @EmptyContent
+            }
+            else
+            {
+                <FluentLabel Typo="Typography.Body" Color="Color.Neutral">
+                    No results found.
+                </FluentLabel>
+            }
+        }
+
+        <FluentStack Orientation="Orientation.Horizontal"
+                     HorizontalAlignment="HorizontalAlignment.End"
+                     VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="12"
+                     Wrap="false">
+            <FluentStack Orientation="Orientation.Horizontal"
+                         VerticalAlignment="VerticalAlignment.Center"
+                         HorizontalGap="8">
+                <FluentLabel Typo="Typography.Body">Items per page</FluentLabel>
+                <FluentSelect TOption="int"
+                              Items="@ItemsPerPageOptions"
+                              OptionText="@(size => size.ToString())"
+                              OptionValue="@(size => size.ToString())"
+                              SelectedOption="@_selectedItemsPerPage"
+                              SelectedOptionChanged="@OnItemsPerPageChangedAsync"
+                              Style="min-width: 96px;" />
+            </FluentStack>
+
+            @if (Controller.TotalCount > 0)
+            {
+                <div style="display: inline-flex; width: max-content; min-width: max-content; white-space: nowrap;">
+                    <FluentPaginator State="@Controller.Pagination" style="width: max-content; min-width: max-content; white-space: nowrap;" />
+                </div>
+            }
+        </FluentStack>
+    </FluentStack>
+</FluentCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public PagedGridController<TGridItem> Controller { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? EmptyContent { get; set; }
+
+    [Parameter]
+    public bool ResizableColumns { get; set; } = true;
+
+    [Parameter]
+    public bool ResizeColumnOnAllRows { get; set; }
+
+    [Parameter]
+    public DataGridDisplayMode DisplayMode { get; set; } = DataGridDisplayMode.Table;
+
+    private FluentDataGrid<TGridItem>? _grid;
+    private int _selectedItemsPerPage = PagedGridController<TGridItem>.DefaultItemsPerPage;
+    private IReadOnlyList<int> ItemsPerPageOptions => PagedGridController<TGridItem>.SupportedItemsPerPageOptions;
+
+    protected override void OnParametersSet()
+    {
+        _selectedItemsPerPage = ValidateItemsPerPage(Controller.Pagination.ItemsPerPage);
+        if (Controller.Pagination.ItemsPerPage != _selectedItemsPerPage)
+        {
+            Controller.Pagination.ItemsPerPage = _selectedItemsPerPage;
+        }
+    }
+
+    public async Task RefreshAsync(bool resetToFirstPage = false)
+    {
+        if (resetToFirstPage && Controller.Pagination.CurrentPageIndex != 0)
+        {
+            // Yield so FluentUI finishes enumerating its subscriber list before we mutate it.
+            await Task.Yield();
+            await Controller.Pagination.SetCurrentPageIndexAsync(0);
+        }
+
+        if (_grid is not null)
+        {
+            await _grid.RefreshDataAsync();
+        }
+    }
+
+    private async Task OnItemsPerPageChangedAsync(int selectedItemsPerPage)
+    {
+        var validatedItemsPerPage = ValidateItemsPerPage(selectedItemsPerPage);
+        _selectedItemsPerPage = validatedItemsPerPage;
+        if (Controller.Pagination.ItemsPerPage == validatedItemsPerPage)
+        {
+            return;
+        }
+
+        Controller.Pagination.ItemsPerPage = validatedItemsPerPage;
+        await RefreshAsync(resetToFirstPage: true);
+    }
+
+    private static int ValidateItemsPerPage(int value)
+    {
+        if (PagedGridController<TGridItem>.SupportedItemsPerPageOptions.Contains(value))
+        {
+            return value;
+        }
+
+        return PagedGridController<TGridItem>.DefaultItemsPerPage;
+    }
+}

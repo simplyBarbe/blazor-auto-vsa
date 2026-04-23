@@ -22,7 +22,7 @@ public class GetProductQueryValidatorTests
         var query = new GetProductQuery(0);
         var result = _validator.Validate(query);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "L'ID del prodotto deve essere maggiore di zero");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Product ID must be greater than zero");
     }
 
     [Fact]
@@ -31,6 +31,6 @@ public class GetProductQueryValidatorTests
         var query = new GetProductQuery(-1);
         var result = _validator.Validate(query);
         result.IsValid.Should().BeFalse();
-        result.Errors.Should().Contain(e => e.ErrorMessage == "L'ID del prodotto deve essere maggiore di zero");
+        result.Errors.Should().Contain(e => e.ErrorMessage == "Product ID must be greater than zero");
     }
 }

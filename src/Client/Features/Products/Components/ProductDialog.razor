@@ -1,5 +1,10 @@
 @using Shared.Features.Products.Update
 @using Shared.Features.Products.Create
+@using Shared.Features.Categories.Responses
+@using Shared.Features.Categories.List
+@using Shared.Features.ProductGroups.Responses
+@using Shared.Features.ProductGroups.List
+@using Shared.Features.ProductGroups.Get
 @using Client.Components
 @using Client.Components.Base
 @using Client.Extensions
@@ -11,39 +16,209 @@
                  IsAddMode="@(Content.Id == 0)"
                  AddTitle="Add Product"
                  EditTitle="Edit Product"
+                 SaveState="@_saveCommand"
                  OnSave="SaveAsync"
                  OnCancel="CancelAsync">
-        <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
-        <FluentValidationMessage For="@(() => Content.Name)"/>
+    <FluentSelect TOption="CategoryResponse"
+                  Items="@(_categoryListLoad.Data ?? [])"
+                  OptionText="@(c => c.Name)"
+                  SelectedOption="@_selectedCategory"
+                  SelectedOptionChanged="OnCategoryChangedAsync"
+                  Label="Category"
+                  Style="width: 100%;"
+                  Disabled="@(_categoryListLoad.IsPending || _groupListLoad.IsPending)"/>
 
-        <CustomNumericField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true"
-                            Style="width: 100%;"/>
-        <FluentValidationMessage For="@(() => Content.Price)"/>
+    <FluentSelect TOption="ProductGroupResponse"
+                  Items="@(_groupListLoad.Data ?? [])"
+                  OptionText="@(g => g.Name)"
+                  SelectedOption="@_selectedGroup"
+                  SelectedOptionChanged="OnGroupChangedAsync"
+                  Label="Group"
+                  Style="width: 100%;"
+                  Disabled="@(_categoryListLoad.IsPending || _groupListLoad.IsPending || _selectedCategory is null || _selectedCategory.Id == 0)"/>
+    <FluentValidationMessage For="@(() => Content.GroupId)"/>
+
+    <FluentTextField @bind-Value="Content.Name" Label="Name" Required="true" Style="width: 100%;"/>
+    <FluentValidationMessage For="@(() => Content.Name)"/>
+
+    <CustomNumericField TValue="decimal" @bind-Value="Content.Price" Label="Price" Required="true"
+                        Style="width: 100%;"/>
+    <FluentValidationMessage For="@(() => Content.Price)"/>
 </ActionDialog>
 
 @code {
     [Parameter] public UpdateProductCommand Content { get; set; } = default!;
 
     [CascadingParameter] public FluentDialog Dialog { get; set; } = default!;
+    private AsyncState _saveCommand = default!;
+    private AsyncState<List<CategoryResponse>> _categoryListLoad = default!;
+    private AsyncState<List<ProductGroupResponse>> _groupListLoad = default!;
 
-    private async Task SaveAsync(EditContext editContext)
+    private CategoryResponse? _selectedCategory;
+    private ProductGroupResponse? _selectedGroup;
+    private int? _lastResolvedGroupId;
+    private bool _isResolvingDialogSelection;
+
+    protected override void OnInitialized()
     {
-        if (Content.Id == 0)
+        _saveCommand = UseAsyncState();
+        _categoryListLoad = UseAsyncState<List<CategoryResponse>>();
+        _groupListLoad = UseAsyncState<List<ProductGroupResponse>>();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        await EnsureCategoriesLoadedAsync();
+        await AlignSelectionWithContentAsync();
+    }
+
+    private Task EnsureCategoriesLoadedAsync()
+    {
+        if (_categoryListLoad.Data is not null || _categoryListLoad.IsPending)
         {
-            var createCommand = new CreateProductCommand(Content.Name, Content.Price);
-            var result = await SendAsync(createCommand, editContext, new RequestOptions(SuccessMessage: "Product created!"));
-            if (result != null) await Dialog.CloseAsync(Content);
+            return Task.CompletedTask;
+        }
+
+        return _categoryListLoad.RunAsync(async () =>
+        {
+            var page = await SendAsync(new ListCategoryQuery { PageNumber = 1, PageSize = 500 });
+            return page?.Items?.ToList() ?? [];
+        });
+    }
+
+    /// <summary>
+    /// Picks category + group to match <see cref="Content"/>.
+    /// Edit mode: resolve category from the existing group.
+    /// Add mode (GroupId == 0): preselect the first category + its first group so Save works immediately.
+    /// </summary>
+    private async Task AlignSelectionWithContentAsync()
+    {
+        var categories = _categoryListLoad.Data ?? [];
+        if (categories.Count == 0)
+        {
+            return;
+        }
+
+        if (Content.GroupId > 0 && Content.GroupId != _lastResolvedGroupId)
+        {
+            await ResolveFromExistingGroupAsync(categories);
+            return;
+        }
+
+        if (Content.GroupId == 0 && _selectedCategory is null)
+        {
+            await PreselectFirstAsync(categories[0]);
+        }
+    }
+
+    private async Task ResolveFromExistingGroupAsync(IReadOnlyList<CategoryResponse> categories)
+    {
+        _isResolvingDialogSelection = true;
+        try
+        {
+            var grp = await SendAsync(new GetProductGroupQuery(Content.GroupId));
+            if (grp is null)
+            {
+                return;
+            }
+
+            _selectedCategory = categories.FirstOrDefault(c => c.Id == grp.CategoryId);
+            await LoadGroupsForCategoryAsync(grp.CategoryId);
+            _selectedGroup = (_groupListLoad.Data ?? []).FirstOrDefault(g => g.Id == Content.GroupId);
+            _lastResolvedGroupId = Content.GroupId;
+        }
+        finally
+        {
+            _isResolvingDialogSelection = false;
+        }
+    }
+
+    private async Task PreselectFirstAsync(CategoryResponse category)
+    {
+        _isResolvingDialogSelection = true;
+        try
+        {
+            _selectedCategory = category;
+            await LoadGroupsForCategoryAsync(category.Id);
+            ApplyFirstGroupSelection();
+        }
+        finally
+        {
+            _isResolvingDialogSelection = false;
+        }
+    }
+
+    private async Task OnCategoryChangedAsync(CategoryResponse? value)
+    {
+        if (_isResolvingDialogSelection)
+        {
+            return;
+        }
+
+        _selectedCategory = value;
+        Content.GroupId = 0;
+        _selectedGroup = null;
+        _lastResolvedGroupId = null;
+
+        if (value is { Id: > 0 } c)
+        {
+            await LoadGroupsForCategoryAsync(c.Id);
+            ApplyFirstGroupSelection();
         }
         else
         {
-            var result = await SendAsync(Content, editContext, new RequestOptions(SuccessMessage: "Product updated!"));
-            if (result != null) await Dialog.CloseAsync(Content);
+            await _groupListLoad.RunAsync(() => Task.FromResult<List<ProductGroupResponse>?>([]));
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task OnGroupChangedAsync(ProductGroupResponse? value)
+    {
+        _selectedGroup = value;
+        Content.GroupId = value?.Id ?? 0;
+        _lastResolvedGroupId = Content.GroupId > 0 ? Content.GroupId : null;
+        return Task.CompletedTask;
+    }
+
+    private void ApplyFirstGroupSelection()
+    {
+        var firstGroup = (_groupListLoad.Data ?? []).FirstOrDefault();
+        _selectedGroup = firstGroup;
+        Content.GroupId = firstGroup?.Id ?? 0;
+        _lastResolvedGroupId = Content.GroupId > 0 ? Content.GroupId : null;
+    }
+
+    private Task LoadGroupsForCategoryAsync(int categoryId) =>
+        _groupListLoad.RunAsync(async () =>
+        {
+            var page = await SendAsync(new ListProductGroupQuery
+            {
+                PageNumber = 1,
+                PageSize = 500,
+                CategoryId = categoryId
+            });
+            return page?.Items?.ToList() ?? [];
+        });
+
+    private async Task SaveAsync(EditContext editContext)
+    {
+        var success = Content.Id == 0
+            ? await _saveCommand.RunAsync(() => SendAsync(
+                new CreateProductCommand(Content.GroupId, Content.Name, Content.Price),
+                editContext,
+                new RequestOptions(SuccessMessage: "Product created!")))
+            : await _saveCommand.RunAsync(() => SendAsync(
+                Content,
+                editContext,
+                new RequestOptions(SuccessMessage: "Product updated!")));
+
+        if (success)
+        {
+            await Dialog.CloseAsync(Content);
         }
     }
 
-    private async Task CancelAsync()
-    {
-        await Dialog.CancelAsync();
-    }
-
+    private Task CancelAsync() => Dialog.CancelAsync();
 }

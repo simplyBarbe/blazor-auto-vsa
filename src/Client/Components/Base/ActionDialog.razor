@@ -2,9 +2,8 @@
 @using Client.Extensions
 @using Client.Components.Base
 @typeparam TCommand where TCommand : class
-@inherits BaseComponent
 
-<FluentDialogHeader ShowDismiss="true">
+<FluentDialogHeader ShowDismiss="@(!SaveState.IsPending)">
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         @if (IsAddMode)
         {
@@ -30,10 +29,10 @@
     </FluentDialogBody>
 
     <FluentDialogFooter>
-        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@IsLoading" Disabled="@IsLoading">
+        <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit" Loading="@SaveState.IsPending" Disabled="@SaveState.IsPending">
             @SaveButtonText
         </FluentButton>
-        <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync" Disabled="@IsLoading">
+        <FluentButton Appearance="Appearance.Neutral" OnClick="HandleCancelAsync" Disabled="@SaveState.IsPending">
             @CancelButtonText
         </FluentButton>
     </FluentDialogFooter>
@@ -56,13 +55,16 @@
 
     [Parameter] public bool IsAddMode { get; set; }
 
+    [Parameter, EditorRequired]
+    public AsyncState SaveState { get; set; } = default!;
+
     [Parameter] public EventCallback<EditContext> OnSave { get; set; }
 
     [Parameter] public EventCallback OnCancel { get; set; }
 
     private async Task HandleSubmitAsync(EditContext editContext)
     {
-        if (IsLoading) return;
+        if (SaveState.IsPending) return;
 
         editContext.ClearValidationMessages();
 
@@ -77,6 +79,7 @@
 
     private async Task HandleCancelAsync()
     {
+        if (SaveState.IsPending) return;
         await OnCancel.InvokeAsync();
     }
 }

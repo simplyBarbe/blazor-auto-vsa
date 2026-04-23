@@ -23,10 +23,7 @@ public class ListAuditTrailHandler : ListEntityHandlerBase<AuditTrail, ListAudit
         {
             Skip = (pageNumber - 1) * pageSize,
             Take = pageSize,
-            OrderBy = new List<SortExpression<AuditTrail>>
-            {
-                new(p => p.DateTime, SortDirection.Descending)
-            }
+            OrderBy = new List<SortExpression<AuditTrail>> { BuildSort(query) }
         };
 
         var predicates = new List<Expression<Func<AuditTrail, bool>>>();
@@ -47,5 +44,20 @@ public class ListAuditTrailHandler : ListEntityHandlerBase<AuditTrail, ListAudit
         }
 
         return filter;
+    }
+
+    private static SortExpression<AuditTrail> BuildSort(ListAuditTrailQuery query)
+    {
+        var field = query.SortBy?.Trim();
+        var ascending = query.SortAscending ?? true;
+        var direction = ascending ? SortDirection.Ascending : SortDirection.Descending;
+
+        return field?.ToLowerInvariant() switch
+        {
+            "tablename" => new SortExpression<AuditTrail>(p => p.TableName!, direction),
+            "audittype" => new SortExpression<AuditTrail>(p => p.AuditType, direction),
+            "datetime" => new SortExpression<AuditTrail>(p => p.DateTime, direction),
+            _ => new SortExpression<AuditTrail>(p => p.DateTime, SortDirection.Descending)
+        };
     }
 }

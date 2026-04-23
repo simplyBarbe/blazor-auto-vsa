@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize]
 @using Client.Components.Base
-@inherits PagedListComponent<AuditTrailResponse, Shared.Features.AuditTrails.List.ListAuditTrailQuery>
+@inherits BaseComponent
 @using Shared.Features.AuditTrails.Responses
 @using Shared.Features.AuditTrails.List
 @using Shared.Domain.Enums
@@ -13,11 +13,11 @@
 <FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
 
     <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" VerticalGap="8">
-        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent">📜 Audit Trails</FluentLabel>
-        <FluentLabel Typo="Typography.Body" Color="Color.Neutral">System activity and changes.</FluentLabel>
+        <FluentLabel Typo="Typography.PageTitle" Color="Color.Accent" Class="page-title">📜 Audit Trails</FluentLabel>
+        <FluentLabel Typo="Typography.Body" Color="Color.Neutral" Class="page-subtitle">System activity and changes.</FluentLabel>
     </FluentStack>
 
-    <FluentCard AreaRestricted="false" Style="position: relative; z-index: 100; width: 100%;">
+    <FluentCard Class="surface-card" AreaRestricted="false" Style="position: relative; z-index: 100; width: 100%;">
         <FluentStack Class="page-toolbar-filters" Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
                      HorizontalGap="16" Style="overflow: visible;">
             <FluentTextField @bind-Value="Query.SearchTerm" Class="page-toolbar-search" Label="Search Table" Placeholder="e.g. products"
@@ -30,17 +30,13 @@
                           @bind-Value="SelectedAuditTypeString"
                           Width="200px"/>
 
-            <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="LoadDataAsync" Style="align-self: flex-end;">Apply
+            <FluentButton Class="page-toolbar-button page-toolbar-primary" Appearance="Appearance.Accent" OnClick="OnApplyFilterAsync" Disabled="@GridController.IsPending" Style="align-self: flex-end;">Apply
                 Filter
             </FluentButton>
         </FluentStack>
     </FluentCard>
 
-    <DataGridContainer IsLoading="@IsLoading" Pagination="@Pagination">
-        <FluentDataGrid @ref="_grid" ItemsProvider="@AuditTrailProvider" Pagination="@Pagination"
-                        ResizableColumns="true" ResizeColumnOnAllRows="false"
-                        DisplayMode="DataGridDisplayMode.Table"
-                        TGridItem="AuditTrailResponse">
+    <PagedDataGrid @ref="Grid" TGridItem="AuditTrailResponse" Controller="@GridController">
             <PropertyColumn Property="@(p => p.TableName)" Sortable="true" Title="Table"/>
             <PropertyColumn Property="@(p => p.AuditType)" Sortable="true" Title="Type"/>
             <PropertyColumn Property="@(p => p.DateTime)" Sortable="true" Title="Date" Format="G"/>
@@ -60,6 +56,5 @@
                     <FluentIcon Value="@(new Icons.Regular.Size16.Search())" Color="@Color.Accent"/>
                 </FluentButton>
             </TemplateColumn>
-        </FluentDataGrid>
-    </DataGridContainer>
+    </PagedDataGrid>
 </FluentStack>
