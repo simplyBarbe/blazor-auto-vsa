@@ -1,4 +1,5 @@
 using Shared.Core;
+using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -42,7 +43,7 @@ public sealed class RequestEndpointMapper : IRequestEndpointMapper
 
             if (prop != null)
             {
-                var val = prop.GetValue(request)?.ToString();
+                var val = SerializeValue(prop.GetValue(request));
                 if (val != null)
                 {
                     used.Add(prop.Name);
@@ -55,7 +56,7 @@ public sealed class RequestEndpointMapper : IRequestEndpointMapper
         if (mapping.Method == HttpMethod.Get)
         {
             var queryParts = type.GetProperties()
-                .Select(p => (p.Name, Value: p.GetValue(request)?.ToString()))
+                .Select(p => (p.Name, Value: SerializeValue(p.GetValue(request))))
                 .Where(p => p.Value != null && !used.Contains(p.Name))
                 .Select(p => $"{Uri.EscapeDataString(p.Name)}={Uri.EscapeDataString(p.Value!)}")
                 .ToList();
@@ -68,5 +69,20 @@ public sealed class RequestEndpointMapper : IRequestEndpointMapper
         }
 
         return (url, mapping.Method);
+    }
+
+    private static string? SerializeValue(object? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        return value switch
+        {
+            string text => text,
+            IFormattable formattable => formattable.ToString(format: null, formatProvider: CultureInfo.InvariantCulture),
+            _ => Convert.ToString(value, CultureInfo.InvariantCulture)
+        };
     }
 }
