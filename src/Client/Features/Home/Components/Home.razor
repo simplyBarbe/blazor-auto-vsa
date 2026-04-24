@@ -2,7 +2,7 @@
 
 <PageTitle>Home</PageTitle>
 
-<FluentStack Class="page-stack" Orientation="Orientation.Vertical" VerticalGap="20">
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="20">
     <FluentCard Class="hero-card">
         <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
             <FluentLabel Typo="Typography.PageTitle" Class="page-title">
@@ -20,7 +20,7 @@
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
                     <FluentLabel Typo="Typography.Header">Products</FluentLabel>
                     <FluentLabel Typo="Typography.Body">Create, edit, search, and delete catalog entries.</FluentLabel>
-                    <FluentButton Appearance="Appearance.Accent" Href="/products">Open Products</FluentButton>
+                    <FluentButton Appearance="Appearance.Accent" OnClick="@(() => NavigateTo("/products"))">Open Products</FluentButton>
                 </FluentStack>
             </FluentCard>
         </FluentGridItem>
@@ -29,7 +29,7 @@
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
                     <FluentLabel Typo="Typography.Header">Audit Trails</FluentLabel>
                     <FluentLabel Typo="Typography.Body">Review change history and inspect field-level diffs.</FluentLabel>
-                    <FluentButton Appearance="Appearance.Outline" Href="/audit-trails">Open Audit Trails</FluentButton>
+                    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => NavigateTo("/audit-trails"))">Open Audit Trails</FluentButton>
                 </FluentStack>
             </FluentCard>
         </FluentGridItem>
@@ -38,9 +38,19 @@
                 <FluentStack Orientation="Orientation.Vertical" VerticalGap="10">
                     <FluentLabel Typo="Typography.Header">Counter</FluentLabel>
                     <FluentLabel Typo="Typography.Body">Quick sample page for interactive component behavior.</FluentLabel>
-                    <FluentButton Appearance="Appearance.Lightweight" Href="/counter">Open Counter</FluentButton>
+                    <FluentButton Appearance="Appearance.Lightweight" OnClick="@(() => NavigateTo("/counter"))">Open Counter</FluentButton>
                 </FluentStack>
             </FluentCard>
         </FluentGridItem>
     </FluentGrid>
 </FluentStack>
+
+@code {
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    private void NavigateTo(string route)
+    {
+        NavigationManager.NavigateTo(route);
+    }
+}

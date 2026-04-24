@@ -12,6 +12,7 @@ using Shared.Features.Products.Create;
 using Shared.Features.Products.Get;
 using Shared.Features.Products.List;
 using Shared.Features.Products.Responses;
+using System.Globalization;
 using Xunit;
 namespace Unit.Features.Dispatching;
 
@@ -110,5 +111,55 @@ public class RequestEndpointMapperTests
             .WithMessage("*No route mapped*UnmappedRequest*");
     }
 
+    [Fact]
+    public void GetEndpoint_GetRequest_should_serialize_route_and_query_values_with_invariant_culture()
+    {
+        var originalCulture = CultureInfo.CurrentCulture;
+        var originalUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            var italianCulture = new CultureInfo("it-IT");
+            CultureInfo.CurrentCulture = italianCulture;
+            CultureInfo.CurrentUICulture = italianCulture;
+
+            var mapper = new RequestEndpointMapper(new IRouteDefinition[]
+            {
+                new ProductRoutes(),
+                new CategoryRoutes(),
+                new GroupRoutes(),
+                new CultureAwareRoutes()
+            });
+
+            var request = new CultureAwareQuery(12.34m, new DateTime(2026, 01, 02, 15, 16, 17, DateTimeKind.Utc), 8.9d);
+
+            var (url, method) = mapper.GetEndpoint<object?>(request);
+
+            url.Should().StartWith("/api/culture-aware/12.34/01%2F02%2F2026%2015%3A16%3A17");
+            url.Should().Contain("Ratio=8.9");
+            url.Should().NotContain("Amount=");
+            method.Should().Be(HttpMethod.Get);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
+    }
+
     private sealed class UnmappedRequest : IRequest<object?> { }
+
+    private sealed class CultureAwareQuery(decimal Amount, DateTime When, double Ratio) : IRequest<object?>
+    {
+        public decimal Amount { get; } = Amount;
+        public DateTime When { get; } = When;
+        public double Ratio { get; } = Ratio;
+    }
+
+    private sealed class CultureAwareRoutes : IRouteDefinition
+    {
+        public void Define(RequestEndpointMapper mapper)
+        {
+            mapper.Map<CultureAwareQuery>("/api/culture-aware/{Amount}/{When}", HttpMethod.Get);
+        }
+    }
 }

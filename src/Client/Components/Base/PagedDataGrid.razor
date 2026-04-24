@@ -2,7 +2,7 @@
 @attribute [CascadingTypeParameter(nameof(TGridItem))]
 @typeparam TGridItem
 
-<FluentCard Class="surface-card" Style="width: 100%;">
+<FluentCard Style="width: 100%;">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" Style="width: 100%;">
         <div style="position: relative; width: 100%;">
             <div style="overflow-x: auto; width: 100%;">
@@ -20,7 +20,7 @@
 
             @if (Controller.IsPending)
             {
-                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--fill-color, rgba(0,0,0,0.02)); min-height: 200px; z-index: 1;">
+                <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; min-height: 200px; z-index: 1;">
                     <FluentProgressRing/>
                 </div>
             }
