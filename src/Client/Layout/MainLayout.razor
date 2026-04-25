@@ -2,20 +2,32 @@
 
 <FluentDesignTheme Mode="DesignThemeModes.System" />
 
-<FluentLayout>
-    <FluentHeader>
+<FluentLayout Class="app-layout">
+    <FluentHeader Class="app-header">
         <FluentStack Orientation="Orientation.Horizontal"
                      HorizontalAlignment="HorizontalAlignment.SpaceBetween"
                      VerticalAlignment="VerticalAlignment.Center"
-                     Style="width: 100%; padding: 0.5rem 1rem;">
-            <FluentLabel Typo="Typography.Header">Server</FluentLabel>
+                     Class="header-bar">
+            <FluentStack Orientation="Orientation.Horizontal"
+                         VerticalAlignment="VerticalAlignment.Center"
+                         Class="header-start">
+                <FluentButton Appearance="Appearance.Stealth"
+                              Class="menu-toggle"
+                              AriaLabel="Toggle navigation menu"
+                              OnClick="@ToggleMenu"
+                              IconEnd="@(new Icons.Regular.Size20.LineHorizontal3())"></FluentButton>
+                <FluentLabel Typo="Typography.Header" Class="app-title">Server</FluentLabel>
+            </FluentStack>
             <Client.Features.Auth.Components.LoginDisplay />
         </FluentStack>
     </FluentHeader>
-    <FluentStack Orientation="Orientation.Horizontal" Width="100%">
-        <NavMenu Expanded="true" />
-        <FluentBodyContent>
-            <div class="content">
+    <FluentStack Orientation="Orientation.Horizontal"
+                 Width="100%"
+                 Id="app-main"
+                 Class="@(menuExpanded ? "menu-expanded" : "menu-collapsed")">
+        <NavMenu Expanded="@menuExpanded" ExpandedChanged="@OnMenuExpandedChanged" />
+        <FluentBodyContent Class="app-body">
+            <div class="content app-content">
                 @Body
             </div>
         </FluentBodyContent>
@@ -33,3 +45,17 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    private bool menuExpanded = true;
+
+    private void OnMenuExpandedChanged(bool expanded)
+    {
+        menuExpanded = expanded;
+    }
+
+    private void ToggleMenu()
+    {
+        menuExpanded = !menuExpanded;
+    }
+}

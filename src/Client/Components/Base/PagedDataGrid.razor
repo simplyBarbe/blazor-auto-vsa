@@ -2,10 +2,10 @@
 @attribute [CascadingTypeParameter(nameof(TGridItem))]
 @typeparam TGridItem
 
-<FluentCard Style="width: 100%;">
+<FluentCard Class="paged-grid-card" Style="width: 100%;">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="16" Style="width: 100%;">
-        <div style="position: relative; width: 100%;">
-            <div style="overflow-x: auto; width: 100%;">
+        <div class="paged-grid-container" style="position: relative; width: 100%;">
+            <div class="paged-grid-table-scroll" style="overflow-x: auto; width: 100%;">
                 <FluentDataGrid @ref="_grid"
                                 ItemsProvider="@Controller.ProvideItemsAsync"
                                 Pagination="@Controller.Pagination"
@@ -40,14 +40,8 @@
             }
         }
 
-        <FluentStack Orientation="Orientation.Horizontal"
-                     HorizontalAlignment="HorizontalAlignment.End"
-                     VerticalAlignment="VerticalAlignment.Center"
-                     HorizontalGap="12"
-                     Wrap="false">
-            <FluentStack Orientation="Orientation.Horizontal"
-                         VerticalAlignment="VerticalAlignment.Center"
-                         HorizontalGap="8">
+        <div class="paged-grid-footer">
+            <div class="paged-grid-page-size">
                 <FluentLabel Typo="Typography.Body">Items per page</FluentLabel>
                 <FluentSelect TOption="int"
                               Items="@ItemsPerPageOptions"
@@ -55,16 +49,35 @@
                               OptionValue="@(size => size.ToString())"
                               SelectedOption="@_selectedItemsPerPage"
                               SelectedOptionChanged="@OnItemsPerPageChangedAsync"
+                              Class="paged-grid-page-size-select"
                               Style="min-width: 96px;" />
-            </FluentStack>
+            </div>
 
             @if (Controller.TotalCount > 0)
             {
-                <div style="display: inline-flex; width: max-content; min-width: max-content; white-space: nowrap;">
-                    <FluentPaginator State="@Controller.Pagination" style="width: max-content; min-width: max-content; white-space: nowrap;" />
+                <div class="paged-grid-paginator-wrap paged-grid-paginator-desktop">
+                    <FluentPaginator State="@Controller.Pagination" Class="paged-grid-paginator" />
+                </div>
+
+                <div class="paged-grid-paginator-compact">
+                    <FluentButton Appearance="Appearance.Stealth"
+                                  Class="paged-grid-compact-nav"
+                                  Disabled="@IsOnFirstPage"
+                                  OnClick="@GoToPreviousPageAsync">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronLeft())" />
+                    </FluentButton>
+                    <FluentLabel Typo="Typography.Body" Class="paged-grid-compact-label">
+                        @CompactPageLabel
+                    </FluentLabel>
+                    <FluentButton Appearance="Appearance.Stealth"
+                                  Class="paged-grid-compact-nav"
+                                  Disabled="@IsOnLastPage"
+                                  OnClick="@GoToNextPageAsync">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" />
+                    </FluentButton>
                 </div>
             }
-        </FluentStack>
+        </div>
     </FluentStack>
 </FluentCard>
 
@@ -90,6 +103,10 @@
     private FluentDataGrid<TGridItem>? _grid;
     private int _selectedItemsPerPage = PagedGridController<TGridItem>.DefaultItemsPerPage;
     private IReadOnlyList<int> ItemsPerPageOptions => PagedGridController<TGridItem>.SupportedItemsPerPageOptions;
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)Controller.TotalCount / Controller.Pagination.ItemsPerPage));
+    private bool IsOnFirstPage => Controller.Pagination.CurrentPageIndex <= 0;
+    private bool IsOnLastPage => Controller.Pagination.CurrentPageIndex >= TotalPages - 1;
+    private string CompactPageLabel => $"{Controller.Pagination.CurrentPageIndex + 1} / {TotalPages}";
 
     protected override void OnParametersSet()
     {
@@ -126,6 +143,28 @@
 
         Controller.Pagination.ItemsPerPage = validatedItemsPerPage;
         await RefreshAsync(resetToFirstPage: true);
+    }
+
+    private async Task GoToPreviousPageAsync()
+    {
+        if (IsOnFirstPage)
+        {
+            return;
+        }
+
+        await Controller.Pagination.SetCurrentPageIndexAsync(Controller.Pagination.CurrentPageIndex - 1);
+        await RefreshAsync();
+    }
+
+    private async Task GoToNextPageAsync()
+    {
+        if (IsOnLastPage)
+        {
+            return;
+        }
+
+        await Controller.Pagination.SetCurrentPageIndexAsync(Controller.Pagination.CurrentPageIndex + 1);
+        await RefreshAsync();
     }
 
     private static int ValidateItemsPerPage(int value)

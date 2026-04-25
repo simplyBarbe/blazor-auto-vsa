@@ -1,17 +1,17 @@
-﻿<FluentNavMenu Id="main-menu" Width="250" Collapsible="true" Title="Navigation menu" Expanded="@Expanded" ExpandedChanged="@ExpandedChanged">
-    <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())">
+﻿<FluentNavMenu Id="main-menu" Width="250" Collapsible="false" Title="Navigation menu" Expanded="@Expanded" ExpandedChanged="@ExpandedChanged">
+    <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Icons.Regular.Size20.Home())" OnClick="@HandleNavClickAsync">
         Home
     </FluentNavLink>
-    <FluentNavLink Href="counter" Icon="@(new Icons.Regular.Size20.NumberSymbolSquare())">
+    <FluentNavLink Href="counter" Icon="@(new Icons.Regular.Size20.NumberSymbolSquare())" OnClick="@HandleNavClickAsync">
         Counter
     </FluentNavLink>
-    <FluentNavLink Href="products" Icon="@(new Icons.Regular.Size20.Box())">Products
+    <FluentNavLink Href="products" Icon="@(new Icons.Regular.Size20.Box())" OnClick="@HandleNavClickAsync">Products
     </FluentNavLink>
-    <FluentNavLink Href="categories" Icon="@(new Icons.Regular.Size20.Folder())">Categories
+    <FluentNavLink Href="categories" Icon="@(new Icons.Regular.Size20.Folder())" OnClick="@HandleNavClickAsync">Categories
     </FluentNavLink>
-    <FluentNavLink Href="groups" Icon="@(new Icons.Regular.Size20.Layer())">Groups
+    <FluentNavLink Href="groups" Icon="@(new Icons.Regular.Size20.Layer())" OnClick="@HandleNavClickAsync">Groups
     </FluentNavLink>
-    <FluentNavLink Href="audit-trails" Icon="@(new Icons.Regular.Size20.History())">Audit Trails
+    <FluentNavLink Href="audit-trails" Icon="@(new Icons.Regular.Size20.History())" OnClick="@HandleNavClickAsync">Audit Trails
     </FluentNavLink>
 </FluentNavMenu>
 
@@ -21,4 +21,9 @@
 
     [Parameter]
     public EventCallback<bool> ExpandedChanged { get; set; }
+
+    private async Task HandleNavClickAsync()
+    {
+        await ExpandedChanged.InvokeAsync(false);
+    }
 }
